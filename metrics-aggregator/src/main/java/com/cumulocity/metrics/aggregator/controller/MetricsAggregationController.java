@@ -1,7 +1,8 @@
 package com.cumulocity.metrics.aggregator.controller;
 
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cumulocity.metrics.aggregator.model.DeviceStatistics;
 import com.cumulocity.metrics.aggregator.service.MetricsAggregationService;
 
 /**
@@ -37,9 +38,9 @@ public class MetricsAggregationController {
 	}
 
 	@GetMapping(value = "/device/overview/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<String>> getAllDegetDeviceStatisticsOverviewviceNames(@PathVariable("type") String type, 
+    public ResponseEntity<HashMap<String,DeviceStatistics>> getAllDegetDeviceStatisticsOverviewviceNames(@PathVariable("type") String type, 
                 @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate ) {
-        List<String> response = deviceService.getDeviceStatisticsOverview(type,statDate);
-		return new ResponseEntity<List<String>>(response, HttpStatus.OK);
+        HashMap<String,DeviceStatistics> response = deviceService.getDeviceStatisticsOverview(type,statDate);
+		return new ResponseEntity<HashMap<String, DeviceStatistics>>(response, HttpStatus.OK);
     }
 }
