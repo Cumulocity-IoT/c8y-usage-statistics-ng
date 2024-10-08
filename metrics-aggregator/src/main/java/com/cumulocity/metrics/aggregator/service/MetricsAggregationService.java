@@ -138,8 +138,8 @@ public class MetricsAggregationService {
 								log.info("MaxMea:" + dc.getAvgMaxMea().getClass() + " Value: " +dc.getAvgMaxMea());
 								int maxm = 0;
 								Object avgMaxMea = dc.getAvgMaxMea();
-								//if (avgMaxMea.getClass() == String.class && avgMaxMea == "INFINITY"){
-								if (avgMaxMea.getClass() == String.class ){
+								if (avgMaxMea.getClass() == String.class && avgMaxMea.equals("INFINITY")){
+								//if (avgMaxMea.getClass() == String.class ){
 									log.info("Setting MaxMea to infinity");
 									maxm = Integer.MAX_VALUE;
 								} else if (avgMaxMea.getClass() == Integer.class) {
