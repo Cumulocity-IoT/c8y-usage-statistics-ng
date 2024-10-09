@@ -1,22 +1,27 @@
 package com.cumulocity.metrics.aggregator.service;
 
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import com.cumulocity.sdk.client.RestConnector;
-import com.cumulocity.metrics.aggregator.model.DeviceClassRepresentation;
+import com.cumulocity.metrics.aggregator.model.DeviceClass;
 import com.cumulocity.metrics.aggregator.model.DeviceStatistics;
+import com.cumulocity.metrics.aggregator.model.DeviceStatisticsAggregation;
+import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.cumulocity.model.option.OptionPK;
 import com.cumulocity.rest.representation.tenant.OptionRepresentation;
@@ -42,7 +47,8 @@ public class MetricsAggregationService {
 	private static final String OPTION_CATEGORY_CONFIGURATION = "configuration";
 	private static final String OPTION_KEY = "device.statistics.class.details";
 	
-	private HashMap<String,ArrayList<DeviceClassRepresentation>> deviceClassRepresentation = null;
+	private HashMap<String,ArrayList<DeviceClass>> deviceClassRepresentation = null;
+	private BigInteger meaTotal = BigInteger.valueOf(0);
 	
 	@Autowired
     RestConnector restConnector;
@@ -57,6 +63,10 @@ public class MetricsAggregationService {
 	@Autowired
 	ObjectMapper objectMapper;
  
+	@EventListener
+    public void initialize(MicroserviceSubscriptionAddedEvent event) {
+		//event.getCredentials().getTenant()
+	}
 
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -76,10 +86,10 @@ public class MetricsAggregationService {
 		return dsMap;
 	}
 
-	public HashMap<String, ArrayList<DeviceClassRepresentation>> getdeviceClassConfiguration(boolean omitCache) {
+	public HashMap<String, ArrayList<DeviceClass>> getdeviceClassConfiguration(boolean omitCache) {
 		if (this.deviceClassRepresentation == null || omitCache) {
 			log.info("########## Fetching deviceClassRepresentation, omitCache: " +omitCache);
-			this.deviceClassRepresentation = new HashMap<String, ArrayList<DeviceClassRepresentation>>();
+			this.deviceClassRepresentation = new HashMap<String, ArrayList<DeviceClass>>();
 			subscriptionsService.runForEachTenant(() -> {
 				String currentTenant = subscriptionsService.getTenant();
 				log.info("Get DeviceClassDefinition for Tenant: " + currentTenant);
@@ -87,12 +97,12 @@ public class MetricsAggregationService {
 				option.setCategory(OPTION_CATEGORY_CONFIGURATION);
 				option.setKey(OPTION_KEY);
 				final OptionRepresentation optionRepresentation= tenantOptionApi.getOption(option);
-				ArrayList<DeviceClassRepresentation> dcd = new ArrayList<DeviceClassRepresentation>();
+				ArrayList<DeviceClass> dcd = new ArrayList<DeviceClass>();
 				try {
 					log.info("optionRepresentation: " + optionRepresentation.getValue());
 					dcd = new ObjectMapper().readValue(
 								optionRepresentation.getValue(),
-								new TypeReference<ArrayList<DeviceClassRepresentation>>(){});
+								new TypeReference<ArrayList<DeviceClass>>(){});
 				} catch (JsonProcessingException e) {
 					log.error("Could not get Tenant Options for DeviceClassDefinition: ", e);
 				}
@@ -104,58 +114,62 @@ public class MetricsAggregationService {
 	}
 	
 
-	public HashMap<String, ArrayList<DeviceClassRepresentation>> getAggregatedDeviceClassStatistics(String type, Date statDate){
+	public HashMap<String, DeviceStatisticsAggregation> getAggregatedDeviceClassStatistics(String type, Date statDate){
 		HashMap<String, DeviceStatistics> deviceStatisticsMap = this.getDeviceStatisticsOverview(type, statDate);
-		HashMap<String, ArrayList<DeviceClassRepresentation>> deviceClassesMap = this.getdeviceClassConfiguration(true);
+		HashMap<String, ArrayList<DeviceClass>> deviceClassesMap = this.getdeviceClassConfiguration(true);
 		return getAggregatedDevicesPerClass(deviceStatisticsMap,deviceClassesMap);
-
 	}
 
-	private HashMap<String, ArrayList<DeviceClassRepresentation>> getAggregatedDevicesPerClass(
+	private HashMap<String, DeviceStatisticsAggregation> getAggregatedDevicesPerClass(
 				HashMap<String, DeviceStatistics> deviceStatisticsMap, 
-				HashMap<String, ArrayList<DeviceClassRepresentation>> deviceClassesMap){
+				HashMap<String, ArrayList<DeviceClass>> deviceClassesMap){
+					
+					// Return object to gather
+					HashMap<String, DeviceStatisticsAggregation> deviceStatisticsAggregationMap = new HashMap<String, DeviceStatisticsAggregation>();
 
+					//Iterate over deviceClassConfigurations of all tenants
 					Iterator dClassIt  = deviceClassesMap.entrySet().iterator();
-					// Iterate all Tenants and get DeviceClasses 
 					while (dClassIt.hasNext()) {
-						Map.Entry<String, ArrayList<DeviceClassRepresentation>> pair = (Entry<String, ArrayList<DeviceClassRepresentation>>) dClassIt.next();
+						Map.Entry<String, ArrayList<DeviceClass>> pair = (Entry<String, ArrayList<DeviceClass>>) dClassIt.next();
 						String tenant = pair.getKey();
-						ArrayList<DeviceClassRepresentation> deviceClasses = pair.getValue();
+						DeviceStatisticsAggregation dsa = new DeviceStatisticsAggregation();
+						deviceStatisticsAggregationMap.put(tenant, dsa);
+						ArrayList<DeviceClass> deviceClasses = pair.getValue();
 						// Iterate over DeviceClasse of current tenant
 						log.info("Tenant: " + tenant);
 						deviceClasses.forEach(dc -> {
 							//Device Statistic of current tenant
 							DeviceStatistics deviceStatistics = deviceStatisticsMap.get(tenant);
-							deviceStatistics.getStatistics().forEach(ds -> {
+							Iterator<DeviceStatistics.Statistic> ids = deviceStatistics.getStatistics().iterator();
+							while (ids.hasNext()) {
+								DeviceStatistics.Statistic ds = ids.next();
 								int count = ds.getCount();
 								String deviceId = ds.getDeviceId();
-								// Add device count to class if in device classe range
-								// (avgMea >= config.avgMinMea && avgMea < config.avgMaxMea) ||
-								//	(index === currentConfiguration.length - 1 && avgMea >= config.avgMinMea)
-								// ) 
 								log.info("DeviceClass: " +dc.toString());
 								// check if maxmea is INFINITY
 								log.info("MaxMea:" + dc.getAvgMaxMea().getClass() + " Value: " +dc.getAvgMaxMea());
 								int maxm = 0;
 								Object avgMaxMea = dc.getAvgMaxMea();
 								if (avgMaxMea.getClass() == String.class && avgMaxMea.equals("INFINITY")){
-								//if (avgMaxMea.getClass() == String.class ){
-									log.info("Setting MaxMea to infinity");
 									maxm = Integer.MAX_VALUE;
 								} else if (avgMaxMea.getClass() == Integer.class) {
-									log.info("Setting MaxMea to integer");
 									maxm = (Integer)avgMaxMea;
 								} else {
 									log.error("Could not extract MaxMea");
 								}
 								if (count >= dc.getAvgMinMea() && count < maxm && maxm > 0) {
-									log.info("##### Tenant: " + tenant + " Adding Device: " + deviceId + " count: " + count + " to Device Class: " + dc.getClassName());
+									log.info("##### Tenant: " + tenant + " Adding Device and remove from stat: " + deviceId + " meacount: " + count + " to Device Class: " + dc.getClassName());
 									dc.setCount(dc.getCount() + 1);
+									this.meaTotal = meaTotal.add(BigInteger.valueOf(count));
+									dsa.setTotalMeas(dsa.getTotalMeas().add(BigInteger.valueOf(count)));
+									log.info("MeaTotal: " + this.meaTotal.toString());
+									ids.remove();
 								}
-							});
-
+							}
+							deviceStatisticsAggregationMap.get(tenant).getDeviceClasses().add(dc);
 						});
 					}
-					return deviceClassesMap;
+
+					return deviceStatisticsAggregationMap;
 				}
 }
