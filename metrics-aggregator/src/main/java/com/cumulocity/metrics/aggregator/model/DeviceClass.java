@@ -3,7 +3,7 @@ package com.cumulocity.metrics.aggregator.model;
 import java.util.Objects;
 
 
-public class DeviceClassRepresentation {
+public class DeviceClass {
     private String className;
     private int avgMinMea;
     private Object avgMaxMea; // Using Object to accommodate both int and String ("INFINITY")
@@ -13,10 +13,10 @@ public class DeviceClassRepresentation {
 
 
     // Default constructor
-    public DeviceClassRepresentation() {}
+    public DeviceClass() {}
 
     // Constructor with all fields
-    public DeviceClassRepresentation(String className, int avgMinMea, Object avgMaxMea, int monthlyThreshold, int count) {
+    public DeviceClass(String className, int avgMinMea, Object avgMaxMea, int monthlyThreshold, int count) {
         this.className = className;
         this.avgMinMea = avgMinMea;
         this.avgMaxMea = avgMaxMea;
@@ -68,24 +68,13 @@ public class DeviceClassRepresentation {
     // toString method
     @Override
     public String toString() {
-        return "DeviceClassDefinition{" +
+        return "DeviceClass{" +
                 "className='" + className + '\'' +
                 ", avgMinMea=" + avgMinMea +
                 ", avgMaxMea=" + avgMaxMea +
                 ", monthlyThreshold=" + monthlyThreshold +
+                ", count=" + count +
                 '}';
-    }
-
-    // equals and hashCode methods
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DeviceClassRepresentation that = (DeviceClassRepresentation) o;
-        return avgMinMea == that.avgMinMea &&
-                monthlyThreshold == that.monthlyThreshold &&
-                Objects.equals(className, that.className) &&
-                Objects.equals(avgMaxMea, that.avgMaxMea);
     }
 
     @Override

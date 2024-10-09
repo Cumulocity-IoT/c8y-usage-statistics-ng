@@ -2,6 +2,7 @@ package com.cumulocity.metrics.aggregator.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import org.slf4j.Logger;
 
 public class DeviceStatistics {
 
@@ -25,6 +26,16 @@ public class DeviceStatistics {
 
     public void setStatistics(List<Statistic> statistics) {
         this.statistics = statistics;
+    }
+
+
+
+    public void logAllStatistics(Logger log) {
+
+        for (Statistic statistic : statistics) {
+            log.info(statistic.toString());
+        }
+        
     }
 
     public static class Statistic {
