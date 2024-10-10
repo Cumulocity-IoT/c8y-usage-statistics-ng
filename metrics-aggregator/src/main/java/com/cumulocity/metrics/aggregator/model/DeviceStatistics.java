@@ -28,7 +28,7 @@ public class DeviceStatistics {
     public void setDaysInMonth(Date date) {
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(date);
-        YearMonth yearMonthObject = YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH));
+        YearMonth yearMonthObject = YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH + 1));
         this.daysInMonth = yearMonthObject.lengthOfMonth();
         
     }

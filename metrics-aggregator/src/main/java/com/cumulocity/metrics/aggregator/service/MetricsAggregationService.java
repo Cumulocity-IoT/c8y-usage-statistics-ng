@@ -104,27 +104,30 @@ public class MetricsAggregationService {
 	}
 
 	private List<DeviceClass> getDeviceClasseConfiguration (String currentTenant){
-				log.info("Get DeviceClassDefinition for Tenant: " + currentTenant);
-				final OptionPK option = new OptionPK();
-				option.setCategory(OPTION_CATEGORY_CONFIGURATION);
-				option.setKey(OPTION_KEY);
-				final OptionRepresentation optionRepresentation= tenantOptionApi.getOption(option);
-				ArrayList<DeviceClass> dcd = new ArrayList<DeviceClass>();
-				try {
-					log.info("optionRepresentation: " + optionRepresentation.getValue());
-					dcd = new ObjectMapper().readValue(
-								optionRepresentation.getValue(),
-								new TypeReference<ArrayList<DeviceClass>>(){});
-				} catch (JsonProcessingException e) {
-					log.error("Could not get Tenant Options for DeviceClassDefinition: ", e);
-				}
-				return dcd;
+		log.info("Get DeviceClassDefinition for Tenant: " + currentTenant);
+		final OptionPK option = new OptionPK();
+		option.setCategory(OPTION_CATEGORY_CONFIGURATION);
+		option.setKey(OPTION_KEY);
+		final OptionRepresentation optionRepresentation= tenantOptionApi.getOption(option);
+		ArrayList<DeviceClass> dcd = new ArrayList<DeviceClass>();
+		try {
+			log.info("optionRepresentation: " + optionRepresentation.getValue());
+			dcd = new ObjectMapper().readValue(
+						optionRepresentation.getValue(),
+						new TypeReference<ArrayList<DeviceClass>>(){});
+		} catch (JsonProcessingException e) {
+			log.error("Could not get Tenant Options for DeviceClassDefinition: ", e);
+		}
+		return dcd;
 	}
 	
-
 	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate){
 		Map<String, DeviceStatistics> deviceStatisticsMap = this.getDeviceStatisticsOverview(type, statDate);
-		Map<String, List<DeviceClass>> deviceClassesMap = this.getAllDeviceClassConfiguration(false);
+		boolean omitCache = false;
+		if(deviceStatisticsMap.size() != this.allDeviceClassConfiguration.size()){
+			omitCache = true;
+		}
+		Map<String, List<DeviceClass>> deviceClassesMap = this.getAllDeviceClassConfiguration(omitCache);
 		return getAggregatedDevicesPerClass(deviceStatisticsMap,deviceClassesMap);
 	}
 
