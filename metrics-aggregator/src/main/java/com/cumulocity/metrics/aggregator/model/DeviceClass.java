@@ -2,6 +2,10 @@ package com.cumulocity.metrics.aggregator.model;
 
 import java.util.Objects;
 
+/*
+ * This class is used to represent the device Class definition inside each tenant
+ * but also to be a part DeviceStatisticAggregation
+ */
 
 public class DeviceClass {
     private String className;
