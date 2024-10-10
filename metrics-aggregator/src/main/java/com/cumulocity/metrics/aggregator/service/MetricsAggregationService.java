@@ -19,7 +19,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import com.cumulocity.sdk.client.RestConnector;
-import com.cumulocity.metrics.aggregator.model.DeviceClass;
+import com.cumulocity.sdk.client.SDKException;
+import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration;
 import com.cumulocity.metrics.aggregator.model.DeviceStatistics;
 import com.cumulocity.metrics.aggregator.model.DeviceStatisticsAggregation;
 import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
@@ -48,7 +49,7 @@ public class MetricsAggregationService {
 	private static final String OPTION_CATEGORY_CONFIGURATION = "configuration";
 	private static final String OPTION_KEY = "device.statistics.class.details";
 	
-	private Map<String,List<DeviceClass>> allDeviceClassConfiguration = new HashMap<String,List<DeviceClass>>();
+	private Map<String,DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String,DeviceClassConfiguration>();
 	
 	@Autowired
     RestConnector restConnector;
@@ -90,10 +91,10 @@ public class MetricsAggregationService {
 		return dsMap;
 	}
 
-	public Map<String, List<DeviceClass>> getAllDeviceClassConfiguration(boolean omitCache) {
+	public Map<String, DeviceClassConfiguration> getAllDeviceClassConfiguration(boolean omitCache) {
 		if (omitCache) {
 			log.info("########## Fetching deviceClassRepresentation, omitCache: " +omitCache);
-			this.allDeviceClassConfiguration = new HashMap<String, List<DeviceClass>>();
+			this.allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
 			subscriptionsService.runForEachTenant(() -> {
 				String currentTenant = subscriptionsService.getTenant();
 				this.allDeviceClassConfiguration.put(currentTenant,  getDeviceClasseConfiguration(currentTenant));
@@ -103,20 +104,29 @@ public class MetricsAggregationService {
 		return allDeviceClassConfiguration;
 	}
 
-	private List<DeviceClass> getDeviceClasseConfiguration (String currentTenant){
+	private DeviceClassConfiguration getDeviceClasseConfiguration (String currentTenant){
 		log.info("Get DeviceClassDefinition for Tenant: " + currentTenant);
 		final OptionPK option = new OptionPK();
 		option.setCategory(OPTION_CATEGORY_CONFIGURATION);
 		option.setKey(OPTION_KEY);
-		final OptionRepresentation optionRepresentation= tenantOptionApi.getOption(option);
-		ArrayList<DeviceClass> dcd = new ArrayList<DeviceClass>();
+		OptionRepresentation optionRepresentation = new OptionRepresentation(); 
 		try {
-			log.info("optionRepresentation: " + optionRepresentation.getValue());
-			dcd = new ObjectMapper().readValue(
-						optionRepresentation.getValue(),
-						new TypeReference<ArrayList<DeviceClass>>(){});
-		} catch (JsonProcessingException e) {
-			log.error("Could not get Tenant Options for DeviceClassDefinition: ", e);
+			optionRepresentation= tenantOptionApi.getOption(option);
+		} catch (SDKException e) {
+			log.error("tenant option not found");
+		}
+		DeviceClassConfiguration dcd = new DeviceClassConfiguration();
+		if (optionRepresentation.getValue() != null) {
+			try {
+				log.info("optionRepresentation: " + optionRepresentation.getValue());
+				List<DeviceClassConfiguration.DeviceClass> dcl = new ArrayList<DeviceClassConfiguration.DeviceClass>();
+				dcl = new ObjectMapper().readValue(
+							optionRepresentation.getValue(),
+							new TypeReference<List<DeviceClassConfiguration.DeviceClass>>(){});
+				dcd.setDeviceClasses(dcl);
+			} catch (JsonProcessingException e) {
+				log.error("Could not get Tenant Options for DeviceClassDefinition: ", e);
+			}
 		}
 		return dcd;
 	}
@@ -127,28 +137,28 @@ public class MetricsAggregationService {
 		if(deviceStatisticsMap.size() != this.allDeviceClassConfiguration.size()){
 			omitCache = true;
 		}
-		Map<String, List<DeviceClass>> deviceClassesMap = this.getAllDeviceClassConfiguration(omitCache);
+		Map<String, DeviceClassConfiguration> deviceClassesMap = this.getAllDeviceClassConfiguration(omitCache);
 		return getAggregatedDevicesPerClass(deviceStatisticsMap,deviceClassesMap);
 	}
 
 	private DeviceStatisticsAggregation getAggregatedDevicesPerClass(
 		Map<String, DeviceStatistics> deviceStatisticsMap, 
-		Map<String, List<DeviceClass>> deviceClassesMap){
+		Map<String, DeviceClassConfiguration> deviceClassesMap){
 
 		// Return object to gather
 		DeviceStatisticsAggregation deviceStatisticsAggregation = new  DeviceStatisticsAggregation();
 		//Iterate over deviceClassConfigurations of all tenants
 		Iterator dClassIt  = deviceClassesMap.entrySet().iterator();
 		while (dClassIt.hasNext()) {
-			Map.Entry<String, ArrayList<DeviceClass>> pair = (Entry<String, ArrayList<DeviceClass>>) dClassIt.next();
+			Map.Entry<String, DeviceClassConfiguration> pair = (Entry<String, DeviceClassConfiguration>) dClassIt.next();
 			String tenant = pair.getKey();
 			DeviceStatisticsAggregation.TenantAggregation ta = new DeviceStatisticsAggregation.TenantAggregation();
 			deviceStatisticsAggregation.getTenantAggregation().put(tenant,ta );
 			
-			ArrayList<DeviceClass> deviceClasses = pair.getValue();
+			DeviceClassConfiguration deviceClassesConfiguration = pair.getValue();
 			// Iterate over DeviceClasse of current tenant
 			log.info("Tenant: " + tenant);
-			deviceClasses.forEach(dc -> {
+			deviceClassesConfiguration.getDeviceClasses().forEach(dc -> {
 				//Device Statistic of current tenant
 				DeviceStatistics deviceStatistics = deviceStatisticsMap.get(tenant);
 				int daysInMonth = deviceStatistics.getDaysInMonth();

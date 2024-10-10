@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.cumulocity.metrics.aggregator.model.DeviceClass;
+import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration;
 import com.cumulocity.metrics.aggregator.model.DeviceStatistics;
 import com.cumulocity.metrics.aggregator.model.DeviceStatisticsAggregation;
 import com.cumulocity.metrics.aggregator.service.MetricsAggregationService;
@@ -49,9 +49,9 @@ public class MetricsAggregationController {
     }
 
 	@GetMapping(value = "/deviceclasses", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String,List<DeviceClass>>> getAllDeviceClassDefinitions(@RequestParam(value= "omitCache", required = false, defaultValue = "false") boolean omitCache) {
-        Map<String,List<DeviceClass>> response = deviceService.getAllDeviceClassConfiguration(omitCache);
-		return new ResponseEntity<Map<String, List<DeviceClass>>>(response, HttpStatus.OK);
+    public ResponseEntity<Map<String,DeviceClassConfiguration>> getAllDeviceClassDefinitions(@RequestParam(value= "omitCache", required = false, defaultValue = "false") boolean omitCache) {
+        Map<String,DeviceClassConfiguration> response = deviceService.getAllDeviceClassConfiguration(omitCache);
+		return new ResponseEntity<Map<String, DeviceClassConfiguration>>(response, HttpStatus.OK);
     }
 
 	@GetMapping(value = "/aggregated/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
