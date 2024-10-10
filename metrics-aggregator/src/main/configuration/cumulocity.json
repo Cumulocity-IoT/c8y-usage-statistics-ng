@@ -10,9 +10,6 @@
         "memory": "512M"
     },
 	"requiredRoles": [
-		"ROLE_INVENTORY_READ",
-		"ROLE_INVENTORY_CREATE",
-		"ROLE_INVENTORY_ADMIN",
 		"ROLE_TENANT_STATISTICS_READ",
 		"ROLE_OPTION_MANAGEMENT_READ"
 	],
