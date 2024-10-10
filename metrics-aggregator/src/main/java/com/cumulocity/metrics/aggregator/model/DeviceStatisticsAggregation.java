@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration.DeviceClass;
+
 import java.math.BigInteger;
 
 
@@ -36,14 +39,14 @@ public class DeviceStatisticsAggregation {
 
         private int meas;
         
-        private List<DeviceClass> deviceClasses;
+        private List<DeviceClassConfiguration.DeviceClass> deviceClasses;
         private List<String> errors;
         
         
 
         public TenantAggregation(){
             this.meas = 0;
-            this.deviceClasses = new ArrayList<DeviceClass>();
+            this.deviceClasses = new ArrayList<DeviceClassConfiguration.DeviceClass>();
             this.errors = new ArrayList<String>();
         }
     
