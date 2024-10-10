@@ -1,17 +1,39 @@
 package com.cumulocity.metrics.aggregator.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Date;
+import java.time.YearMonth;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import org.slf4j.Logger;
+
 
 public class DeviceStatistics {
 
     public DeviceStatistics(){}
+    private int daysInMonth;
+
     
     private String self;
     private List<Statistic> statistics;
 
+
     // Getters and setters
+    public int getDaysInMonth() {
+        return daysInMonth;
+    }
+
+    public void setDaysInMonth(Date date) {
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        YearMonth yearMonthObject = YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH));
+        this.daysInMonth = yearMonthObject.lengthOfMonth();
+        
+    }
+
+
     public String getSelf() {
         return self;
     }

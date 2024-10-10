@@ -2,8 +2,8 @@ package com.cumulocity.metrics.aggregator.controller;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,23 +41,23 @@ public class MetricsAggregationController {
 		this.deviceService = deviceService;
 	}
 
-	@GetMapping(value = "/device/overview/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<HashMap<String,DeviceStatistics>> getAllDegetDeviceStatisticsOverviewviceNames(@PathVariable("type") String type, 
+	@GetMapping(value = "/devices/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String,DeviceStatistics>> getAllDegetDeviceStatisticsOverviewviceNames(@PathVariable("type") String type, 
                 @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate ) {
-        HashMap<String,DeviceStatistics> response = deviceService.getDeviceStatisticsOverview(type,statDate);
-		return new ResponseEntity<HashMap<String, DeviceStatistics>>(response, HttpStatus.OK);
+        Map<String,DeviceStatistics> response = deviceService.getDeviceStatisticsOverview(type,statDate);
+		return new ResponseEntity<Map<String, DeviceStatistics>>(response, HttpStatus.OK);
     }
 
-	@GetMapping(value = "/device/overview/deviceclasses", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<HashMap<String,ArrayList<DeviceClass>>> getAllDeviceClassDefinitions(@RequestParam(value= "omitCache", required = false, defaultValue = "false") boolean omitCache) {
-        HashMap<String,ArrayList<DeviceClass>> response = deviceService.getdeviceClassConfiguration(omitCache );
-		return new ResponseEntity<HashMap<String, ArrayList<DeviceClass>>>(response, HttpStatus.OK);
+	@GetMapping(value = "/deviceclasses", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String,List<DeviceClass>>> getAllDeviceClassDefinitions(@RequestParam(value= "omitCache", required = false, defaultValue = "false") boolean omitCache) {
+        Map<String,List<DeviceClass>> response = deviceService.getAllDeviceClassConfiguration(omitCache);
+		return new ResponseEntity<Map<String, List<DeviceClass>>>(response, HttpStatus.OK);
     }
 
-	@GetMapping(value = "/device/overview/deviceclassesaggregate/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<HashMap<String,DeviceStatisticsAggregation>> getAggregatedDevicesPerClass(@PathVariable("type") String type, 
+	@GetMapping(value = "/aggregated/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DeviceStatisticsAggregation> getAggregatedDevicesPerClass(@PathVariable("type") String type, 
                 @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate ) {
-        HashMap<String,DeviceStatisticsAggregation> response = deviceService.getAggregatedDeviceClassStatistics(type, statDate); 
-		return new ResponseEntity<HashMap<String, DeviceStatisticsAggregation>>(response, HttpStatus.OK);
+        DeviceStatisticsAggregation response = deviceService.getAggregatedDeviceClassStatistics(type, statDate); 
+		return new ResponseEntity<DeviceStatisticsAggregation>(response, HttpStatus.OK);
     }
 }
