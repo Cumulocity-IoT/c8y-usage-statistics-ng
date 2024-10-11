@@ -9,7 +9,6 @@ import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration.DeviceCl
 
 import java.math.BigInteger;
 
-
 public class DeviceStatisticsAggregation {
 
     private Map<String, TenantAggregation> tenantAggregation;
@@ -25,45 +24,47 @@ public class DeviceStatisticsAggregation {
     private BigInteger totalMeas;
 
     public void setTotalMeas(BigInteger totalMeas) {
-            this.totalMeas = totalMeas;
+        this.totalMeas = totalMeas;
     }
+
     public BigInteger getTotalMeas() {
-            return this.totalMeas;
+        return this.totalMeas;
     }
-    public DeviceStatisticsAggregation(){
-        this.tenantAggregation = new HashMap<String,TenantAggregation>();
+
+    public DeviceStatisticsAggregation() {
+        this.tenantAggregation = new HashMap<String, TenantAggregation>();
         this.totalMeas = BigInteger.valueOf(0);
     }
 
-    public static class TenantAggregation{
+    public static class TenantAggregation {
 
         private int meas;
-        
+
         private List<DeviceClassConfiguration.DeviceClass> deviceClasses;
         private List<String> errors;
-        
-        
 
-        public TenantAggregation(){
+        public TenantAggregation() {
             this.meas = 0;
             this.deviceClasses = new ArrayList<DeviceClassConfiguration.DeviceClass>();
             this.errors = new ArrayList<String>();
         }
-    
+
         public List<String> getErrors() {
             return errors;
         }
+
         public void setErrors(List<String> errors) {
             this.errors = errors;
         }
+
         public List<DeviceClass> getDeviceClasses() {
             return deviceClasses;
         }
-        
+
         public void setDeviceClasses(List<DeviceClass> deviceClasses) {
             this.deviceClasses = deviceClasses;
         }
-        
+
         public int getMeas() {
             return meas;
         }
@@ -72,10 +73,6 @@ public class DeviceStatisticsAggregation {
             this.meas = meas;
         }
 
-    
-       
     }
-
-   
 
 }

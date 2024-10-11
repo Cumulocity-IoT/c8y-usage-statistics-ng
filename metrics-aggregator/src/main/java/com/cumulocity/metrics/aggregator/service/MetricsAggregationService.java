@@ -33,59 +33,66 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.ws.rs.core.MediaType;
 
-
 /**
- * This is a service to aggregate device an microservices metrics to display in the usage statistics app
- * It will iterate over all subscribed tenants and aggregate the metrics to an overview
- * @author Marco Stoffel; Christof Strack
+ * This is a service to aggregate device an microservices metrics to display in
+ * the usage statistics app
+ * It will iterate over all subscribed tenants and aggregate the metrics to an
+ * overview
+ * 
+ * @author Marco Stoffel
  *
  */
 @Service
 public class MetricsAggregationService {
-	
 
 	private static final Logger log = LoggerFactory.getLogger(MetricsAggregationService.class);
 
 	private static final String OPTION_CATEGORY_CONFIGURATION = "configuration";
 	private static final String OPTION_KEY = "device.statistics.class.details";
-	
-	private Map<String,DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String,DeviceClassConfiguration>();
-	
+
+	private Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
+
+	private int subscribedTenantCount = 0;
+
 	@Autowired
-    RestConnector restConnector;
-	
+	RestConnector restConnector;
+
 	@Autowired
-    MicroserviceSubscriptionsService subscriptionsService;
+	MicroserviceSubscriptionsService subscriptionsService;
 
 	@Autowired
 	TenantOptionApi tenantOptionApi;
 
 	@Autowired
 	ObjectMapper objectMapper;
- 
+
 	@EventListener
-    public void initialize(MicroserviceSubscriptionAddedEvent event) {
+	public void initialize(MicroserviceSubscriptionAddedEvent event) {
 		String currentTenant = event.getCredentials().getTenant();
-		subscriptionsService.runForTenant(currentTenant, () ->{
-			this.allDeviceClassConfiguration.put(currentTenant ,  getDeviceClasseConfiguration(currentTenant));
-			log.info("Tenant: " + currentTenant + " subscribed. Fetching DeviceClassConfiguraiton." );
+		subscriptionsService.runForTenant(currentTenant, () -> {
+			this.subscribedTenantCount++;
+			this.allDeviceClassConfiguration.put(currentTenant, getDeviceClasseConfiguration(currentTenant));
+			log.info("Tenant: " + currentTenant + " subscribed. subscribedTenantCount: " + subscribedTenantCount
+					+ " Fetching DeviceClassConfiguration.");
 		});
 	}
 
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
 	public Map<String, DeviceStatistics> getDeviceStatisticsOverview(String type, Date statDate) {
-		log.info("type: " + type +  " statDate: " + statDate.toString());
+		log.info("type: " + type + " statDate: " + statDate.toString());
 
-		HashMap<String,DeviceStatistics> dsMap = new HashMap<String, DeviceStatistics>();
+		HashMap<String, DeviceStatistics> dsMap = new HashMap<String, DeviceStatistics>();
 		subscriptionsService.runForEachTenant(() -> {
 			String currentTenant = subscriptionsService.getTenant();
 			log.info("Get Statistics for Tenant: " + currentTenant);
-			DeviceStatistics ds = restConnector.get("/tenant/statistics/device/"+currentTenant+"/"+type+"/"+df.format(statDate)+"?pageSize=2000&withTotalPages=true", MediaType.APPLICATION_JSON_TYPE,DeviceStatistics.class );
+			DeviceStatistics ds = restConnector.get(
+					"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
+							+ "?pageSize=2000&withTotalPages=true",
+					MediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
 			ds.setDaysInMonth(statDate);
-			log.info("Statistics: " + ds.getStatistics().toString());
+			log.debug("Statistics: " + ds.getStatistics().toString());
 			dsMap.put(currentTenant, ds);
-		
 		});
 		log.info("Statistics" + dsMap.toString());
 		return dsMap;
@@ -93,73 +100,69 @@ public class MetricsAggregationService {
 
 	public Map<String, DeviceClassConfiguration> getAllDeviceClassConfiguration(boolean omitCache) {
 		if (omitCache) {
-			log.info("########## Fetching deviceClassRepresentation, omitCache: " +omitCache);
+			log.info("# Fetching deviceClassRepresentation, omitCache: " + omitCache);
 			this.allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
 			subscriptionsService.runForEachTenant(() -> {
 				String currentTenant = subscriptionsService.getTenant();
-				this.allDeviceClassConfiguration.put(currentTenant,  getDeviceClasseConfiguration(currentTenant));
+				this.allDeviceClassConfiguration.put(currentTenant, getDeviceClasseConfiguration(currentTenant));
 			});
 		}
-		log.info("deviceClassRepresentation" + allDeviceClassConfiguration.toString());
 		return allDeviceClassConfiguration;
 	}
 
-	private DeviceClassConfiguration getDeviceClasseConfiguration (String currentTenant){
+	private DeviceClassConfiguration getDeviceClasseConfiguration(String currentTenant) {
 		log.info("Get DeviceClassDefinition for Tenant: " + currentTenant);
 		final OptionPK option = new OptionPK();
 		option.setCategory(OPTION_CATEGORY_CONFIGURATION);
 		option.setKey(OPTION_KEY);
-		OptionRepresentation optionRepresentation = new OptionRepresentation(); 
-		try {
-			optionRepresentation= tenantOptionApi.getOption(option);
-		} catch (SDKException e) {
-			log.error("tenant option not found");
-		}
+		OptionRepresentation optionRepresentation = new OptionRepresentation();
+		List<DeviceClassConfiguration.DeviceClass> dcl = new ArrayList<DeviceClassConfiguration.DeviceClass>();
 		DeviceClassConfiguration dcd = new DeviceClassConfiguration();
-		if (optionRepresentation.getValue() != null) {
-			try {
-				log.info("optionRepresentation: " + optionRepresentation.getValue());
-				List<DeviceClassConfiguration.DeviceClass> dcl = new ArrayList<DeviceClassConfiguration.DeviceClass>();
-				dcl = new ObjectMapper().readValue(
-							optionRepresentation.getValue(),
-							new TypeReference<List<DeviceClassConfiguration.DeviceClass>>(){});
-				dcd.setDeviceClasses(dcl);
-			} catch (JsonProcessingException e) {
-				log.error("Could not get Tenant Options for DeviceClassDefinition: ", e);
-			}
+		try {
+			optionRepresentation = tenantOptionApi.getOption(option);
+			dcl = new ObjectMapper().readValue(
+					optionRepresentation.getValue(),
+					new TypeReference<List<DeviceClassConfiguration.DeviceClass>>() {
+					});
+			dcd.setDeviceClasses(dcl);
+		} catch (SDKException | JsonProcessingException e) {
+			log.error("Could not get DeviceClassConfiguration form tenant options using default config.");
 		}
 		return dcd;
 	}
-	
-	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate){
+
+	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate) {
 		Map<String, DeviceStatistics> deviceStatisticsMap = this.getDeviceStatisticsOverview(type, statDate);
 		boolean omitCache = false;
-		if(deviceStatisticsMap.size() != this.allDeviceClassConfiguration.size()){
+		if (deviceStatisticsMap.size() != this.allDeviceClassConfiguration.size()) {
 			omitCache = true;
 		}
 		Map<String, DeviceClassConfiguration> deviceClassesMap = this.getAllDeviceClassConfiguration(omitCache);
-		return getAggregatedDevicesPerClass(deviceStatisticsMap,deviceClassesMap);
+		return getAggregatedDevicesPerClass(deviceStatisticsMap, deviceClassesMap);
 	}
 
 	private DeviceStatisticsAggregation getAggregatedDevicesPerClass(
-		Map<String, DeviceStatistics> deviceStatisticsMap, 
-		Map<String, DeviceClassConfiguration> deviceClassesMap){
+			Map<String, DeviceStatistics> deviceStatisticsMap,
+			Map<String, DeviceClassConfiguration> deviceClassesMap) {
 
-		// Return object to gather
-		DeviceStatisticsAggregation deviceStatisticsAggregation = new  DeviceStatisticsAggregation();
-		//Iterate over deviceClassConfigurations of all tenants
-		Iterator dClassIt  = deviceClassesMap.entrySet().iterator();
+		// Return object to gather statistics
+		DeviceStatisticsAggregation deviceStatisticsAggregation = new DeviceStatisticsAggregation();
+
+		// Iterate over deviceClassConfigurations of all tenants
+		Iterator dClassIt = deviceClassesMap.entrySet().iterator();
 		while (dClassIt.hasNext()) {
-			Map.Entry<String, DeviceClassConfiguration> pair = (Entry<String, DeviceClassConfiguration>) dClassIt.next();
+
+			Map.Entry<String, DeviceClassConfiguration> pair = (Entry<String, DeviceClassConfiguration>) dClassIt
+					.next();
 			String tenant = pair.getKey();
 			DeviceStatisticsAggregation.TenantAggregation ta = new DeviceStatisticsAggregation.TenantAggregation();
-			deviceStatisticsAggregation.getTenantAggregation().put(tenant,ta );
-			
+			deviceStatisticsAggregation.getTenantAggregation().put(tenant, ta);
 			DeviceClassConfiguration deviceClassesConfiguration = pair.getValue();
+
 			// Iterate over DeviceClasse of current tenant
-			log.info("Tenant: " + tenant);
+			log.info("Getting statistics for Tenant: " + tenant);
 			deviceClassesConfiguration.getDeviceClasses().forEach(dc -> {
-				//Device Statistic of current tenant
+				// Device Statistic of current tenant
 				DeviceStatistics deviceStatistics = deviceStatisticsMap.get(tenant);
 				int daysInMonth = deviceStatistics.getDaysInMonth();
 				Iterator<DeviceStatistics.Statistic> ids = deviceStatistics.getStatistics().iterator();
@@ -167,35 +170,36 @@ public class MetricsAggregationService {
 					DeviceStatistics.Statistic ds = ids.next();
 					int count = ds.getCount();
 					String deviceId = ds.getDeviceId();
-					
-					log.info("DeviceClass: " +dc.toString());
+
 					// check if maxmea is INFINITY
-					log.info("MaxMea:" + dc.getAvgMaxMea().getClass() + " Value: " +dc.getAvgMaxMea());
-					
 					int maxm = 0;
 					Object avgMaxMea = dc.getAvgMaxMea();
-					if (avgMaxMea.getClass() == String.class && avgMaxMea.equals("INFINITY")){
+					if (avgMaxMea.getClass() == String.class && avgMaxMea.equals("INFINITY")) {
 						maxm = Integer.MAX_VALUE;
 					} else if (avgMaxMea.getClass() == Integer.class) {
-						maxm = (Integer)avgMaxMea;
+						maxm = (Integer) avgMaxMea;
 					} else {
-						log.error("Could not extract MaxMea");
+						String error = "Could not extract MaxMea";
+						log.error(error);
+						ta.getErrors().add(error);
 					}
-					
 					float avgMea = count / daysInMonth;
-					log.info("aveMea: " + avgMea);
-					if (avgMea >= Float.valueOf(dc.getAvgMinMea()) && avgMea < Float.valueOf(maxm )) {
-						log.info("##### Tenant: " + tenant + " Adding Device and remove from stat: " + deviceId + " meacount: " + count + " to Device Class: " + dc.getClassName());
-						dc.setCount(dc.getCount()+1);
-						deviceStatisticsAggregation.setTotalMeas(deviceStatisticsAggregation.getTotalMeas().add(BigInteger.valueOf(count)));
-						ta.setMeas(ta.getMeas()+ count);
+					log.debug("Calculated aveMea: " + avgMea);
+
+					// Check if DeviceClass fits device
+					if (avgMea >= Float.valueOf(dc.getAvgMinMea()) && avgMea < Float.valueOf(maxm)) {
+						log.info("# Tenant: " + tenant + " add  Device: " + deviceId + " avgMea: " + avgMea + " Class: "
+								+ dc.getClassName());
+						dc.setCount(dc.getCount() + 1);
+						deviceStatisticsAggregation.setTotalMeas(
+								deviceStatisticsAggregation.getTotalMeas().add(BigInteger.valueOf(count)));
+						ta.setMeas(ta.getMeas() + count);
 						ids.remove();
 					}
 				}
 				ta.getDeviceClasses().add(dc);
 			});
 		}
-
 		return deviceStatisticsAggregation;
 	}
 }
