@@ -9,16 +9,15 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import org.slf4j.Logger;
 
-
 public class DeviceStatistics {
 
-    public DeviceStatistics(){}
+    public DeviceStatistics() {
+    }
+
     private int daysInMonth;
 
-    
     private String self;
     private List<Statistic> statistics;
-
 
     // Getters and setters
     public int getDaysInMonth() {
@@ -30,9 +29,8 @@ public class DeviceStatistics {
         calendar.setTime(date);
         YearMonth yearMonthObject = YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH + 1));
         this.daysInMonth = yearMonthObject.lengthOfMonth();
-        
-    }
 
+    }
 
     public String getSelf() {
         return self;
@@ -50,14 +48,12 @@ public class DeviceStatistics {
         this.statistics = statistics;
     }
 
-
-
     public void logAllStatistics(Logger log) {
 
         for (Statistic statistic : statistics) {
             log.info(statistic.toString());
         }
-        
+
     }
 
     public static class Statistic {
