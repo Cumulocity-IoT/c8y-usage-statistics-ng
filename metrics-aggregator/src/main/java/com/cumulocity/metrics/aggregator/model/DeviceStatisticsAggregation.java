@@ -22,6 +22,15 @@ public class DeviceStatisticsAggregation {
     }
 
     private BigInteger totalMeas;
+    private int totalDevicesCount;
+
+    public int getTotalDevicesCount() {
+        return totalDevicesCount;
+    }
+
+    public void setTotalDevicesCount(int totalDevicesCount) {
+        this.totalDevicesCount = totalDevicesCount;
+    }
 
     public void setTotalMeas(BigInteger totalMeas) {
         this.totalMeas = totalMeas;
@@ -34,19 +43,30 @@ public class DeviceStatisticsAggregation {
     public DeviceStatisticsAggregation() {
         this.tenantAggregation = new HashMap<String, TenantAggregation>();
         this.totalMeas = BigInteger.valueOf(0);
+        this.totalDevicesCount =0;
     }
 
     public static class TenantAggregation {
 
         private int meas;
-
+        private int devicesCount;
+        
         private List<DeviceClassConfiguration.DeviceClass> deviceClasses;
         private List<String> errors;
-
+        
         public TenantAggregation() {
             this.meas = 0;
             this.deviceClasses = new ArrayList<DeviceClassConfiguration.DeviceClass>();
             this.errors = new ArrayList<String>();
+            this.devicesCount =0;
+        }
+        
+        public int getDevicesCount() {
+            return devicesCount;
+        }
+
+        public void setDevicesCount(int devicesCount) {
+            this.devicesCount = devicesCount;
         }
 
         public List<String> getErrors() {

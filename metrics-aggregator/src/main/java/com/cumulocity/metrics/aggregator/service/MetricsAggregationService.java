@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * This is a service to aggregate device an microservices metrics to display in
@@ -80,21 +81,23 @@ public class MetricsAggregationService {
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
 	public Map<String, DeviceStatistics> getDeviceStatisticsOverview(String type, Date statDate) {
-		log.info("type: " + type + " statDate: " + statDate.toString());
 
 		HashMap<String, DeviceStatistics> dsMap = new HashMap<String, DeviceStatistics>();
 		subscriptionsService.runForEachTenant(() -> {
 			String currentTenant = subscriptionsService.getTenant();
 			log.info("Get Statistics for Tenant: " + currentTenant);
-			DeviceStatistics ds = restConnector.get(
+			Response rs = restConnector.get(
+					"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
+							+ "?pageSize=2&withTotalPages=true",
+					MediaType.APPLICATION_JSON_TYPE);
+			DeviceStatistics dspage = restConnector.get(
 					"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
 							+ "?pageSize=2000&withTotalPages=true",
 					MediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
-			ds.setDaysInMonth(statDate);
-			log.debug("Statistics: " + ds.getStatistics().toString());
-			dsMap.put(currentTenant, ds);
+			dspage.setDaysInMonth(statDate);
+			log.debug("Statistics: " + dspage.getStatistics().toString());
+			dsMap.put(currentTenant, dspage);
 		});
-		log.info("Statistics" + dsMap.toString());
 		return dsMap;
 	}
 
@@ -135,6 +138,7 @@ public class MetricsAggregationService {
 		Map<String, DeviceStatistics> deviceStatisticsMap = this.getDeviceStatisticsOverview(type, statDate);
 		boolean omitCache = false;
 		if (deviceStatisticsMap.size() != this.allDeviceClassConfiguration.size()) {
+			log.info("################## Size DeviceClasses and DeviceStatistics uneven. Fetching DeviceClassesConfig again.");
 			omitCache = true;
 		}
 		Map<String, DeviceClassConfiguration> deviceClassesMap = this.getAllDeviceClassConfiguration(omitCache);
@@ -152,20 +156,21 @@ public class MetricsAggregationService {
 		Iterator dClassIt = deviceClassesMap.entrySet().iterator();
 		while (dClassIt.hasNext()) {
 
-			Map.Entry<String, DeviceClassConfiguration> pair = (Entry<String, DeviceClassConfiguration>) dClassIt
-					.next();
+			Map.Entry<String, DeviceClassConfiguration> pair = (Entry<String, DeviceClassConfiguration>) dClassIt.next();
 			String tenant = pair.getKey();
 			DeviceStatisticsAggregation.TenantAggregation ta = new DeviceStatisticsAggregation.TenantAggregation();
 			deviceStatisticsAggregation.getTenantAggregation().put(tenant, ta);
 			DeviceClassConfiguration deviceClassesConfiguration = pair.getValue();
+			DeviceStatistics deviceStatistics = deviceStatisticsMap.get(tenant);
+			ta.setDevicesCount(deviceStatistics.getStatistics().size());
 
 			// Iterate over DeviceClasse of current tenant
 			log.info("Getting statistics for Tenant: " + tenant);
 			deviceClassesConfiguration.getDeviceClasses().forEach(dc -> {
 				// Device Statistic of current tenant
-				DeviceStatistics deviceStatistics = deviceStatisticsMap.get(tenant);
 				int daysInMonth = deviceStatistics.getDaysInMonth();
 				Iterator<DeviceStatistics.Statistic> ids = deviceStatistics.getStatistics().iterator();
+				
 				while (ids.hasNext()) {
 					DeviceStatistics.Statistic ds = ids.next();
 					int count = ds.getCount();
@@ -188,7 +193,7 @@ public class MetricsAggregationService {
 
 					// Check if DeviceClass fits device
 					if (avgMea >= Float.valueOf(dc.getAvgMinMea()) && avgMea < Float.valueOf(maxm)) {
-						log.info("# Tenant: " + tenant + " add  Device: " + deviceId + " avgMea: " + avgMea + " Class: "
+						log.debug("# Tenant: " + tenant + " add  Device: " + deviceId + " avgMea: " + avgMea + " Class: "
 								+ dc.getClassName());
 						dc.setCount(dc.getCount() + 1);
 						deviceStatisticsAggregation.setTotalMeas(
@@ -199,6 +204,8 @@ public class MetricsAggregationService {
 				}
 				ta.getDeviceClasses().add(dc);
 			});
+			deviceStatisticsAggregation.setTotalDevicesCount(deviceStatisticsAggregation.getTotalDevicesCount() + ta.getDevicesCount());
+			log.info("totalDevicesCount: " + deviceStatisticsAggregation.getTotalDevicesCount());
 		}
 		return deviceStatisticsAggregation;
 	}
