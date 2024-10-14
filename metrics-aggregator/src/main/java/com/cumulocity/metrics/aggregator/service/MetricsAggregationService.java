@@ -166,7 +166,7 @@ public class MetricsAggregationService {
 			ta.setDevicesCount(deviceStatistics.getStatistics().size());
 
 			// Iterate over DeviceClasse of current tenant
-			log.info("Getting statistics for Tenant: " + tenant);
+			log.info("Matching deviceClasses for Tenant: " + tenant);
 			deviceClassesConfiguration.getDeviceClasses().forEach(dc -> {
 				// Device Statistic of current tenant
 				int daysInMonth = deviceStatistics.getDaysInMonth();
@@ -176,33 +176,26 @@ public class MetricsAggregationService {
 					DeviceStatistics.Statistic ds = ids.next();
 					int count = ds.getCount();
 					String deviceId = ds.getDeviceId();
-
-					// check if maxmea is INFINITY
-					int maxm = 0;
-					Object avgMaxMea = dc.getAvgMaxMea();
-					if (avgMaxMea.getClass() == String.class && avgMaxMea.equals("INFINITY")) {
-						maxm = Integer.MAX_VALUE;
-					} else if (avgMaxMea.getClass() == Integer.class) {
-						maxm = (Integer) avgMaxMea;
-					} else {
-						String error = "Could not extract MaxMea";
-						log.error(error);
-						ta.getErrors().add(error);
-					}
 					float avgMea = count / daysInMonth;
 
 					// Check if DeviceClass fits totalDeviceClass
 					Iterator<DeviceClass> dcGlobalIterator = deviceStatisticsAggregation.getTotalDeviceClasses().getDeviceClasses().iterator();
 					while (dcGlobalIterator.hasNext()) {
 						DeviceClass globalDeviceClass = dcGlobalIterator.next();
-						if (avgMea >= Float.valueOf(globalDeviceClass.getAvgMinMea()) && avgMea < Float.valueOf(maxm)) {
-							log.debug("#### Global DeviceClasses Tenant: " + tenant + " add  Device: " + deviceId + " avgMea: " + avgMea + " Class: "
-								+ globalDeviceClass.getClassName());
-							globalDeviceClass.setCount(globalDeviceClass.getCount() + 1);
+						int maxm = getMaxMeas(globalDeviceClass.getAvgMaxMea());
+						if (maxm != 0){
+							if (avgMea >= Float.valueOf(globalDeviceClass.getAvgMinMea()) && avgMea < Float.valueOf(maxm)) {
+								log.debug("#### Global DeviceClasses Tenant: " + tenant + " add  Device: " + deviceId + " avgMea: " + avgMea + " Class: "
+									+ globalDeviceClass.getClassName());
+								globalDeviceClass.setCount(globalDeviceClass.getCount() + 1);
+							}
+						}else{
+							ta.getErrors().add("Could not get MaxMea.");
 						}
 					}
 
 					// Check if DeviceClass fits device
+					int maxm = getMaxMeas(dc.getAvgMaxMea());
 					if (avgMea >= Float.valueOf(dc.getAvgMinMea()) && avgMea < Float.valueOf(maxm)) {
 						log.debug("# Tenant: " + tenant + " add  Device: " + deviceId + " avgMea: " + avgMea + " Class: "
 								+ dc.getClassName());
@@ -219,5 +212,18 @@ public class MetricsAggregationService {
 			log.info("totalDevicesCount: " + deviceStatisticsAggregation.getTotalDevicesCount());
 		}
 		return deviceStatisticsAggregation;
+	}
+	private int getMaxMeas(Object avgMaxMea){
+		// check if maxmea is INFINITY
+		int maxm = 0;
+		if (avgMaxMea.getClass() == String.class && avgMaxMea.equals("INFINITY")) {
+			maxm = Integer.MAX_VALUE;
+		} else if (avgMaxMea.getClass() == Integer.class) {
+			maxm = (Integer) avgMaxMea;
+		} else {
+			String error = "Could not extract MaxMea";
+			log.error(error);
+		}
+		return maxm;
 	}
 }
