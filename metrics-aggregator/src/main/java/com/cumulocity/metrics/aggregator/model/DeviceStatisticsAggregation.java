@@ -13,17 +13,24 @@ public class DeviceStatisticsAggregation {
 
     private Map<String, TenantAggregation> tenantAggregation;
 
+    
+    
+    private BigInteger totalMeas;
+    private int totalDevicesCount;
+    private DeviceClassConfiguration totalDeviceClasses;
+    
+    public DeviceClassConfiguration getTotalDeviceClasses() {
+        return totalDeviceClasses;
+    }
+    public void setTotalDeviceClasses(DeviceClassConfiguration totalDeviceClasses) {
+        this.totalDeviceClasses = totalDeviceClasses;
+    }
     public Map<String, TenantAggregation> getTenantAggregation() {
         return tenantAggregation;
     }
-
     public void setTenantAggregation(Map<String, TenantAggregation> tenantAggregation) {
         this.tenantAggregation = tenantAggregation;
     }
-
-    private BigInteger totalMeas;
-    private int totalDevicesCount;
-
     public int getTotalDevicesCount() {
         return totalDevicesCount;
     }
@@ -44,6 +51,7 @@ public class DeviceStatisticsAggregation {
         this.tenantAggregation = new HashMap<String, TenantAggregation>();
         this.totalMeas = BigInteger.valueOf(0);
         this.totalDevicesCount =0;
+        this.totalDeviceClasses = new DeviceClassConfiguration();
     }
 
     public static class TenantAggregation {
