@@ -12,37 +12,31 @@ import org.apache.commons.beanutils.converters.LongArrayConverter;
  */
 
 public class DeviceClassConfiguration {
- 
+
     private List<DeviceClass> deviceClasses;
-    
+
     public DeviceClassConfiguration(List<DeviceClass> deviceClasses) {
         this.deviceClasses = deviceClasses;
     }
 
     public DeviceClassConfiguration() {
         List<DeviceClass> devcList = new ArrayList<DeviceClass>();
-        devcList.add( new DeviceClass("Class A",0,24,200)); 
-        devcList.add( new DeviceClass("Class B",24,144,200)); 
-        devcList.add( new DeviceClass("Class C",144,1440,50)); 
-        devcList.add( new DeviceClass("Class D",1440,8640,50)); 
-        devcList.add( new DeviceClass("Class E",8640,86400,50)); 
-        devcList.add( new DeviceClass("Class F",86400,"INFINITY",50)); 
+        devcList.add(new DeviceClass("Class A", 0, 24, 200));
+        devcList.add(new DeviceClass("Class B", 24, 144, 200));
+        devcList.add(new DeviceClass("Class C", 144, 1440, 50));
+        devcList.add(new DeviceClass("Class D", 1440, 8640, 50));
+        devcList.add(new DeviceClass("Class E", 8640, 86400, 50));
+        devcList.add(new DeviceClass("Class F", 86400, "INFINITY", 50));
         this.deviceClasses = devcList;
     }
-
-
 
     public List<DeviceClass> getDeviceClasses() {
         return deviceClasses;
     }
 
-
-
     public void setDeviceClasses(List<DeviceClass> deviceClasses) {
         this.deviceClasses = deviceClasses;
     }
-
-
 
     public static class DeviceClass {
         private String className;
@@ -51,10 +45,9 @@ public class DeviceClassConfiguration {
         private int monthlyThreshold;
         private int count;
 
-
-
         // Default constructor
-        public DeviceClass() {}
+        public DeviceClass() {
+        }
 
         // Constructor with all fields
         public DeviceClass(String className, int avgMinMea, Object avgMaxMea, int monthlyThreshold) {
