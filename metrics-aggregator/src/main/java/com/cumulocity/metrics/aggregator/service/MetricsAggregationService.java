@@ -23,6 +23,7 @@ import com.cumulocity.sdk.client.SDKException;
 import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration;
 import com.cumulocity.metrics.aggregator.model.DeviceStatistics;
 import com.cumulocity.metrics.aggregator.model.DeviceStatisticsAggregation;
+import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration.DeviceClass;
 import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.cumulocity.model.option.OptionPK;
@@ -151,7 +152,7 @@ public class MetricsAggregationService {
 
 		// Return object to gather statistics
 		DeviceStatisticsAggregation deviceStatisticsAggregation = new DeviceStatisticsAggregation();
-
+		
 		// Iterate over deviceClassConfigurations of all tenants
 		Iterator dClassIt = deviceClassesMap.entrySet().iterator();
 		while (dClassIt.hasNext()) {
@@ -189,7 +190,17 @@ public class MetricsAggregationService {
 						ta.getErrors().add(error);
 					}
 					float avgMea = count / daysInMonth;
-					log.debug("Calculated aveMea: " + avgMea);
+
+					// Check if DeviceClass fits totalDeviceClass
+					Iterator<DeviceClass> dcGlobalIterator = deviceStatisticsAggregation.getTotalDeviceClasses().getDeviceClasses().iterator();
+					while (dcGlobalIterator.hasNext()) {
+						DeviceClass globalDeviceClass = dcGlobalIterator.next();
+						if (avgMea >= Float.valueOf(globalDeviceClass.getAvgMinMea()) && avgMea < Float.valueOf(maxm)) {
+							log.debug("#### Global DeviceClasses Tenant: " + tenant + " add  Device: " + deviceId + " avgMea: " + avgMea + " Class: "
+								+ globalDeviceClass.getClassName());
+							globalDeviceClass.setCount(globalDeviceClass.getCount() + 1);
+						}
+					}
 
 					// Check if DeviceClass fits device
 					if (avgMea >= Float.valueOf(dc.getAvgMinMea()) && avgMea < Float.valueOf(maxm)) {
