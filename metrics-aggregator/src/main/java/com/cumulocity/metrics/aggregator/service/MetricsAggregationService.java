@@ -11,10 +11,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +29,16 @@ import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration.DeviceCl
 import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.cumulocity.model.option.OptionPK;
+import com.cumulocity.rest.representation.CumulocityMediaType;
 import com.cumulocity.rest.representation.tenant.OptionRepresentation;
+import com.cumulocity.rest.representation.tenant.TenantRepresentation;
 import com.cumulocity.sdk.client.option.TenantOptionApi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import javassist.expr.Instanceof;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -55,6 +62,7 @@ public class MetricsAggregationService {
 	private Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
 
 	private int subscribedTenantCount = 0;
+	private boolean includeSubtenants = false;
 
 	@Autowired
 	RestConnector restConnector;
@@ -70,6 +78,8 @@ public class MetricsAggregationService {
 
 	@EventListener
 	public void initialize(MicroserviceSubscriptionAddedEvent event) {
+		// Optional<TenantRepresentation> deployedTenant = getCurrentTenant();
+		// System.out.println("Current Tenant: " + deployedTenant.get().getDomain());
 		String currentTenant = event.getCredentials().getTenant();
 		subscriptionsService.runForTenant(currentTenant, () -> {
 			this.subscribedTenantCount++;
@@ -78,6 +88,12 @@ public class MetricsAggregationService {
 					+ " Fetching DeviceClassConfiguration.");
 		});
 	}
+
+	// @EventListener(ApplicationReadyEvent.class)
+	// public void doSomethingAfterStartup() {
+	// 	Optional<TenantRepresentation> currentTenant= getCurrentTenant();
+	// 	System.out.println("Current Tenant: " +currentTenant.get());
+	// }
 
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -135,9 +151,10 @@ public class MetricsAggregationService {
 		return dcd;
 	}
 
-	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate) {
+	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate, boolean includeSubtenants) {
 		Map<String, DeviceStatistics> deviceStatisticsMap = this.getDeviceStatisticsOverview(type, statDate);
 		boolean omitCache = false;
+		this.includeSubtenants = includeSubtenants;
 		if (deviceStatisticsMap.size() != this.allDeviceClassConfiguration.size()) {
 			log.info("################## Size DeviceClasses and DeviceStatistics uneven. Fetching DeviceClassesConfig again.");
 			omitCache = true;
@@ -153,77 +170,56 @@ public class MetricsAggregationService {
 		// Return object to gather statistics
 		DeviceStatisticsAggregation deviceStatisticsAggregation = new DeviceStatisticsAggregation();
 		
-		// Iterate over deviceClassConfigurations of all tenants
-		Iterator dClassIt = deviceClassesMap.entrySet().iterator();
-		while (dClassIt.hasNext()) {
-
-			Map.Entry<String, DeviceClassConfiguration> pair = (Entry<String, DeviceClassConfiguration>) dClassIt.next();
-			String tenant = pair.getKey();
-			DeviceStatisticsAggregation.TenantAggregation ta = new DeviceStatisticsAggregation.TenantAggregation();
-			deviceStatisticsAggregation.getTenantAggregation().put(tenant, ta);
-			DeviceClassConfiguration deviceClassesConfiguration = pair.getValue();
-			DeviceStatistics deviceStatistics = deviceStatisticsMap.get(tenant);
-			ta.setDevicesCount(deviceStatistics.getStatistics().size());
-
-			// Iterate over DeviceClasse of current tenant
-			log.info("Matching deviceClasses for Tenant: " + tenant);
-			deviceClassesConfiguration.getDeviceClasses().forEach(dc -> {
-				// Device Statistic of current tenant
-				int daysInMonth = deviceStatistics.getDaysInMonth();
-				Iterator<DeviceStatistics.Statistic> ids = deviceStatistics.getStatistics().iterator();
-				
-				while (ids.hasNext()) {
-					DeviceStatistics.Statistic ds = ids.next();
-					int count = ds.getCount();
-					String deviceId = ds.getDeviceId();
-					float avgMea = count / daysInMonth;
-
-					// Check if DeviceClass fits totalDeviceClass
-					Iterator<DeviceClass> dcGlobalIterator = deviceStatisticsAggregation.getTotalDeviceClasses().getDeviceClasses().iterator();
-					while (dcGlobalIterator.hasNext()) {
-						DeviceClass globalDeviceClass = dcGlobalIterator.next();
-						int maxm = getMaxMeas(globalDeviceClass.getAvgMaxMea());
-						if (maxm != 0){
-							if (avgMea >= Float.valueOf(globalDeviceClass.getAvgMinMea()) && avgMea < Float.valueOf(maxm)) {
-								log.debug("#### Global DeviceClasses Tenant: " + tenant + " add  Device: " + deviceId + " avgMea: " + avgMea + " Class: "
-									+ globalDeviceClass.getClassName());
-								globalDeviceClass.setCount(globalDeviceClass.getCount() + 1);
-							}
-						}else{
-							ta.getErrors().add("Could not get MaxMea.");
-						}
+		// Loop through all tenans deviceStatistics
+		Iterator<Entry<String, DeviceStatistics>> dsIterator = deviceStatisticsMap.entrySet().iterator();
+		while (dsIterator.hasNext()) {
+			Map.Entry<String, DeviceStatistics> pair = (Entry<String, DeviceStatistics>) dsIterator
+					.next();
+			String tenant= pair.getKey();
+			DeviceStatistics ds = pair.getValue();
+			DeviceClassConfiguration dcc = deviceClassesMap.get(tenant);
+			deviceStatisticsAggregation.addTotalDevicesCount(ds.getStatistics().size());
+			ds.getStatistics().forEach(devs ->{
+				deviceStatisticsAggregation.addTotaMeas(devs.getCount());
+				if (this.includeSubtenants) {
+						DeviceStatisticsAggregation.TenantAggregation ta = new DeviceStatisticsAggregation.TenantAggregation();
+						deviceStatisticsAggregation.getTenantAggregation().put(tenant, ta);
+						ta.addToMeas(devs.getCount());
+						ta.setDeviceClasses(dcc.getDeviceClasses());
+						ta.setDevicesCount(ds.getStatistics().size());
+						updateDeviceClass(dcc, devs.getCount(), ds.getDaysInMonth());
 					}
+					updateDeviceClass(deviceStatisticsAggregation.getTotalDeviceClasses(), 
+						devs.getCount(), ds.getDaysInMonth());
+			});	
 
-					// Check if DeviceClass fits device
-					int maxm = getMaxMeas(dc.getAvgMaxMea());
-					if (avgMea >= Float.valueOf(dc.getAvgMinMea()) && avgMea < Float.valueOf(maxm)) {
-						log.debug("# Tenant: " + tenant + " add  Device: " + deviceId + " avgMea: " + avgMea + " Class: "
-								+ dc.getClassName());
-						dc.setCount(dc.getCount() + 1);
-						deviceStatisticsAggregation.setTotalMeas(
-								deviceStatisticsAggregation.getTotalMeas().add(BigInteger.valueOf(count)));
-						ta.setMeas(ta.getMeas() + count);
-						ids.remove();
-					}
-				}
-				ta.getDeviceClasses().add(dc);
-			});
-			deviceStatisticsAggregation.setTotalDevicesCount(deviceStatisticsAggregation.getTotalDevicesCount() + ta.getDevicesCount());
-			log.info("totalDevicesCount: " + deviceStatisticsAggregation.getTotalDevicesCount());
 		}
 		return deviceStatisticsAggregation;
 	}
-	private int getMaxMeas(Object avgMaxMea){
-		// check if maxmea is INFINITY
-		int maxm = 0;
-		if (avgMaxMea.getClass() == String.class && avgMaxMea.equals("INFINITY")) {
-			maxm = Integer.MAX_VALUE;
-		} else if (avgMaxMea.getClass() == Integer.class) {
-			maxm = (Integer) avgMaxMea;
-		} else {
-			String error = "Could not extract MaxMea";
-			log.error(error);
+
+	private void updateDeviceClass(DeviceClassConfiguration dcc, int count, int daysInMonth){
+		float avgMea = count / daysInMonth;
+		Iterator<DeviceClass> idc = dcc.getDeviceClasses().iterator();
+		while (idc.hasNext()) {
+			DeviceClass dc = idc.next();
+			if (
+				(dc.getAvgMaxMea() instanceof String && dc.getAvgMaxMea().equals("INFINITY") && avgMea >= Float.valueOf(dc.getAvgMinMea()))
+				|| 
+				(dc.getAvgMaxMea() instanceof Integer && avgMea >= Float.valueOf(dc.getAvgMinMea()) && avgMea < Float.valueOf((int)dc.getAvgMaxMea()))
+			){
+				dc.incrementCount();
+			};
 		}
-		return maxm;
 	}
+
+	public Optional<TenantRepresentation> getCurrentTenant() {
+		try {
+			return Optional.ofNullable(restConnector.get("/tenant/currentTenant", CumulocityMediaType.APPLICATION_JSON_TYPE, TenantRepresentation.class));
+		} catch (final SDKException e) {
+			log.error("Tenant#getCurrentTenant operation resulted in " + e.getMessage(), e);
+		}
+		return Optional.empty();
+	}
+
+	
 }
