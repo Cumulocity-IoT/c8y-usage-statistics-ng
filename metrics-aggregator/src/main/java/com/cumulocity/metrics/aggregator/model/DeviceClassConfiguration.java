@@ -100,6 +100,10 @@ public class DeviceClassConfiguration {
             this.count = count;
         }
 
+        public void incrementCount(){
+            this.count++;
+        }
+
         // toString method
         @Override
         public String toString() {

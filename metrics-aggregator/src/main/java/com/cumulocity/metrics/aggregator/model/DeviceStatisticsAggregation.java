@@ -35,12 +35,20 @@ public class DeviceStatisticsAggregation {
         return totalDevicesCount;
     }
 
+    public void addTotalDevicesCount(int addToCount){
+        this.totalDevicesCount = this.totalDevicesCount+addToCount;
+    }
+
     public void setTotalDevicesCount(int totalDevicesCount) {
         this.totalDevicesCount = totalDevicesCount;
     }
 
     public void setTotalMeas(BigInteger totalMeas) {
         this.totalMeas = totalMeas;
+    }
+
+    public void addTotaMeas(int meas){
+        this.totalMeas = this.totalMeas.add( BigInteger.valueOf(meas));
     }
 
     public BigInteger getTotalMeas() {
@@ -71,6 +79,13 @@ public class DeviceStatisticsAggregation {
         
         public int getDevicesCount() {
             return devicesCount;
+        }
+        public void incrementDevicesCount(){
+            this.devicesCount++;
+        }
+        
+        public void addToMeas(int meas){
+            this.meas = this.meas + meas;
         }
 
         public void setDevicesCount(int devicesCount) {
