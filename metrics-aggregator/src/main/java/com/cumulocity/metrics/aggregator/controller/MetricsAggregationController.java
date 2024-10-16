@@ -41,20 +41,20 @@ public class MetricsAggregationController {
 		this.deviceService = deviceService;
 	}
 
-	@GetMapping(value = "/devices/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Map<String, DeviceStatistics>> getAllDegetDeviceStatisticsOverviewviceNames(
-			@PathVariable("type") String type,
-			@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate) {
-		Map<String, DeviceStatistics> response = deviceService.getDeviceStatisticsOverview(type, statDate);
-		return new ResponseEntity<Map<String, DeviceStatistics>>(response, HttpStatus.OK);
-	}
+	// @GetMapping(value = "/devices/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
+	// public ResponseEntity<Map<String, DeviceStatistics>> getAllDegetDeviceStatisticsOverviewviceNames(
+	// 		@PathVariable("type") String type,
+	// 		@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate) {
+	// 	Map<String, DeviceStatistics> response = deviceService.getDeviceStatisticsOverview(type, statDate);
+	// 	return new ResponseEntity<Map<String, DeviceStatistics>>(response, HttpStatus.OK);
+	// }
 
-	@GetMapping(value = "/deviceclasses", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Map<String, DeviceClassConfiguration>> getAllDeviceClassDefinitions(
-			@RequestParam(value = "omitCache", required = false, defaultValue = "false") boolean omitCache) {
-		Map<String, DeviceClassConfiguration> response = deviceService.getAllDeviceClassConfiguration(omitCache);
-		return new ResponseEntity<Map<String, DeviceClassConfiguration>>(response, HttpStatus.OK);
-	}
+	// @GetMapping(value = "/deviceclasses", produces = MediaType.APPLICATION_JSON_VALUE)
+	// public ResponseEntity<Map<String, DeviceClassConfiguration>> getAllDeviceClassDefinitions(
+	// 		@RequestParam(value = "omitCache", required = false, defaultValue = "false") boolean omitCache) {
+	// 	Map<String, DeviceClassConfiguration> response = deviceService.getAllDeviceClassConfiguration(omitCache);
+	// 	return new ResponseEntity<Map<String, DeviceClassConfiguration>>(response, HttpStatus.OK);
+	// }
 
 	@GetMapping(value = "/aggregated/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<DeviceStatisticsAggregation> getAggregatedDevicesPerClass(@PathVariable("type") String type,
