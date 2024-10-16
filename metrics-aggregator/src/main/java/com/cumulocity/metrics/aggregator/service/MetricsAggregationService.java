@@ -1,9 +1,7 @@
 package com.cumulocity.metrics.aggregator.service;
 
-import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -12,11 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
@@ -36,8 +32,6 @@ import com.cumulocity.sdk.client.option.TenantOptionApi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import javassist.expr.Instanceof;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -62,7 +56,6 @@ public class MetricsAggregationService {
 	private Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
 
 	private int subscribedTenantCount = 0;
-	private boolean includeSubtenants = false;
 
 	@Autowired
 	RestConnector restConnector;
@@ -120,7 +113,7 @@ public class MetricsAggregationService {
 
 	public Map<String, DeviceClassConfiguration> getAllDeviceClassConfiguration(boolean omitCache) {
 		if (omitCache) {
-			log.info("# Fetching deviceClassRepresentation, omitCache: " + omitCache);
+			log.info("# Fetching all deviceClassConfigurations, omitCache: " + omitCache);
 			this.allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
 			subscriptionsService.runForEachTenant(() -> {
 				String currentTenant = subscriptionsService.getTenant();
@@ -131,7 +124,7 @@ public class MetricsAggregationService {
 	}
 
 	private DeviceClassConfiguration getDeviceClasseConfiguration(String currentTenant) {
-		log.info("Get DeviceClassDefinition for Tenant: " + currentTenant);
+		log.info("Get DeviceClassConfiguration for Tenant: " + currentTenant);
 		final OptionPK option = new OptionPK();
 		option.setCategory(OPTION_CATEGORY_CONFIGURATION);
 		option.setKey(OPTION_KEY);
@@ -154,19 +147,19 @@ public class MetricsAggregationService {
 	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate, boolean includeSubtenants) {
 		Map<String, DeviceStatistics> deviceStatisticsMap = this.getDeviceStatisticsOverview(type, statDate);
 		boolean omitCache = false;
-		this.includeSubtenants = includeSubtenants;
 		if (deviceStatisticsMap.size() != this.allDeviceClassConfiguration.size()) {
 			log.info("################## Size DeviceClasses and DeviceStatistics uneven. Fetching DeviceClassesConfig again.");
 			omitCache = true;
 		}
 		Map<String, DeviceClassConfiguration> deviceClassesMap = this.getAllDeviceClassConfiguration(omitCache);
-		return getAggregatedDevicesPerClass(deviceStatisticsMap, deviceClassesMap);
+		return getAggregatedDevicesPerClass(deviceStatisticsMap, deviceClassesMap, includeSubtenants);
 	}
 
 	private DeviceStatisticsAggregation getAggregatedDevicesPerClass(
 			Map<String, DeviceStatistics> deviceStatisticsMap,
-			Map<String, DeviceClassConfiguration> deviceClassesMap) {
+			Map<String, DeviceClassConfiguration> deviceClassesMap, boolean includeSubtenants) {
 
+		final Boolean incSubtenants = includeSubtenants;
 		// Return object to gather statistics
 		DeviceStatisticsAggregation deviceStatisticsAggregation = new DeviceStatisticsAggregation();
 		
@@ -181,7 +174,7 @@ public class MetricsAggregationService {
 			deviceStatisticsAggregation.addTotalDevicesCount(ds.getStatistics().size());
 			ds.getStatistics().forEach(devs ->{
 				deviceStatisticsAggregation.addTotaMeas(devs.getCount());
-				if (this.includeSubtenants) {
+				if (incSubtenants) {
 						DeviceStatisticsAggregation.TenantAggregation ta = new DeviceStatisticsAggregation.TenantAggregation();
 						deviceStatisticsAggregation.getTenantAggregation().put(tenant, ta);
 						ta.addToMeas(devs.getCount());
