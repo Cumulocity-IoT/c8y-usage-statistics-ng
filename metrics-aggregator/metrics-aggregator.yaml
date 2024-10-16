@@ -1,0 +1,91 @@
+openapi: 3.0.0
+info:
+  title: Metrics Aggregator API
+  version: 1.0.0
+
+paths:
+  /statistics/aggregated/{type}/{date}:
+    get:
+      summary: Get aggregated statistics
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [daily, monthly]
+        - name: date
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: includeSubtenants
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+
+components:
+  schemas:
+    StatisticsResponse:
+      type: object
+      properties:
+        tenantAggregation:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/TenantStatistics'
+        totalMeas:
+          type: integer
+        totalDevicesCount:
+          type: integer
+        totalDeviceClasses:
+          $ref: '#/components/schemas/TotalDeviceClasses'
+
+    TenantStatistics:
+      type: object
+      properties:
+        meas:
+          type: integer
+        devicesCount:
+          type: integer
+        deviceClasses:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceClass'
+        errors:
+          type: array
+          items:
+            type: string
+
+    DeviceClass:
+      type: object
+      properties:
+        className:
+          type: string
+        avgMinMea:
+          type: integer
+        avgMaxMea:
+          oneOf:
+            - type: integer
+            - type: string
+        monthlyThreshold:
+          type: integer
+        count:
+          type: integer
+
+    TotalDeviceClasses:
+      type: object
+      properties:
+        deviceClasses:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceClass'
