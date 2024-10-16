@@ -18,7 +18,7 @@
 		<spring-boot-dependencies.version>2.7.14</spring-boot-dependencies.version>
 		<c8y.version>1020.97.0</c8y.version>
 		<microservice.name>metrics-aggregator</microservice.name>
-		<c8y.docker.skip>true</c8y.docker.skip>
+		<c8y.docker.skip>false</c8y.docker.skip>
 	</properties>
 
 	<dependencyManagement>
