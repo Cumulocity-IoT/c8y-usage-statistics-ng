@@ -21,13 +21,13 @@ import com.cumulocity.sdk.client.SDKException;
 import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration;
 import com.cumulocity.metrics.aggregator.model.DeviceStatistics;
 import com.cumulocity.metrics.aggregator.model.DeviceStatisticsAggregation;
+import com.cumulocity.metrics.aggregator.model.TenantRep;
 import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration.DeviceClass;
 import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.cumulocity.model.option.OptionPK;
 import com.cumulocity.rest.representation.CumulocityMediaType;
 import com.cumulocity.rest.representation.tenant.OptionRepresentation;
-import com.cumulocity.rest.representation.tenant.TenantRepresentation;
 import com.cumulocity.sdk.client.option.TenantOptionApi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -46,9 +46,9 @@ import javax.ws.rs.core.Response;
  *
  */
 @Service
-public class MetricsAggregationService {
+public class DeviceMetricsAggregationService {
 
-	private static final Logger log = LoggerFactory.getLogger(MetricsAggregationService.class);
+	private static final Logger log = LoggerFactory.getLogger(DeviceMetricsAggregationService.class);
 
 	private static final String OPTION_CATEGORY_CONFIGURATION = "configuration";
 	private static final String OPTION_KEY = "device.statistics.class.details";
@@ -71,9 +71,10 @@ public class MetricsAggregationService {
 
 	@EventListener
 	public void initialize(MicroserviceSubscriptionAddedEvent event) {
-		// Optional<TenantRepresentation> deployedTenant = getCurrentTenant();
-		// System.out.println("Current Tenant: " + deployedTenant.get().getDomain());
+		// Optional<TenantRep> deployedTenant = getCurrentTenant();
+		// System.out.println("Current Tenant: " + deployedTenant.get().getDomainName());
 		String currentTenant = event.getCredentials().getTenant();
+		
 		subscriptionsService.runForTenant(currentTenant, () -> {
 			this.subscribedTenantCount++;
 			this.allDeviceClassConfiguration.put(currentTenant, getDeviceClasseConfiguration(currentTenant));
@@ -81,12 +82,6 @@ public class MetricsAggregationService {
 					+ " Fetching DeviceClassConfiguration.");
 		});
 	}
-
-	// @EventListener(ApplicationReadyEvent.class)
-	// public void doSomethingAfterStartup() {
-	// 	Optional<TenantRepresentation> currentTenant= getCurrentTenant();
-	// 	System.out.println("Current Tenant: " +currentTenant.get());
-	// }
 
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -205,9 +200,12 @@ public class MetricsAggregationService {
 		}
 	}
 
-	public Optional<TenantRepresentation> getCurrentTenant() {
+	public Optional<TenantRep> getCurrentTenant() {
 		try {
-			return Optional.ofNullable(restConnector.get("/tenant/currentTenant", CumulocityMediaType.APPLICATION_JSON_TYPE, TenantRepresentation.class));
+			Optional<TenantRep> tenantRep = Optional.empty();
+			Optional<Response> resp=  Optional.ofNullable(restConnector.get("/tenant/currentTenant", CumulocityMediaType.APPLICATION_JSON_TYPE));
+			log.info(resp.get().readEntity(String.class));
+			return tenantRep;
 		} catch (final SDKException e) {
 			log.error("Tenant#getCurrentTenant operation resulted in " + e.getMessage(), e);
 		}
