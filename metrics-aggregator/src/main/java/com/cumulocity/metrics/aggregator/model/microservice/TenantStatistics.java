@@ -1,7 +1,10 @@
-package com.cumulocity.metrics.aggregator.model;
+package com.cumulocity.metrics.aggregator.model.microservice;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class TenantStatistics {
     private int deviceEndpointCount;
@@ -178,6 +181,18 @@ public class TenantStatistics {
     }
 
     public static class Resources {
+
+        public Resources(long cpu, long memory, List<UsedBy> usedBy){
+            this.setCpu(cpu);
+            this.setMemory(memory);
+            this.setUsedBy(usedBy);
+        }
+
+        public Resources(){
+            this.setCpu(0);
+            this.setMemory(0);
+            this.setUsedBy(new ArrayList<TenantStatistics.UsedBy>());
+        }
         private long memory;
         private long cpu;
         private List<UsedBy> usedBy;
@@ -215,8 +230,10 @@ public class TenantStatistics {
         //     this.cause = cause;
         // };
         private long memory;
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private String name;
         private long cpu;
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private String cause;
 
         public long getMemory() {

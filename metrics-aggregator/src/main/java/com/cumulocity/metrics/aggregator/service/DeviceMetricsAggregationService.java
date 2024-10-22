@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +17,10 @@ import org.springframework.stereotype.Service;
 
 import com.cumulocity.sdk.client.RestConnector;
 import com.cumulocity.sdk.client.SDKException;
-import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration;
-import com.cumulocity.metrics.aggregator.model.DeviceStatistics;
-import com.cumulocity.metrics.aggregator.model.DeviceStatisticsAggregation;
-import com.cumulocity.metrics.aggregator.model.TenantRep;
-import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration.DeviceClass;
+import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration;
+import com.cumulocity.metrics.aggregator.model.device.DeviceStatistics;
+import com.cumulocity.metrics.aggregator.model.device.DeviceStatisticsAggregation;
+import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration.DeviceClass;
 import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.cumulocity.model.option.OptionPK;
@@ -200,17 +198,17 @@ public class DeviceMetricsAggregationService {
 		}
 	}
 
-	public Optional<TenantRep> getCurrentTenant() {
-		try {
-			Optional<TenantRep> tenantRep = Optional.empty();
-			Optional<Response> resp=  Optional.ofNullable(restConnector.get("/tenant/currentTenant", CumulocityMediaType.APPLICATION_JSON_TYPE));
-			log.info(resp.get().readEntity(String.class));
-			return tenantRep;
-		} catch (final SDKException e) {
-			log.error("Tenant#getCurrentTenant operation resulted in " + e.getMessage(), e);
-		}
-		return Optional.empty();
-	}
+	// public Optional<TenantRep> getCurrentTenant() {
+	// 	try {
+	// 		Optional<TenantRep> tenantRep = Optional.empty();
+	// 		Optional<Response> resp=  Optional.ofNullable(restConnector.get("/tenant/currentTenant", CumulocityMediaType.APPLICATION_JSON_TYPE));
+	// 		log.info(resp.get().readEntity(String.class));
+	// 		return tenantRep;
+	// 	} catch (final SDKException e) {
+	// 		log.error("Tenant#getCurrentTenant operation resulted in " + e.getMessage(), e);
+	// 	}
+	// 	return Optional.empty();
+	// }
 
 	
 }

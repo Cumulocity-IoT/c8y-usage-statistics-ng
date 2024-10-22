@@ -1,11 +1,11 @@
-package com.cumulocity.metrics.aggregator.model;
+package com.cumulocity.metrics.aggregator.model.device;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cumulocity.metrics.aggregator.model.DeviceClassConfiguration.DeviceClass;
+import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration.DeviceClass;
 
 import java.math.BigInteger;
 

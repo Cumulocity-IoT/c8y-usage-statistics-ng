@@ -1,4 +1,4 @@
-package com.cumulocity.metrics.aggregator.model;
+package com.cumulocity.metrics.aggregator.model.device;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

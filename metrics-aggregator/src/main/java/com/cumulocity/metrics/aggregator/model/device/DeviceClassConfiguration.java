@@ -1,10 +1,10 @@
-package com.cumulocity.metrics.aggregator.model;
+package com.cumulocity.metrics.aggregator.model.device;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.commons.beanutils.converters.LongArrayConverter;
+
 
 /*
  * This class is used to represent the device Class definition inside each tenant
