@@ -1,4 +1,4 @@
-package com.cumulocity.metrics.aggregator.model;
+package com.cumulocity.metrics.aggregator.model.microservice;
 
 import java.util.ArrayList;
 import java.util.List;
