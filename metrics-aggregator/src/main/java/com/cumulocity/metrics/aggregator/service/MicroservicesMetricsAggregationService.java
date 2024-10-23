@@ -10,8 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.cumulocity.sdk.client.RestConnector;
 import com.cumulocity.metrics.aggregator.model.microservice.MicroservicesStatisticsAggregation;
 import com.cumulocity.metrics.aggregator.model.microservice.TenantStatistics;
 import com.cumulocity.metrics.aggregator.model.microservice.TenantStatistics.Resources;
@@ -118,9 +115,6 @@ public class MicroservicesMetricsAggregationService {
 		this.df= new SimpleDateFormat("yyyy-MM-dd");
 	}
 
-
-	@Autowired
-	RestConnector restConnector;
 
 	@Autowired
 	MicroserviceSubscriptionsService subscriptionsService;
@@ -230,11 +224,11 @@ public class MicroservicesMetricsAggregationService {
 			}
 			
 		}
-		
+
 		microservicesStatisticsAggregation.setTotalUsage(
 			new Resources(	totalUsage.getCpu(),
 							totalUsage.getMemory(),
-							agg.values().stream().toList()
+							new ArrayList<UsedBy>(agg.values())
 							));
 		return microservicesStatisticsAggregation;
 	}
