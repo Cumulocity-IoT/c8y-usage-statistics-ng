@@ -18,6 +18,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     
     - name: Set up JDK
       uses: actions/setup-java@v3
@@ -48,8 +50,8 @@ jobs:
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       with:
+        tag_name: ${{ github.event.inputs.version || github.ref_name }}
         files: metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
         draft: false
         prerelease: false
