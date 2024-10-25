@@ -34,6 +34,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/StatisticsResponse'
 
+  /microservices:
+    get:
+      summary: Get microservices usage statistics
+      parameters:
+        - name: dateFrom
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MicroservicesUsage'
+
 components:
   schemas:
     StatisticsResponse:
@@ -89,3 +113,51 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeviceClass'
+
+    MicroservicesUsage:
+      type: object
+      properties:
+        totalUsage:
+          $ref: '#/components/schemas/TotalUsage'
+        subTenantStat:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SubTenantUsage'
+
+    TotalUsage:
+      type: object
+      properties:
+        memory:
+          type: integer
+        cpu:
+          type: integer
+        usedBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/MicroserviceUsage'
+
+    MicroserviceUsage:
+      type: object
+      properties:
+        memory:
+          type: integer
+        name:
+          type: string
+        cpu:
+          type: integer
+        cause:
+          type: string
+          enum: [Owner, Subscribed]
+          description: Only present in subTenant usage statistics
+
+    SubTenantUsage:
+      type: object
+      properties:
+        memory:
+          type: integer
+        cpu:
+          type: integer
+        usedBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/MicroserviceUsage'
