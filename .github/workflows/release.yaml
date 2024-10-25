@@ -32,7 +32,7 @@ jobs:
         C8Y_BASE_URL: ${{ secrets.C8Y_BASE_URL }}
         C8Y_BOOTSTRAP_USER: ${{ secrets.C8Y_BOOTSTRAP_USER }}
         C8Y_BOOTSTRAP_PASSWORD: ${{ secrets.C8Y_BOOTSTRAP_PASSWORD }}
-      run: mvn -B package --file metrics-aggregator/pom.xml
+      run: mvn package
         -DC8Y.bootstrap.tenant="${C8Y_BOOTSTRAP_TENANT}"
         -DC8Y.baseURL="${C8Y_BASE_URL}"
         -DC8Y.bootstrap.user="${C8Y_BOOTSTRAP_USER}"
