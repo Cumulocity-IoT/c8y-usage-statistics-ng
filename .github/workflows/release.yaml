@@ -27,5 +27,5 @@ jobs:
         cache: maven
         
     - name: Build with Maven
-      run: mvn -B package --file metrics-agregator/pom.xml
-      working-directory: ./metrics-agregator
+      run: mvn -B package --file metrics-aggregator/pom.xml
+      working-directory: ./metrics-aggregator
