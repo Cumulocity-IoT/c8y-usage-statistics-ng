@@ -1,0 +1,31 @@
+name: Docker Release Build
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build'
+        required: true
+        default: 'latest'
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'  # Adjust this to your Java version
+        distribution: 'temurin'
+        cache: maven
+        
+    - name: Build with Maven
+      run: mvn -B package --file metrics-agregator/pom.xml
+      working-directory: ./metrics-agregator
