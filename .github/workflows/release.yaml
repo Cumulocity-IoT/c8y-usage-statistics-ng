@@ -32,25 +32,25 @@ jobs:
         C8Y_BASE_URL: ${{ secrets.C8Y_BASE_URL }}
         C8Y_BOOTSTRAP_USER: ${{ secrets.C8Y_BOOTSTRAP_USER }}
         C8Y_BOOTSTRAP_PASSWORD: ${{ secrets.C8Y_BOOTSTRAP_PASSWORD }}
-      run: mvn -B package --file metrics-agregator/pom.xml
+      run: mvn -B package --file metrics-aggregator/pom.xml
         -DC8Y.bootstrap.tenant="${C8Y_BOOTSTRAP_TENANT}"
         -DC8Y.baseURL="${C8Y_BASE_URL}"
         -DC8Y.bootstrap.user="${C8Y_BOOTSTRAP_USER}"
         -DC8Y.bootstrap.password="${C8Y_BOOTSTRAP_PASSWORD}"
-      working-directory: ./metrics-agregator
+      working-directory: ./metrics-aggregator
 
     - name: Get project version
       id: get_version
       run: |
         echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=microservice.name -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout).zip" >> $GITHUB_OUTPUT
-      working-directory: ./metrics-agregator
+      working-directory: ./metrics-aggregator
 
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: metrics-agregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
+        files: metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
         draft: false
         prerelease: false
         generate_release_notes: true
@@ -62,4 +62,4 @@ jobs:
       if: github.event_name == 'workflow_dispatch'
       with:
         name: ${{ steps.get_version.outputs.PROJECT_VERSION }}
-        path: metrics-agregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
+        path: metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
