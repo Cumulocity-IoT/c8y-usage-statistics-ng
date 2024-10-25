@@ -1,4 +1,4 @@
-name: Docker Release Build
+name: Release
 
 on:
   push:
@@ -22,19 +22,44 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@v3
       with:
-        java-version: '11'  # Adjust this to your Java version
+        java-version: '11'
         distribution: 'temurin'
         cache: maven
         
     - name: Build with Maven
-      working-directory: ./metrics-aggregator
       env:
         C8Y_BOOTSTRAP_TENANT: ${{ secrets.C8Y_BOOTSTRAP_TENANT }}
         C8Y_BASE_URL: ${{ secrets.C8Y_BASE_URL }}
         C8Y_BOOTSTRAP_USER: ${{ secrets.C8Y_BOOTSTRAP_USER }}
         C8Y_BOOTSTRAP_PASSWORD: ${{ secrets.C8Y_BOOTSTRAP_PASSWORD }}
-      run: mvn package
+      run: mvn -B package --file metrics-agregator/pom.xml
         -DC8Y.bootstrap.tenant="${C8Y_BOOTSTRAP_TENANT}"
         -DC8Y.baseURL="${C8Y_BASE_URL}"
         -DC8Y.bootstrap.user="${C8Y_BOOTSTRAP_USER}"
         -DC8Y.bootstrap.password="${C8Y_BOOTSTRAP_PASSWORD}"
+      working-directory: ./metrics-agregator
+
+    - name: Get project version
+      id: get_version
+      run: |
+        echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=microservice.name -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout).zip" >> $GITHUB_OUTPUT
+      working-directory: ./metrics-agregator
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: metrics-agregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload artifact (for manual triggers)
+      uses: actions/upload-artifact@v3
+      if: github.event_name == 'workflow_dispatch'
+      with:
+        name: ${{ steps.get_version.outputs.PROJECT_VERSION }}
+        path: metrics-agregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
