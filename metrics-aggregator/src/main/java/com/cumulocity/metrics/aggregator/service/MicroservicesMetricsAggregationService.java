@@ -39,7 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
- * This is a service to aggregate device an microservices metrics to display in
+ * This  service will aggregate  microservices metrics to display in
  * the usage statistics app
  * It will iterate over all subscribed tenants and aggregate the metrics to an
  * overview
@@ -52,6 +52,8 @@ public class MicroservicesMetricsAggregationService {
 
 	private static final Logger log = LoggerFactory.getLogger(MicroservicesMetricsAggregationService.class);
 	private DateFormat df;
+
+	// Product Services to exclude from statistics since they will not be billed.
 	private List<String> productServices = Stream.of(
   "actility",
             "administration",
@@ -143,20 +145,20 @@ public class MicroservicesMetricsAggregationService {
 
 	public MicroservicesStatisticsAggregation getMicroservicesStatisticsOverview( Date dateFrom, Date dateTo) {
 		
+		// Aggregation object will hold all statistics
 		MicroservicesStatisticsAggregation microservicesStatisticsAggregation = new MicroservicesStatisticsAggregation();
 		
 		subscriptionsService.runForEachTenant(() -> {
-			TenantStatistics tstats = new TenantStatistics();
+			// Will hold the c8y API response
+			TenantStatistics tenantStatistics = new TenantStatistics();
 			HttpHeaders headers = new HttpHeaders();
 			String currentTenant = subscriptionsService.getTenant();
-			//MicroserviceCredentials subscriptionsService.getCredentials(currentTenant).toString());
 			headers.set("Authorization",
 					contextService.getContext().toCumulocityCredentials().getAuthenticationString());
 
 			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 
-			log.info("Get Statistics for Tenant: " + currentTenant  +  "  date: " +df.format(dateFrom));
-			// https://sag-dach.eu-latest.cumulocity.com/tenant/statistics/summary?dateFrom=2024-09-01&dateTo=2024-09-30&tenant=t15058219&pageSize=2000&tenant=t1299412144
+			log.info("Get MS Statistics for Tenant: " + currentTenant  +  "  date: " +df.format(dateFrom));
 
 			String serverUrl = clientProperties.getBaseURL() 
 						+ "/tenant/statistics/summary/?tenant="
@@ -169,40 +171,42 @@ public class MicroservicesMetricsAggregationService {
 				HttpEntity<TenantStatistics> entity = new HttpEntity<TenantStatistics>(headers);
 				ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,entity,TenantStatistics.class);
 				
-			tstats = response.getBody();
+			tenantStatistics = response.getBody();
 
-			log.info("MicroservicesStatistics Resources: " + tstats.getResources().toString());
-			
+			log.info("MicroservicesStatistics Resources: " + tenantStatistics.getResources().toString());
 
-			// Filter for only non Product Services
-			// tstats.getResources().setUsedBy(
-			// 	tstats.getResources().getUsedBy().stream().filter(
-			// 		usedBy -> (
-			// 			!this.productServices.contains(usedBy.getName())
-			// 			)).collect(Collectors.toList()));
-			tstats.getResources().setUsedBy(
-				tstats.getResources().getUsedBy().stream().filter(
+			// Exclude Product sdervices and empty results
+			tenantStatistics.getResources().setUsedBy(
+				tenantStatistics.getResources().getUsedBy().stream().filter(
 					usedBy -> (
 						!(this.productServices.contains(usedBy.getName())) 
 						&& (usedBy.getCpu() > 0 || usedBy.getMemory() > 0)
 						)).collect(Collectors.toList()));
 
-			tstats.getResources().setCpu( tstats.getResources().getUsedBy().stream().mapToLong(ub -> ub.getCpu()).sum());
-			tstats.getResources().setMemory( tstats.getResources().getUsedBy().stream().mapToLong(ub -> ub.getMemory()).sum());
-			microservicesStatisticsAggregation.getSubTenantStat().put(currentTenant, tstats.getResources());
+			// Sum of tenant cpu & memory
+			tenantStatistics.getResources().setCpu( tenantStatistics.getResources().getUsedBy().stream().mapToLong(ub -> ub.getCpu()).sum());
+			tenantStatistics.getResources().setMemory( tenantStatistics.getResources().getUsedBy().stream().mapToLong(ub -> ub.getMemory()).sum());
+			microservicesStatisticsAggregation.getSubTenantStat().put(currentTenant, tenantStatistics.getResources());
 		});
 
-		List<TenantStatistics.UsedBy> ubtotalUsedByList = microservicesStatisticsAggregation.getSubTenantStat().values().stream()
+		// Create a flat list of all usedBy objects of all subtenants to create total
+		List<TenantStatistics.UsedBy> totalUsedByList = microservicesStatisticsAggregation.getSubTenantStat().values().stream()
 				.map(r -> r.getUsedBy())
 				.flatMap(x -> x.stream())
 				.filter(r -> r.getCpu() > 0 || r.getMemory() > 0)
 				.collect(Collectors.toList());
-		Map<String,List<TenantStatistics.UsedBy>> ubsum = ubtotalUsedByList.stream().collect(Collectors.groupingBy(TenantStatistics.UsedBy::getName));
 
+		// Create a map by grouping by service name
+		Map<String,List<TenantStatistics.UsedBy>> usedByGrouped = totalUsedByList.stream().collect(Collectors.groupingBy(TenantStatistics.UsedBy::getName));
+
+		// Target map to gather sum results of each service by name
 		Map<String,TenantStatistics.UsedBy> agg = new HashMap<String,TenantStatistics.UsedBy>();
+
+		// Object to hold the sum of all services 
 		UsedBy totalUsage = new UsedBy();
 		
-		Iterator<Entry<String, List<UsedBy>>> it = ubsum.entrySet().iterator();
+		// iterate over grouped entries to sum up the values
+		Iterator<Entry<String, List<UsedBy>>> it = usedByGrouped.entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry<String, List<UsedBy>> pair = it.next();
 			Long cpu = pair.getValue().stream().mapToLong(ub -> ub.getCpu()).sum();
@@ -210,6 +214,7 @@ public class MicroservicesMetricsAggregationService {
 			totalUsage.setCpu(totalUsage.getCpu() + cpu);
 			totalUsage.setMemory(totalUsage.getMemory() + mem);
 			
+			// Check if entry exists
 			if (agg.containsKey(pair.getKey())){
 				Long allCpu = agg.get(pair.getKey()).getCpu();
 				Long allMem = agg.get(pair.getKey()).getMemory();
@@ -225,6 +230,7 @@ public class MicroservicesMetricsAggregationService {
 			
 		}
 
+		// add summary and return
 		microservicesStatisticsAggregation.setTotalUsage(
 			new Resources(	totalUsage.getCpu(),
 							totalUsage.getMemory(),
