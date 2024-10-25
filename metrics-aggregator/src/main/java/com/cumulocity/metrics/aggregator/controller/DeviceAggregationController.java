@@ -1,8 +1,6 @@
 package com.cumulocity.metrics.aggregator.controller;
 
 import java.util.Date;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -18,22 +16,20 @@ import com.cumulocity.metrics.aggregator.model.device.DeviceStatisticsAggregatio
 import com.cumulocity.metrics.aggregator.service.DeviceMetricsAggregationService;
 
 /**
- * This is an example controller. This should be removed for your real project!
+ * This controller provieds the interface to request device class statistics from all subtenants on cumulocity!
  * 
- * @author APES
+ * @author marco.stoffel@cumulocity.com
  *
  */
 @RestController
 @RequestMapping("/devices")
 public class DeviceAggregationController {
 
-	private static final Logger log = LoggerFactory.getLogger(DeviceAggregationController.class);
 	private DeviceMetricsAggregationService deviceService;
 	
 	@Autowired
 	public DeviceAggregationController(DeviceMetricsAggregationService deviceService) {
 		this.deviceService = deviceService;
-
 	}
 
 	@GetMapping(value = "/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)

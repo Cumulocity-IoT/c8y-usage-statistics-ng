@@ -1,8 +1,6 @@
 package com.cumulocity.metrics.aggregator.controller;
 
 import java.util.Date;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -17,16 +15,15 @@ import com.cumulocity.metrics.aggregator.model.microservice.MicroservicesStatist
 import com.cumulocity.metrics.aggregator.service.MicroservicesMetricsAggregationService;
 
 /**
- * This is an example controller. This should be removed for your real project!
+ * This controller provides the inteface to request microservices statistics aggregation from all subscribed tenants of cumulocity
  * 
- * @author Marco Stoffel
+ * @author marco.stoffel@cumulocity.com
  *
  */
 @RestController
 @RequestMapping("/microservices")
 public class MicroservicesAggregationController {
 
-	private static final Logger log = LoggerFactory.getLogger(MicroservicesAggregationController.class);
 	private MicroservicesMetricsAggregationService microservicesMetricsAggregationServiceService;
 
 	@Autowired
@@ -34,8 +31,6 @@ public class MicroservicesAggregationController {
 		this.microservicesMetricsAggregationServiceService = microservicesMetricsAggregationService;
 	}
 
-
-	// https://sag-dach.eu-latest.cumulocity.com/service/metrics-aggregator/statistics/microservices?dateFrom=2024-08-01&dateTo=024-09-01
 	@GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<MicroservicesStatisticsAggregation> getMicroservicesStatisticsOverview(
 			@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateFrom, 
