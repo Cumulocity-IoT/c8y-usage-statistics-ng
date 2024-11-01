@@ -89,10 +89,6 @@ public class DeviceMetricsAggregationService {
 		subscriptionsService.runForEachTenant(() -> {
 			String currentTenant = subscriptionsService.getTenant();
 			log.info("Get Statistics for Tenant: " + currentTenant);
-			Response rs = restConnector.get(
-					"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
-							+ "?pageSize=2&withTotalPages=true",
-					MediaType.APPLICATION_JSON_TYPE);
 			DeviceStatistics dspage = restConnector.get(
 					"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
 							+ "?pageSize=2000&withTotalPages=true",
@@ -137,9 +133,9 @@ public class DeviceMetricsAggregationService {
 		return dcd;
 	}
 
-	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate, boolean includeSubtenants) {
+	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate, boolean includeSubtenants, boolean omitCache) {
 		Map<String, DeviceStatistics> deviceStatisticsMap = this.getDeviceStatisticsOverview(type, statDate);
-		boolean omitCache = false;
+		
 		if (deviceStatisticsMap.size() != this.allDeviceClassConfiguration.size()) {
 			log.info("################## Size DeviceClasses and DeviceStatistics uneven. Fetching DeviceClassesConfig again.");
 			omitCache = true;
