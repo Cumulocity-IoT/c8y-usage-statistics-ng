@@ -33,9 +33,12 @@ public class DeviceAggregationController {
 	}
 
 	@GetMapping(value = "/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<DeviceStatisticsAggregation> getAggregatedDevicesPerClass(@PathVariable("type") String type,
-			@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate, @RequestParam(value = "includeSubtenants", required = false, defaultValue = "false") boolean includeSubtenants) {
-		DeviceStatisticsAggregation response = deviceService.getAggregatedDeviceClassStatistics(type, statDate, includeSubtenants);
+	public ResponseEntity<DeviceStatisticsAggregation> getAggregatedDevicesPerClass(
+		@PathVariable("type") String type,
+		@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate, 
+		@RequestParam(value = "includeSubtenants", required = false, defaultValue = "false") boolean includeSubtenants,
+		@RequestParam(value = "omitCache", required = false, defaultValue = "false") boolean omitCache) {
+		DeviceStatisticsAggregation response = deviceService.getAggregatedDeviceClassStatistics(type, statDate, includeSubtenants,omitCache);
 		return new ResponseEntity<DeviceStatisticsAggregation>(response, HttpStatus.OK);
 	}
 }
