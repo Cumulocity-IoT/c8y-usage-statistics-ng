@@ -1,42 +1,75 @@
 openapi: 3.0.0
 info:
-  title: Metrics Aggregator API
+  title: Device and Microservice Statistics API
   version: 1.0.0
+  description: API for retrieving device statistics and microservice usage information
+
+servers:
+  - url: https://{tenant}.cumulocity.com/service/metrics-aggregator
+    variables:
+      tenant:
+        default: mytenant
+        description: The tenant identifier
 
 paths:
-  /statistics/aggregated/{type}/{date}:
+  /devices/{type}/{date}:
     get:
-      summary: Get aggregated statistics
+      summary: Get device statistics
+      description: Retrieve device statistics for a specific type and date
       parameters:
         - name: type
           in: path
           required: true
           schema:
             type: string
-            enum: [daily, monthly]
+          description: The type of devices to query
         - name: date
           in: path
           required: true
           schema:
             type: string
             format: date
+          example: "2024-09-01"
+          description: The date to query statistics for (YYYY-MM-DD)
         - name: includeSubtenants
           in: query
           required: false
           schema:
             type: boolean
             default: false
+          description: Whether to include subtenant information in the response
+        - name: useTenantDeviceClasses
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Whether to use tenant-specific device classes instead of global ones
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatisticsResponse'
+                type: object
+                properties:
+                  totalMeas:
+                    type: integer
+                  totalDeviceCount:
+                    type: integer
+                  totalDeviceClasses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DeviceClass"
+                  tenantAggregation:
+                    type: object
+                    additionalProperties:
+                      $ref: "#/components/schemas/TenantStats"
 
-  /microservices:
+  /microservices/:
     get:
-      summary: Get microservices usage statistics
+      summary: Get microservice usage statistics
+      description: Retrieve microservice usage statistics for a specific date range
       parameters:
         - name: dateFrom
           in: query
@@ -44,37 +77,48 @@ paths:
           schema:
             type: string
             format: date
+          example: "2024-08-01"
+          description: Start date of the period (YYYY-MM-DD)
         - name: dateTo
           in: query
           required: true
           schema:
             type: string
             format: date
+          example: "2024-09-01"
+          description: End date of the period (YYYY-MM-DD)
       responses:
-        '200':
+        "200":
           description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MicroservicesUsage'
+                type: object
+                properties:
+                  totalUsage:
+                    $ref: "#/components/schemas/UsageStats"
+                  subTenantStat:
+                    type: object
+                    additionalProperties:
+                      $ref: "#/components/schemas/SubTenantUsage"
 
 components:
   schemas:
-    StatisticsResponse:
+    DeviceClass:
       type: object
       properties:
-        tenantAggregation:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/TenantStatistics'
-        totalMeas:
+        className:
+          type: string
+        avgMinMea:
+          type: number
+        avgMaxMea:
+          type: string
+        monthlyThreshold:
           type: integer
-        totalDevicesCount:
+        count:
           type: integer
-        totalDeviceClasses:
-          $ref: '#/components/schemas/TotalDeviceClasses'
 
-    TenantStatistics:
+    TenantStats:
       type: object
       properties:
         meas:
@@ -84,47 +128,9 @@ components:
         deviceClasses:
           type: array
           items:
-            $ref: '#/components/schemas/DeviceClass'
-        errors:
-          type: array
-          items:
-            type: string
+            $ref: "#/components/schemas/DeviceClass"
 
-    DeviceClass:
-      type: object
-      properties:
-        className:
-          type: string
-        avgMinMea:
-          type: integer
-        avgMaxMea:
-          oneOf:
-            - type: integer
-            - type: string
-        monthlyThreshold:
-          type: integer
-        count:
-          type: integer
-
-    TotalDeviceClasses:
-      type: object
-      properties:
-        deviceClasses:
-          type: array
-          items:
-            $ref: '#/components/schemas/DeviceClass'
-
-    MicroservicesUsage:
-      type: object
-      properties:
-        totalUsage:
-          $ref: '#/components/schemas/TotalUsage'
-        subTenantStat:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/SubTenantUsage'
-
-    TotalUsage:
+    UsageStats:
       type: object
       properties:
         memory:
@@ -134,9 +140,9 @@ components:
         usedBy:
           type: array
           items:
-            $ref: '#/components/schemas/MicroserviceUsage'
+            $ref: "#/components/schemas/ServiceUsage"
 
-    MicroserviceUsage:
+    ServiceUsage:
       type: object
       properties:
         memory:
@@ -147,8 +153,6 @@ components:
           type: integer
         cause:
           type: string
-          enum: [Owner, Subscribed]
-          description: Only present in subTenant usage statistics
 
     SubTenantUsage:
       type: object
@@ -160,4 +164,4 @@ components:
         usedBy:
           type: array
           items:
-            $ref: '#/components/schemas/MicroserviceUsage'
+            $ref: "#/components/schemas/ServiceUsage"
