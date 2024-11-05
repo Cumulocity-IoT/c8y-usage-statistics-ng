@@ -16,7 +16,8 @@ import com.cumulocity.metrics.aggregator.model.device.DeviceStatisticsAggregatio
 import com.cumulocity.metrics.aggregator.service.DeviceMetricsAggregationService;
 
 /**
- * This controller provieds the interface to request device class statistics from all subtenants on cumulocity!
+ * This controller provieds the interface to request device class statistics
+ * from all subtenants on cumulocity!
  * 
  * @author marco.stoffel@cumulocity.com
  *
@@ -26,7 +27,7 @@ import com.cumulocity.metrics.aggregator.service.DeviceMetricsAggregationService
 public class DeviceAggregationController {
 
 	private DeviceMetricsAggregationService deviceService;
-	
+
 	@Autowired
 	public DeviceAggregationController(DeviceMetricsAggregationService deviceService) {
 		this.deviceService = deviceService;
@@ -34,11 +35,12 @@ public class DeviceAggregationController {
 
 	@GetMapping(value = "/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<DeviceStatisticsAggregation> getAggregatedDevicesPerClass(
-		@PathVariable("type") String type,
-		@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate, 
-		@RequestParam(value = "includeSubtenants", required = false, defaultValue = "false") boolean includeSubtenants,
-		@RequestParam(value = "omitCache", required = false, defaultValue = "false") boolean omitCache) {
-		DeviceStatisticsAggregation response = deviceService.getAggregatedDeviceClassStatistics(type, statDate, includeSubtenants,omitCache);
+			@PathVariable("type") String type,
+			@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate,
+			@RequestParam(value = "includeSubtenants", required = false, defaultValue = "false") boolean includeSubtenants,
+			@RequestParam(value = "useTenantDeviceClasses", required = false, defaultValue = "false") boolean useTenantDeviceClasses) {
+		DeviceStatisticsAggregation response = deviceService.getAggregatedDeviceClassStatistics(type, statDate,
+				includeSubtenants, useTenantDeviceClasses);
 		return new ResponseEntity<DeviceStatisticsAggregation>(response, HttpStatus.OK);
 	}
 }

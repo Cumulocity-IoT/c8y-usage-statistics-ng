@@ -5,50 +5,59 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration.DeviceClass;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.math.BigInteger;
 
+@JsonPropertyOrder({ "totalMeas", "totalDeviceCount", "totalDeviceClasses", "tenantAggregation" })
 public class DeviceStatisticsAggregation {
 
     private Map<String, TenantAggregation> tenantAggregation;
 
-    
-    
     private BigInteger totalMeas;
-    private int totalDevicesCount;
+
+    private int totalDeviceCount;
+
+    @JsonUnwrapped
+    @JsonProperty("totalDeviceClasses")
     private DeviceClassConfiguration totalDeviceClasses;
-    
+
     public DeviceClassConfiguration getTotalDeviceClasses() {
         return totalDeviceClasses;
     }
+
     public void setTotalDeviceClasses(DeviceClassConfiguration totalDeviceClasses) {
         this.totalDeviceClasses = totalDeviceClasses;
     }
+
     public Map<String, TenantAggregation> getTenantAggregation() {
         return tenantAggregation;
     }
+
     public void setTenantAggregation(Map<String, TenantAggregation> tenantAggregation) {
         this.tenantAggregation = tenantAggregation;
     }
-    public int getTotalDevicesCount() {
-        return totalDevicesCount;
+
+    public int getTotalDeviceCount() {
+        return totalDeviceCount;
     }
 
-    public void addTotalDevicesCount(int addToCount){
-        this.totalDevicesCount = this.totalDevicesCount+addToCount;
+    public void addTotalDevicesCount(int addToCount) {
+        this.totalDeviceCount = this.totalDeviceCount + addToCount;
     }
 
-    public void setTotalDevicesCount(int totalDevicesCount) {
-        this.totalDevicesCount = totalDevicesCount;
+    public void setTotalDeviceCount(int totalDevicesCount) {
+        this.totalDeviceCount = totalDevicesCount;
     }
 
     public void setTotalMeas(BigInteger totalMeas) {
         this.totalMeas = totalMeas;
     }
 
-    public void addTotaMeas(int meas){
-        this.totalMeas = this.totalMeas.add( BigInteger.valueOf(meas));
+    public void addTotalMeas(int meas) {
+        this.totalMeas = this.totalMeas.add(BigInteger.valueOf(meas));
     }
 
     public BigInteger getTotalMeas() {
@@ -58,7 +67,7 @@ public class DeviceStatisticsAggregation {
     public DeviceStatisticsAggregation() {
         this.tenantAggregation = new HashMap<String, TenantAggregation>();
         this.totalMeas = BigInteger.valueOf(0);
-        this.totalDevicesCount =0;
+        this.totalDeviceCount = 0;
         this.totalDeviceClasses = new DeviceClassConfiguration();
     }
 
@@ -66,25 +75,27 @@ public class DeviceStatisticsAggregation {
 
         private int meas;
         private int devicesCount;
-        
-        private List<DeviceClassConfiguration.DeviceClass> deviceClasses;
+
+        @JsonUnwrapped
+        private DeviceClassConfiguration deviceClasses;
         private List<String> errors;
-        
+
         public TenantAggregation() {
             this.meas = 0;
-            this.deviceClasses = new ArrayList<DeviceClassConfiguration.DeviceClass>();
+            this.deviceClasses = new DeviceClassConfiguration();
             this.errors = new ArrayList<String>();
-            this.devicesCount =0;
+            this.devicesCount = 0;
         }
-        
+
         public int getDevicesCount() {
             return devicesCount;
         }
-        public void incrementDevicesCount(){
+
+        public void incrementDevicesCount() {
             this.devicesCount++;
         }
-        
-        public void addToMeas(int meas){
+
+        public void addToMeas(int meas) {
             this.meas = this.meas + meas;
         }
 
@@ -100,11 +111,11 @@ public class DeviceStatisticsAggregation {
             this.errors = errors;
         }
 
-        public List<DeviceClass> getDeviceClasses() {
+        public DeviceClassConfiguration getDeviceClasses() {
             return deviceClasses;
         }
 
-        public void setDeviceClasses(List<DeviceClass> deviceClasses) {
+        public void setDeviceClasses(DeviceClassConfiguration deviceClasses) {
             this.deviceClasses = deviceClasses;
         }
 
