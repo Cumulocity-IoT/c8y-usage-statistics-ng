@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-
+import com.fasterxml.jackson.annotation.JsonValue;
 
 /*
  * This class is used to represent the device Class definition inside each tenant
@@ -12,7 +12,7 @@ import java.util.Objects;
  */
 
 public class DeviceClassConfiguration {
-
+    @JsonValue
     private List<DeviceClass> deviceClasses;
 
     public DeviceClassConfiguration(List<DeviceClass> deviceClasses) {
@@ -100,7 +100,7 @@ public class DeviceClassConfiguration {
             this.count = count;
         }
 
-        public void incrementCount(){
+        public void incrementCount() {
             this.count++;
         }
 
