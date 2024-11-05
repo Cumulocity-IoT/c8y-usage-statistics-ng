@@ -3,68 +3,68 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to build'
+        description: "Version to build"
         required: true
-        default: 'latest'
+        default: "latest"
         type: string
 
 permissions:
-  contents: write  # This is required for creating releases
+  contents: write # This is required for creating releases
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
-        distribution: 'temurin'
-        cache: maven
-        
-    - name: Build with Maven
-      env:
-        C8Y_BOOTSTRAP_TENANT: ${{ secrets.C8Y_BOOTSTRAP_TENANT }}
-        C8Y_BASE_URL: ${{ secrets.C8Y_BASE_URL }}
-        C8Y_BOOTSTRAP_USER: ${{ secrets.C8Y_BOOTSTRAP_USER }}
-        C8Y_BOOTSTRAP_PASSWORD: ${{ secrets.C8Y_BOOTSTRAP_PASSWORD }}
-      run: mvn package
-        -DC8Y.bootstrap.tenant="${C8Y_BOOTSTRAP_TENANT}"
-        -DC8Y.baseURL="${C8Y_BASE_URL}"
-        -DC8Y.bootstrap.user="${C8Y_BOOTSTRAP_USER}"
-        -DC8Y.bootstrap.password="${C8Y_BOOTSTRAP_PASSWORD}"
-      working-directory: ./metrics-aggregator
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Get project version
-      id: get_version
-      run: |
-        echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=microservice.name -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout).zip" >> $GITHUB_OUTPUT
-      working-directory: ./metrics-aggregator
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: "11"
+          distribution: "temurin"
+          cache: maven
 
-    - name: Create Release
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: ${{ github.event.inputs.version || github.ref_name }}
-        files: metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
-        draft: false
-        prerelease: false
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build with Maven
+        env:
+          C8Y_BOOTSTRAP_TENANT: ${{ secrets.C8Y_BOOTSTRAP_TENANT }}
+          C8Y_BASE_URL: ${{ secrets.C8Y_BASE_URL }}
+          C8Y_BOOTSTRAP_USER: ${{ secrets.C8Y_BOOTSTRAP_USER }}
+          C8Y_BOOTSTRAP_PASSWORD: ${{ secrets.C8Y_BOOTSTRAP_PASSWORD }}
+        run: mvn package
+        #  -DC8Y.bootstrap.tenant="${C8Y_BOOTSTRAP_TENANT}"
+        #  -DC8Y.baseURL="${C8Y_BASE_URL}"
+        #  -DC8Y.bootstrap.user="${C8Y_BOOTSTRAP_USER}"
+        #  -DC8Y.bootstrap.password="${C8Y_BOOTSTRAP_PASSWORD}"
+        working-directory: ./metrics-aggregator
 
-    - name: Upload artifact (for manual triggers)
-      uses: actions/upload-artifact@v3
-      if: github.event_name == 'workflow_dispatch'
-      with:
-        name: ${{ steps.get_version.outputs.PROJECT_VERSION }}
-        path: metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
+      - name: Get project version
+        id: get_version
+        run: |
+          echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=microservice.name -q -DforceStdout)-$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout).zip" >> $GITHUB_OUTPUT
+        working-directory: ./metrics-aggregator
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          files: metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact (for manual triggers)
+        uses: actions/upload-artifact@v3
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: ${{ steps.get_version.outputs.PROJECT_VERSION }}
+          path: metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
