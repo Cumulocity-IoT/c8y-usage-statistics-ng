@@ -148,11 +148,13 @@ public class DeviceMetricsAggregationService {
 			// Write amount of devices to total
 			deviceStatisticsAggregation.addTotalDevicesCount(ds.getStatistics().size());
 			// Loop through all device statistics of current tenant
+			DeviceStatisticsAggregation.TenantAggregation ta = new DeviceStatisticsAggregation.TenantAggregation();
+			if (includeSubtenants) {
+				deviceStatisticsAggregation.getTenantAggregation().put(tenant, ta);
+			}
 			ds.getStatistics().forEach(statOfSingleDevice -> {
 				deviceStatisticsAggregation.addTotalMeas(statOfSingleDevice.getCount());
 				if (incSubtenants) {
-					DeviceStatisticsAggregation.TenantAggregation ta = new DeviceStatisticsAggregation.TenantAggregation();
-					deviceStatisticsAggregation.getTenantAggregation().put(tenant, ta);
 					ta.addToMeas(statOfSingleDevice.getCount());
 					ta.setDeviceClasses(deviceClassConfigCurrentTenant);
 					ta.setDevicesCount(ds.getStatistics().size());
@@ -181,20 +183,4 @@ public class DeviceMetricsAggregationService {
 			;
 		}
 	}
-
-	// public Optional<TenantRep> getCurrentTenant() {
-	// try {
-	// Optional<TenantRep> tenantRep = Optional.empty();
-	// Optional<Response> resp=
-	// Optional.ofNullable(restConnector.get("/tenant/currentTenant",
-	// CumulocityMediaType.APPLICATION_JSON_TYPE));
-	// log.info(resp.get().readEntity(String.class));
-	// return tenantRep;
-	// } catch (final SDKException e) {
-	// log.error("Tenant#getCurrentTenant operation resulted in " + e.getMessage(),
-	// e);
-	// }
-	// return Optional.empty();
-	// }
-
 }
