@@ -4,6 +4,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class TenantStatistics {
@@ -11,19 +12,27 @@ public class TenantStatistics {
     private int deviceWithChildrenCount;
     private int inventoriesUpdatedCount;
     private int eventsUpdatedCount;
+
+    @JsonIgnore
     private ZonedDateTime day;
     private int requestCount;
     private int deviceCount;
     private int deviceRequestCount;
+
+    // @JsonIgnore
     private Resources resources;
     private int storageLimitPerDevice;
     private int eventsCreatedCount;
+
+    @JsonIgnore
     private List<String> subscribedApplications;
     private int alarmsCreatedCount;
     private int alarmsUpdatedCount;
     private int inventoriesCreatedCount;
     private long storageSize;
     private int measurementsCreatedCount;
+
+    @JsonIgnore
     private String self;
     private int totalResourceCreateAndUpdateCount;
 
@@ -182,17 +191,18 @@ public class TenantStatistics {
 
     public static class Resources {
 
-        public Resources(long cpu, long memory, List<UsedBy> usedBy){
+        public Resources(long cpu, long memory, List<UsedBy> usedBy) {
             this.setCpu(cpu);
             this.setMemory(memory);
             this.setUsedBy(usedBy);
         }
 
-        public Resources(){
+        public Resources() {
             this.setCpu(0);
             this.setMemory(0);
             this.setUsedBy(new ArrayList<TenantStatistics.UsedBy>());
         }
+
         private long memory;
         private long cpu;
         private List<UsedBy> usedBy;
@@ -224,10 +234,10 @@ public class TenantStatistics {
 
     public static class UsedBy {
         // public UsedBy(long memory, String name, long cpu, String cause){
-        //     this.memory = memory;
-        //     this.name= name;
-        //     this.cpu=cpu;
-        //     this.cause = cause;
+        // this.memory = memory;
+        // this.name= name;
+        // this.cpu=cpu;
+        // this.cause = cause;
         // };
         private long memory;
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
