@@ -102,6 +102,42 @@ paths:
                     additionalProperties:
                       $ref: "#/components/schemas/SubTenantUsage"
 
+  /tenants/:
+    get:
+      summary: Get tenant statistics
+      description: Retrieve usage statistics for all tenants for a specific date range
+      parameters:
+        - name: dateFrom
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2024-08-01"
+          description: Start date of the period (YYYY-MM-DD)
+        - name: dateTo
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2024-09-01"
+          description: End date of the period (YYYY-MM-DD)
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subTenantStat:
+                    type: object
+                    additionalProperties:
+                      $ref: "#/components/schemas/TenantUsageStats"
+                  totalTenantStat:
+                    $ref: "#/components/schemas/TenantUsageStats"
+
 components:
   schemas:
     DeviceClass:
@@ -165,3 +201,37 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ServiceUsage"
+
+    TenantUsageStats:
+      type: object
+      properties:
+        deviceEndpointCount:
+          type: integer
+        deviceWithChildrenCount:
+          type: integer
+        inventoriesUpdatedCount:
+          type: integer
+        eventsUpdatedCount:
+          type: integer
+        requestCount:
+          type: integer
+        deviceCount:
+          type: integer
+        deviceRequestCount:
+          type: integer
+        storageLimitPerDevice:
+          type: integer
+        eventsCreatedCount:
+          type: integer
+        alarmsCreatedCount:
+          type: integer
+        alarmsUpdatedCount:
+          type: integer
+        inventoriesCreatedCount:
+          type: integer
+        storageSize:
+          type: integer
+        measurementsCreatedCount:
+          type: integer
+        totalResourceCreateAndUpdateCount:
+          type: integer
