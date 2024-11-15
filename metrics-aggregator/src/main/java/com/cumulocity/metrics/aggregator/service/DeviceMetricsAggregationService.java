@@ -12,7 +12,7 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.cumulocity.sdk.client.RestConnector;
@@ -21,7 +21,6 @@ import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration;
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatistics;
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatisticsAggregation;
 import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration.DeviceClass;
-import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.cumulocity.model.option.OptionPK;
 import com.cumulocity.rest.representation.tenant.OptionRepresentation;
@@ -50,8 +49,6 @@ public class DeviceMetricsAggregationService {
 	private static final String OPTION_KEY = "device.statistics.class.details";
 
 	private Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
-
-	private int subscribedTenantCount = 0;
 
 	@Autowired
 	RestConnector restConnector;
@@ -119,9 +116,11 @@ public class DeviceMetricsAggregationService {
 		return deviceClassConfiguration;
 	}
 
+	@Cacheable(value = "deviceCache", key = "#statDate.toString() + '-' + #type + '-' + #includeSubtenants", condition = "#useTenantDeviceClasses == false")
 	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate,
 			boolean includeSubtenants, boolean useTenantDeviceClasses) {
 		// Get all Device Statistics for all Tenants
+
 		Map<String, DeviceStatistics> deviceStatisticsMap = this.getDeviceStatisticsOverview(type, statDate);
 		Map<String, DeviceClassConfiguration> deviceClassConfigurationMap = this
 				.getAllDeviceClassConfiguration(useTenantDeviceClasses);

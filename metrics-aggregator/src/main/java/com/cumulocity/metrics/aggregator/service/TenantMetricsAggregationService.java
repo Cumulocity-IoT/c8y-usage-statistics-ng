@@ -9,6 +9,8 @@ import org.springframework.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import com.cumulocity.metrics.aggregator.model.microservice.TenantStatisticsAggr
 import com.cumulocity.microservice.api.CumulocityClientProperties;
 import com.cumulocity.microservice.context.ContextService;
 import com.cumulocity.microservice.context.credentials.MicroserviceCredentials;
+import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -54,6 +57,12 @@ public class TenantMetricsAggregationService {
 	@Autowired
 	CumulocityClientProperties clientProperties;
 
+	@EventListener
+	public void initialize(MicroserviceSubscriptionAddedEvent event) {
+		log.info("Tenant Sub: " + event.toString());
+	}
+
+	@Cacheable(value = "tenantCache", key = "#dateFrom.toString() + '-' + #dateTo.toString()")
 	public TenantStatisticsAggregation getTenantStatisticsOverview(Date dateFrom, Date dateTo) {
 
 		// Aggregation object will hold all statistics

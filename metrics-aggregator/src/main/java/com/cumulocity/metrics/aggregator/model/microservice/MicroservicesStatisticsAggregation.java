@@ -1,10 +1,14 @@
 package com.cumulocity.metrics.aggregator.model.microservice;
 
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import java.util.HashMap;
 
 public class MicroservicesStatisticsAggregation {
 
+    @JsonPropertyOrder({ "totalUsage", "subTenants" })
     private TenantStatistics.Resources totalUsage;
     private Map<String, TenantStatistics.Resources> subTenantStat;
 

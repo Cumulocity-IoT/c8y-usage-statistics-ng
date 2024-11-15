@@ -18,6 +18,7 @@ import org.springframework.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -125,6 +126,7 @@ public class MicroservicesMetricsAggregationService {
 	@Autowired
 	CumulocityClientProperties clientProperties;
 
+	@Cacheable(value = "microserviceCache", key = "#dateFrom.toString() + '-' + #dateTo.toString()")
 	public MicroservicesStatisticsAggregation getMicroservicesStatisticsOverview(Date dateFrom, Date dateTo) {
 
 		// Aggregation object will hold all statistics
