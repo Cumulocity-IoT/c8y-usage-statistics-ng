@@ -191,20 +191,43 @@ public class TenantStatistics {
 
     public static class Resources {
 
-        public Resources(long cpu, long memory, List<UsedBy> usedBy) {
+        public Resources(long cpu, long memory, double avgCPU, double avgMemory, List<UsedBy> usedBy) {
             this.setCpu(cpu);
             this.setMemory(memory);
+            this.setAvgCPU(avgCPU);
+            this.setAvgMemory(avgMemory);
             this.setUsedBy(usedBy);
         }
 
         public Resources() {
             this.setCpu(0);
             this.setMemory(0);
+            this.setAvgCPU(0);
+            this.setAvgMemory(0);
             this.setUsedBy(new ArrayList<TenantStatistics.UsedBy>());
         }
 
         private long memory;
         private long cpu;
+        private double avgMemory;
+        private double avgCPU;
+
+        public double getAvgMemory() {
+            return avgMemory;
+        }
+
+        public void setAvgMemory(double avgMemory) {
+            this.avgMemory = avgMemory;
+        }
+
+        public double getAvgCPU() {
+            return avgCPU;
+        }
+
+        public void setAvgCPU(double avgCPU) {
+            this.avgCPU = avgCPU;
+        }
+
         private List<UsedBy> usedBy;
 
         public long getMemory() {
@@ -240,6 +263,24 @@ public class TenantStatistics {
         // this.cause = cause;
         // };
         private long memory;
+        private double avgMemory;
+        private double avgCPU;
+        public double getAvgMemory() {
+            return avgMemory;
+        }
+
+        public void setAvgMemory(double avgMemory) {
+            this.avgMemory = avgMemory;
+        }
+
+        public double getAvgCPU() {
+            return avgCPU;
+        }
+
+        public void setAvgCPU(double avgCPU) {
+            this.avgCPU = avgCPU;
+        }
+
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private String name;
         private long cpu;
