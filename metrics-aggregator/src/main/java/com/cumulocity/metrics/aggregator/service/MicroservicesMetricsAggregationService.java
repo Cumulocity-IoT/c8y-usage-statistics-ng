@@ -2,9 +2,12 @@ package com.cumulocity.metrics.aggregator.service;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -125,108 +128,125 @@ public class MicroservicesMetricsAggregationService {
 
 	@Autowired
 	CumulocityClientProperties clientProperties;
-
-	@Cacheable(value = "microserviceCache", key = "#dateFrom.toString() + '-' + #dateTo.toString()")
-	public MicroservicesStatisticsAggregation getMicroservicesStatisticsOverview(Date dateFrom, Date dateTo) {
-
-		// Aggregation object will hold all statistics
-		MicroservicesStatisticsAggregation microservicesStatisticsAggregation = new MicroservicesStatisticsAggregation();
-
-		subscriptionsService.runForEachTenant(() -> {
-			// Will hold the c8y API response
-			TenantStatistics tenantStatistics = new TenantStatistics();
-			HttpHeaders headers = new HttpHeaders();
-			String currentTenant = subscriptionsService.getTenant();
-			headers.set("Authorization",
-					contextService.getContext().toCumulocityCredentials()
-							.getAuthenticationString());
-
-			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-
-			log.info("Get MS Statistics for Tenant: " + currentTenant + "  date: " + df.format(dateFrom));
-
-			String serverUrl = clientProperties.getBaseURL()
-					+ "/tenant/statistics/summary/?tenant="
-					+ currentTenant
-					+ "&dateFrom=" + df.format(dateFrom)
-					+ "&dateTo=" + df.format(dateTo)
-					+ "&pageSize=2000&withTotalPages=true";
-
-			RestTemplate restTemplate = new RestTemplate();
-			HttpEntity<TenantStatistics> entity = new HttpEntity<TenantStatistics>(headers);
-			ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,
-					entity, TenantStatistics.class);
-
-			tenantStatistics = response.getBody();
-
-			log.info("MicroservicesStatistics Resources: " + tenantStatistics.getResources().toString());
-
-			// Exclude Product sdervices and empty results
-			tenantStatistics.getResources().setUsedBy(
-					tenantStatistics.getResources().getUsedBy().stream().filter(
-							usedBy -> (!(this.productServices.contains(usedBy.getName()))
-									&& (usedBy.getCpu() > 0
-											|| usedBy.getMemory() > 0)))
-							.collect(Collectors.toList()));
-
-			// Sum of tenant cpu & memory
-			tenantStatistics.getResources().setCpu(tenantStatistics.getResources().getUsedBy().stream()
-					.mapToLong(ub -> ub.getCpu()).sum());
-			tenantStatistics.getResources().setMemory(tenantStatistics.getResources().getUsedBy().stream()
-					.mapToLong(ub -> ub.getMemory()).sum());
-			microservicesStatisticsAggregation.getSubTenantStat().put(currentTenant,
-					tenantStatistics.getResources());
-		});
-
-		// Create a flat list of all usedBy objects of all subtenants to create total
-		List<TenantStatistics.UsedBy> totalUsedByList = microservicesStatisticsAggregation.getSubTenantStat()
-				.values().stream()
-				.map(r -> r.getUsedBy())
-				.flatMap(x -> x.stream())
-				.filter(r -> r.getCpu() > 0 || r.getMemory() > 0)
-				.collect(Collectors.toList());
-
-		// Create a map by grouping by service name
-		Map<String, List<TenantStatistics.UsedBy>> usedByGrouped = totalUsedByList.stream()
-				.collect(Collectors.groupingBy(TenantStatistics.UsedBy::getName));
-
-		// Target map to gather sum results of each service by name
-		Map<String, TenantStatistics.UsedBy> agg = new HashMap<String, TenantStatistics.UsedBy>();
-
-		// Object to hold the sum of all services
-		UsedBy totalUsage = new UsedBy();
-
-		// iterate over grouped entries to sum up the values
-		Iterator<Entry<String, List<UsedBy>>> it = usedByGrouped.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry<String, List<UsedBy>> pair = it.next();
-			Long cpu = pair.getValue().stream().mapToLong(ub -> ub.getCpu()).sum();
-			Long mem = pair.getValue().stream().mapToLong(ub -> ub.getMemory()).sum();
-			totalUsage.setCpu(totalUsage.getCpu() + cpu);
-			totalUsage.setMemory(totalUsage.getMemory() + mem);
-
-			// Check if entry exists
-			if (agg.containsKey(pair.getKey())) {
-				Long allCpu = agg.get(pair.getKey()).getCpu();
-				Long allMem = agg.get(pair.getKey()).getMemory();
-				agg.get(pair.getKey()).setCpu(allCpu + cpu);
-				agg.get(pair.getKey()).setMemory(allMem + mem);
-			} else {
-				UsedBy ub = new UsedBy();
-				ub.setCpu(cpu);
-				ub.setMemory(mem);
-				ub.setName(pair.getKey());
-				agg.put(pair.getKey(), ub);
+		private int daysInMonth;
+	
+		@Cacheable(value = "microserviceCache", key = "#dateFrom.toString() + '-' + #dateTo.toString()")
+		public MicroservicesStatisticsAggregation getMicroservicesStatisticsOverview(Date dateFrom, Date dateTo) {
+			this.setDaysInMonth(dateFrom);
+			// Aggregation object will hold all statistics
+			MicroservicesStatisticsAggregation microservicesStatisticsAggregation = new MicroservicesStatisticsAggregation();
+	
+			subscriptionsService.runForEachTenant(() -> {
+				// Will hold the c8y API response
+				TenantStatistics tenantStatistics = new TenantStatistics();
+				HttpHeaders headers = new HttpHeaders();
+				String currentTenant = subscriptionsService.getTenant();
+				headers.set("Authorization",
+						contextService.getContext().toCumulocityCredentials()
+								.getAuthenticationString());
+	
+				headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+	
+				log.info("Get MS Statistics for Tenant: " + currentTenant + "  date: " + df.format(dateFrom));
+	
+				String serverUrl = clientProperties.getBaseURL()
+						+ "/tenant/statistics/summary/?tenant="
+						+ currentTenant
+						+ "&dateFrom=" + df.format(dateFrom)
+						+ "&dateTo=" + df.format(dateTo)
+						+ "&pageSize=2000&withTotalPages=true";
+	
+				RestTemplate restTemplate = new RestTemplate();
+				HttpEntity<TenantStatistics> entity = new HttpEntity<TenantStatistics>(headers);
+				ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,
+						entity, TenantStatistics.class);
+	
+				tenantStatistics = response.getBody();
+	
+				log.info("MicroservicesStatistics Resources: " + tenantStatistics.getResources().toString());
+	
+				// Exclude Product sdervices and empty results
+				tenantStatistics.getResources().setUsedBy(
+						tenantStatistics.getResources().getUsedBy().stream().filter(
+								usedBy -> (!(this.productServices.contains(usedBy.getName()))
+										&& (usedBy.getCpu() > 0
+												|| usedBy.getMemory() > 0)))
+								.collect(Collectors.toList()));
+	
+				// Sum of tenant cpu & memory
+				tenantStatistics.getResources().setCpu(tenantStatistics.getResources().getUsedBy().stream()
+						.mapToLong(ub -> getCPUAverage(ub.getCpu(), daysInMonth)).sum());
+				tenantStatistics.getResources().setMemory(tenantStatistics.getResources().getUsedBy().stream()
+						.mapToLong(ub ->   getCPUAverage(ub.getMemory(), daysInMonth)).sum());
+				microservicesStatisticsAggregation.getSubTenantStat().put(currentTenant,
+						tenantStatistics.getResources());
+			});
+	
+			// Create a flat list of all usedBy objects of all subtenants to create total
+			List<TenantStatistics.UsedBy> totalUsedByList = microservicesStatisticsAggregation.getSubTenantStat()
+					.values().stream()
+					.map(r -> r.getUsedBy())
+					.flatMap(x -> x.stream())
+					.filter(r -> r.getCpu() > 0 || r.getMemory() > 0)
+					.collect(Collectors.toList());
+	
+			// Create a map by grouping by service name
+			Map<String, List<TenantStatistics.UsedBy>> usedByGrouped = totalUsedByList.stream()
+					.collect(Collectors.groupingBy(TenantStatistics.UsedBy::getName));
+	
+			// Target map to gather sum results of each service by name
+			Map<String, TenantStatistics.UsedBy> agg = new HashMap<String, TenantStatistics.UsedBy>();
+	
+			// Object to hold the sum of all services
+			UsedBy totalUsage = new UsedBy();
+	
+			// iterate over grouped entries to sum up the values
+			Iterator<Entry<String, List<UsedBy>>> it = usedByGrouped.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry<String, List<UsedBy>> pair = it.next();
+				Long cpu = pair.getValue().stream().mapToLong(ub -> ub.getCpu()).sum();
+				Long mem = pair.getValue().stream().mapToLong(ub -> ub.getMemory()).sum();
+				totalUsage.setCpu(totalUsage.getCpu() + cpu);
+				totalUsage.setMemory(totalUsage.getMemory() + mem);
+	
+				// Check if entry exists
+				if (agg.containsKey(pair.getKey())) {
+					Long allCpu = agg.get(pair.getKey()).getCpu();
+					Long allMem = agg.get(pair.getKey()).getMemory();
+					agg.get(pair.getKey()).setCpu(allCpu + cpu);
+					agg.get(pair.getKey()).setMemory(allMem + mem);
+				} else {
+					UsedBy ub = new UsedBy();
+					ub.setCpu(cpu);
+					ub.setMemory(mem);
+					ub.setName(pair.getKey());
+					agg.put(pair.getKey(), ub);
+				}
+	
 			}
-
+	
+			// add summary and return
+			microservicesStatisticsAggregation.setTotalUsage(
+					new Resources(totalUsage.getCpu(),
+							totalUsage.getMemory(),
+							new ArrayList<UsedBy>(agg.values())));
+			return microservicesStatisticsAggregation;
 		}
+	
+		static long getCPUAverage(long cpu, int daysInMonth){
+			return ((cpu) / (1000 * daysInMonth));
+		}
+	
+		
+		static long getMEMAverage(long mem, int daysInMonth){
+			return (long)( (double)mem / (1073.74 * (float)daysInMonth));
+		}
+	
+		public void setDaysInMonth(Date date) {
+			Calendar calendar = new GregorianCalendar();
+			calendar.setTime(date);
+			YearMonth yearMonthObject = YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH ) +1 );
+			this.daysInMonth = yearMonthObject.lengthOfMonth();
 
-		// add summary and return
-		microservicesStatisticsAggregation.setTotalUsage(
-				new Resources(totalUsage.getCpu(),
-						totalUsage.getMemory(),
-						new ArrayList<UsedBy>(agg.values())));
-		return microservicesStatisticsAggregation;
-	}
-
+    }
 }
