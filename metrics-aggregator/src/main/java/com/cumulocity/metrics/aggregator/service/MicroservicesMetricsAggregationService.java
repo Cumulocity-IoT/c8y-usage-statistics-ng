@@ -174,10 +174,22 @@ public class MicroservicesMetricsAggregationService {
 								.collect(Collectors.toList()));
 	
 				// Sum of tenant cpu & memory
+				// calculate averages
+				tenantStatistics.getResources().getUsedBy().forEach(ub-> {
+					ub.setAvgCPU(getCPUAverage(ub.getCpu(), daysInMonth));
+				});
+				tenantStatistics.getResources().getUsedBy().forEach(ub-> {
+					ub.setAvgMemory(getMEMAverage(ub.getMemory(), daysInMonth));
+				});
+				// sum up resources and averages
 				tenantStatistics.getResources().setCpu(tenantStatistics.getResources().getUsedBy().stream()
-						.mapToLong(ub -> getCPUAverage(ub.getCpu(), daysInMonth)).sum());
+						.mapToLong(ub -> ub.getCpu()  ).sum());
+				tenantStatistics.getResources().setAvgCPU(tenantStatistics.getResources().getUsedBy().stream()
+						.mapToDouble(ub -> ub.getAvgCPU()  ).sum());
 				tenantStatistics.getResources().setMemory(tenantStatistics.getResources().getUsedBy().stream()
-						.mapToLong(ub ->   getCPUAverage(ub.getMemory(), daysInMonth)).sum());
+						.mapToLong(ub ->  ub.getMemory() ).sum());
+				tenantStatistics.getResources().setAvgMemory(tenantStatistics.getResources().getUsedBy().stream()
+						.mapToDouble(ub ->  ub.getAvgMemory() ).sum());
 				microservicesStatisticsAggregation.getSubTenantStat().put(currentTenant,
 						tenantStatistics.getResources());
 			});
@@ -206,8 +218,12 @@ public class MicroservicesMetricsAggregationService {
 				Map.Entry<String, List<UsedBy>> pair = it.next();
 				Long cpu = pair.getValue().stream().mapToLong(ub -> ub.getCpu()).sum();
 				Long mem = pair.getValue().stream().mapToLong(ub -> ub.getMemory()).sum();
+				double avgCpu = pair.getValue().stream().mapToDouble(ub -> ub.getAvgCPU()).sum();
+				double avgMem = pair.getValue().stream().mapToDouble(ub -> ub.getAvgMemory()).sum();
 				totalUsage.setCpu(totalUsage.getCpu() + cpu);
 				totalUsage.setMemory(totalUsage.getMemory() + mem);
+				totalUsage.setAvgCPU(totalUsage.getAvgCPU() + avgCpu);
+				totalUsage.setAvgMemory(totalUsage.getAvgMemory() + avgMem);
 	
 				// Check if entry exists
 				if (agg.containsKey(pair.getKey())) {
@@ -215,11 +231,17 @@ public class MicroservicesMetricsAggregationService {
 					Long allMem = agg.get(pair.getKey()).getMemory();
 					agg.get(pair.getKey()).setCpu(allCpu + cpu);
 					agg.get(pair.getKey()).setMemory(allMem + mem);
+					double allAvgCpu = agg.get(pair.getKey()).getAvgCPU();
+					double allAvgMem = agg.get(pair.getKey()).getAvgMemory();
+					agg.get(pair.getKey()).setAvgCPU(allAvgCpu + avgCpu);
+					agg.get(pair.getKey()).setAvgMemory(allAvgMem + avgMem);
 				} else {
 					UsedBy ub = new UsedBy();
 					ub.setCpu(cpu);
 					ub.setMemory(mem);
 					ub.setName(pair.getKey());
+					ub.setAvgCPU(avgCpu);
+					ub.setAvgMemory(avgMem);
 					agg.put(pair.getKey(), ub);
 				}
 	
@@ -229,17 +251,24 @@ public class MicroservicesMetricsAggregationService {
 			microservicesStatisticsAggregation.setTotalUsage(
 					new Resources(totalUsage.getCpu(),
 							totalUsage.getMemory(),
+							totalUsage.getAvgCPU(),
+							totalUsage.getAvgMemory(),
 							new ArrayList<UsedBy>(agg.values())));
 			return microservicesStatisticsAggregation;
 		}
 	
-		static long getCPUAverage(long cpu, int daysInMonth){
-			return ((cpu) / (1000 * daysInMonth));
+		static double getCPUAverage(long cpu, int daysInMonth){
+			double newCpu = ((float)(cpu) / (float)(1000 * daysInMonth));
+			log.info("Convert CPU from: " + cpu + " to: " +newCpu);
+			return newCpu;
 		}
-	
 		
-		static long getMEMAverage(long mem, int daysInMonth){
-			return (long)( (double)mem / (1073.74 * (float)daysInMonth));
+		
+		static double getMEMAverage(long mem, int daysInMonth){
+
+			double newMem= ((float) mem / (float)(1073.74 * daysInMonth));
+			log.info("Convert MEM from: " + mem + "to: " +newMem);
+			return newMem;
 		}
 	
 		public void setDaysInMonth(Date date) {
