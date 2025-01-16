@@ -166,36 +166,41 @@ public class MicroservicesMetricsAggregationService {
 				tenantStatistics = response.getBody();
 	
 				// Exclude Product product services and empty results
-				tenantStatistics.getResources().setUsedBy(
-						tenantStatistics.getResources().getUsedBy().stream().filter(
-								usedBy -> (!(this.productServices.contains(usedBy.getName()))
-										&& (usedBy.getCpu() > 0
-												|| usedBy.getMemory() > 0)))
-								.collect(Collectors.toList()));
-	
-				// Sum of tenant cpu & memory
-				// calculate averages microservice level
-				tenantStatistics.getResources().getUsedBy().forEach(ub-> {
-					ub.setAvgCPU(getCPUAverage(ub.getCpu(), daysInMonth));
-				});
-				tenantStatistics.getResources().getUsedBy().forEach(ub-> {
-					ub.setAvgMemory(getMEMAverage(ub.getMemory(), daysInMonth));
-				});
-				// sum up resources and averages on current tenant level
-				tenantStatistics.getResources().setCpu(tenantStatistics.getResources().getUsedBy().stream()
-						.mapToLong(ub -> ub.getCpu()  ).sum());
-				tenantStatistics.getResources().setMemory(tenantStatistics.getResources().getUsedBy().stream()
-						.mapToLong(ub ->  ub.getMemory() ).sum());
+				if (tenantStatistics.getResources() != null){
+					tenantStatistics.getResources().setUsedBy(
+							tenantStatistics.getResources().getUsedBy().stream().filter(
+									usedBy -> (!(this.productServices.contains(usedBy.getName()))
+											&& (usedBy.getCpu() > 0
+													|| usedBy.getMemory() > 0)))
+									.collect(Collectors.toList()));
+		
+					// Sum of tenant cpu & memory
+					// calculate averages microservice level
+					tenantStatistics.getResources().getUsedBy().forEach(ub-> {
+						ub.setAvgCPU(getCPUAverage(ub.getCpu(), daysInMonth));
+					});
+					tenantStatistics.getResources().getUsedBy().forEach(ub-> {
+						ub.setAvgMemory(getMEMAverage(ub.getMemory(), daysInMonth));
+					});
+					// sum up resources and averages on current tenant level
+					tenantStatistics.getResources().setCpu(tenantStatistics.getResources().getUsedBy().stream()
+							.mapToLong(ub -> ub.getCpu()  ).sum());
+					tenantStatistics.getResources().setMemory(tenantStatistics.getResources().getUsedBy().stream()
+							.mapToLong(ub ->  ub.getMemory() ).sum());
 
-				// Calculate averages on current tenant level
-				tenantStatistics.getResources().setAvgMemory(getMEMAverage(tenantStatistics.getResources().getMemory(), daysInMonth));
-				tenantStatistics.getResources().setAvgCPU(getCPUAverage(tenantStatistics.getResources().getCpu(),daysInMonth));
-				
-				// Add current tenant to aggregation
-				microservicesStatisticsAggregation.getSubTenantStat().put(currentTenant,
-						tenantStatistics.getResources());
+					// Calculate averages on current tenant level
+					tenantStatistics.getResources().setAvgMemory(getMEMAverage(tenantStatistics.getResources().getMemory(), daysInMonth));
+					tenantStatistics.getResources().setAvgCPU(getCPUAverage(tenantStatistics.getResources().getCpu(),daysInMonth));
+					
+					// Add current tenant to aggregation
+					microservicesStatisticsAggregation.getSubTenantStat().put(currentTenant,
+							tenantStatistics.getResources());
+				}else{
+					microservicesStatisticsAggregation.getSubTenantStat().put(currentTenant,
+							new TenantStatistics.Resources());
+				}
 			});
-	
+			
 			// Create a flat list of all usedBy objects of all subtenants to create total
 			List<TenantStatistics.UsedBy> totalUsedByList = microservicesStatisticsAggregation.getSubTenantStat()
 					.values().stream()
