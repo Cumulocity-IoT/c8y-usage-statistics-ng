@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 public class TenantStatistics {
     private int deviceEndpointCount;
@@ -188,14 +189,15 @@ public class TenantStatistics {
     public void setTotalResourceCreateAndUpdateCount(int totalResourceCreateAndUpdateCount) {
         this.totalResourceCreateAndUpdateCount = totalResourceCreateAndUpdateCount;
     }
-
+    @JsonPropertyOrder({ "cpu", "avgCPU", "memory","avgMemory", "CCUs", "usedBy"})
     public static class Resources {
 
-        public Resources(long cpu, long memory, double avgCPU, double avgMemory, List<UsedBy> usedBy) {
+        public Resources(long cpu, long memory, double avgCPU, double avgMemory, double CCUs, List<UsedBy> usedBy) {
             this.setCpu(cpu);
             this.setMemory(memory);
             this.setAvgCPU(avgCPU);
             this.setAvgMemory(avgMemory);
+            this.setCCUs(CCUs);
             this.setUsedBy(usedBy);
         }
 
@@ -207,10 +209,19 @@ public class TenantStatistics {
             this.setUsedBy(new ArrayList<TenantStatistics.UsedBy>());
         }
 
-        private long memory;
         private long cpu;
+        private long memory;
         private double avgMemory;
         private double avgCPU;
+        private double CCUs;
+
+        public double getCCUs() {
+            return CCUs;
+        }
+
+        public void setCCUs(double cCUs) {
+            CCUs = cCUs;
+        }
 
         public double getAvgMemory() {
             return avgMemory;
@@ -256,12 +267,7 @@ public class TenantStatistics {
     }
 
     public static class UsedBy {
-        // public UsedBy(long memory, String name, long cpu, String cause){
-        // this.memory = memory;
-        // this.name= name;
-        // this.cpu=cpu;
-        // this.cause = cause;
-        // };
+
         private long memory;
         private double avgMemory;
         private double avgCPU;
