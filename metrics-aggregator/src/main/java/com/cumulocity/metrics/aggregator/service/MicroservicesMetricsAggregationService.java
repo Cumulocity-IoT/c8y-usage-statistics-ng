@@ -260,6 +260,7 @@ public class MicroservicesMetricsAggregationService {
 							totalUsage.getMemory(),
 							totalUsage.getAvgCPU(),
 							totalUsage.getAvgMemory(),
+							calcCCUs(totalUsage.getAvgCPU(), totalUsage.getAvgMemory()),
 							new ArrayList<UsedBy>(agg.values())));
 			return microservicesStatisticsAggregation;
 		}
@@ -276,6 +277,21 @@ public class MicroservicesMetricsAggregationService {
 			double newMem= ((float) mem / (float)(4294.97 * daysInMonth));
 			log.debug("Convert MEM from: " + mem + "to: " +newMem);
 			return newMem;
+		}
+
+		static double calcCCUs(double avgCpu, double avgMem){
+			
+			double greatest = Math.max(avgCpu, avgMem);
+			double greatestFloor = Math.floor(greatest);
+			log.info("Calc CCUs avgCPU: " + avgCpu + " avgMem: " +avgMem + " greatest: " + greatest + " greatestFloor: " + greatestFloor );
+			if ( (greatest - greatestFloor) <= 0.1){
+				log.info("Calc CCUs Using floor CCUs:" + greatestFloor);
+				return greatestFloor;
+			}else{
+				double greatestCeiling = Math.ceil(greatest);
+				log.info("Calc CCUs Using ceiling CCUs:" + greatestCeiling);
+				return  greatestCeiling;
+			}
 		}
 	
 		public void setDaysInMonth(Date date) {
