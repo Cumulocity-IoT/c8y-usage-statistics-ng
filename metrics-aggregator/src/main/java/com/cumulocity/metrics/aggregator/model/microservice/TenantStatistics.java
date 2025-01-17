@@ -31,6 +31,16 @@ public class TenantStatistics {
     private int alarmsUpdatedCount;
     private int inventoriesCreatedCount;
     private long storageSize;
+    private String storageHumanReadable;
+    
+    public String getStorageHumanReadable() {
+        return storageHumanReadable;
+    }
+
+    public void setStorageHumanReadable(String storageHumanReadable) {
+        this.storageHumanReadable = storageHumanReadable;
+    }
+
     private int measurementsCreatedCount;
 
     @JsonIgnore
