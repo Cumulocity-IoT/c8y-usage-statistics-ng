@@ -97,10 +97,13 @@ public class TenantMetricsAggregationService {
 			tenantStatistics.setResources(null);
 			tenantStatisticsAggregation.getSubTenantStat().put(currentTenant, tenantStatistics);
 			tenantStatisticsAggregation.addToTotalStatistics(tenantStatistics);
+			tenantStatisticsAggregation.convertStorageToHumanReadable(tenantStatisticsAggregation.getTotalTenantStat().getStorageSize());
 
 		});
 
 		return tenantStatisticsAggregation;
 	}
+
+	
 
 }

@@ -280,9 +280,11 @@ public class MicroservicesMetricsAggregationService {
 		}
 
 		static double calcCCUs(double avgCpu, double avgMem){
-			
+			// Calc CCUs avgCPU: 4.129032135009766 avgMem: 0.7061223685741425 greatest: 4.129032135009766 greatestFloor: 4.0  = 0,129032135 greater than 0,1 -> ceeling
+			// Calc CCUs Using ceiling CCUs:5.0
 			double greatest = Math.max(avgCpu, avgMem);
 			double greatestFloor = Math.floor(greatest);
+			
 			log.info("Calc CCUs avgCPU: " + avgCpu + " avgMem: " +avgMem + " greatest: " + greatest + " greatestFloor: " + greatestFloor );
 			if ( (greatest - greatestFloor) <= 0.1){
 				log.info("Calc CCUs Using floor CCUs:" + greatestFloor);
@@ -293,6 +295,7 @@ public class MicroservicesMetricsAggregationService {
 				return  greatestCeiling;
 			}
 		}
+
 	
 		public void setDaysInMonth(Date date) {
 			Calendar calendar = new GregorianCalendar();
