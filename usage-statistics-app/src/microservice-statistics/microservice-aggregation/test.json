@@ -1,0 +1,17 @@
+{"totalTenantStat": {
+    "deviceEndpointCount": 4287,
+    "deviceWithChildrenCount": 4653,
+    "inventoriesUpdatedCount": 14252264,
+    "eventsUpdatedCount": 1,
+    "requestCount": 232784405,
+    "deviceCount": 3803,
+    "deviceRequestCount": 135235819,
+    "storageLimitPerDevice": 0,
+    "eventsCreatedCount": 6016060,
+    "alarmsCreatedCount": 246379,
+    "alarmsUpdatedCount": 375200,
+    "inventoriesCreatedCount": 9360563,
+    "storageSize": 12410420916,
+    "measurementsCreatedCount": 84629373,
+    "totalResourceCreateAndUpdateCount": 114879840
+}}

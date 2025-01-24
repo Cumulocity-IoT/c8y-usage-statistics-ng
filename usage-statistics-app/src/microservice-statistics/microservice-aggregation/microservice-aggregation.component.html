@@ -1,0 +1,37 @@
+<c8y-title>{{'Microservice Aggregation' | translate}}</c8y-title>
+<statistics-action-bar [feature]="feature"></statistics-action-bar>
+
+<ng-container>
+<div class="container-fluid">
+  <table class="table">
+    <!-- <colgroup>
+      <col width="20px">
+      <col width="50%">
+    </colgroup> -->
+    <thead>
+      <tr>
+        <th>Total CPU</th>
+        <th>Total Memory</th>
+        <th>CCUs</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td >{{totalCpu}}</td>
+        <td >{{totalMem}}</td>
+        <td >{{CCUs}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</ng-container>
+    <c8y-data-grid
+    [title]="title"
+    [columns]="columns"
+    [rows]="microserviceData"
+    [actionControls]="[]"
+    [pagination]="pagination"
+    class="d-contents">
+</c8y-data-grid>
+

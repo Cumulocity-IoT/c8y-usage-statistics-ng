@@ -1,0 +1,90 @@
+<c8y-title>
+  {{ "Tenant Aggregation" | translate }}
+</c8y-title>
+
+<statistics-action-bar [feature]="feature"></statistics-action-bar>
+
+<div class="row" *ngIf="tenantAggregation">
+  <div class="col-xs-12 col-sm-6">
+    <div class="card">
+      <div class="card-body" style="padding: 8.18px;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{'Property' | translate}}</th>
+              <th>{{'Value' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td >{{'Storage Size' | translate}}</td>
+              <td>{{tenantAggregation.storageHumanReadable}}</td>
+            </tr>
+            <!-- <tr>
+              <td >{{'Storage Size' | translate}}</td>
+              <td>{{tenantAggregation.storageSize}}</td>
+            </tr> -->
+            <tr>
+              <td>{{'Devices' | translate}} <span class="text-light" style="font-size: smaller; font-style: italic;">(c8y_IsDevice)</span></td>
+              <td>{{tenantAggregation.deviceCount}}</td>
+            </tr>
+            <tr>
+              <td>{{'Device Endpoints' | translate}}</td>
+              <td>{{tenantAggregation.deviceEndpointCount}}</td>
+            </tr>
+            <tr>
+              <td>{{'Devices With Children' | translate}}</td>
+              <td>{{tenantAggregation.deviceWithChildrenCount}}</td>
+            </tr>
+            <tr>
+              <td>{{'Total Requests' | translate}}</td>
+              <td>{{tenantAggregation.requestCount}}</td>
+            </tr>
+            <tr>
+              <td >{{'Device Requests' | translate}}</td>
+              <td>{{tenantAggregation.deviceRequestCount}}</td>
+            </tr>
+            <tr >
+              <td>{{'Total Resources Created & Updated' | translate}}</td>
+              <td>{{tenantAggregation.totalResourceCreateAndUpdateCount}}</td>
+            </tr>
+            <tr>
+              <td >{{'Inventories Created' | translate}}</td>
+              <td>{{tenantAggregation.inventoriesCreatedCount}}</td>
+            </tr>
+            <tr>
+              <td >{{'Inventories Updated' | translate}}</td>
+              <td>{{tenantAggregation.inventoriesUpdatedCount}}</td>
+            </tr>
+            <tr>
+              <td >{{'Events Created' | translate}}</td>
+              <td>{{tenantAggregation.eventsCreatedCount}}</td>
+            </tr>
+            <tr>
+              <td >{{'Events Updated' | translate}}</td>
+              <td>{{tenantAggregation.eventsUpdatedCount}}</td>
+            </tr>
+            <tr>
+              <td >{{'Alarms Created' | translate}}</td>
+              <td>{{tenantAggregation.alarmsCreatedCount}}</td>
+            </tr>
+            <tr>
+              <td >{{'Alarms Updated' | translate}}</td>
+              <td>{{tenantAggregation.alarmsUpdatedCount}}</td>
+            </tr>
+            <tr>
+              <td >{{'Measurements Created' | translate}}</td>
+              <td>{{tenantAggregation.measurementsCreatedCount}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showAlert">
+  <div class="alert alert-info" role="alert">
+    {{'No usage data is available for the selected month' | translate}}
+  </div>
+</div>

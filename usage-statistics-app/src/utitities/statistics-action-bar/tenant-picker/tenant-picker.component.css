@@ -1,0 +1,59 @@
+.hide-item {
+    display: none;
+}
+
+ul {
+    list-style-type: none;
+}
+
+li {
+    margin: 16.18px
+}
+
+.extra {
+    display: flex;
+    gap: 8.18px;
+    cursor: pointer;
+}
+
+.negative-margin-top {
+    margin-top: -4.045px;
+}
+
+.tenant-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 4.045px;
+}
+
+.btn-style{
+    display: flex;
+    gap: 4.045px;
+    align-items: center;
+}
+
+.item-center{
+    align-items: center;
+}
+
+.custom-label{
+    font-size: x-small;
+}
+.micro-layout{
+    display: flex;
+    cursor: pointer;
+}
+.extra-column{
+    flex-direction: column;
+    gap: 0;
+    color: grey;
+}
+
+.li-left{
+    margin-left: -16.18px;
+}
+
+.disable-tenant{
+    pointer-events: none;
+    color: grey; 
+}

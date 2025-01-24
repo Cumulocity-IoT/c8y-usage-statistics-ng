@@ -1,0 +1,31 @@
+<c8y-title>
+  {{ "Device Data" | translate }}
+</c8y-title>
+
+<statistics-action-bar [feature]="feature"></statistics-action-bar>
+
+<div class="content-fullpage d-flex d-col shadow1">
+    <c8y-data-grid
+    [loadMoreItemsLabel]="loadMoreItemsLabel"
+    [loadingItemsLabel]="loadingItemsLabel"
+    [columns]="columns"
+    [rows]="deviceData"
+    [pagination]="pagination"
+    [infiniteScroll]="infiniteScroll"
+    [actionControls]="actionControls"
+    [showSearch]="showSearch"
+    class="d-contents"
+  >
+    <div class="c8y-empty-state">
+      <h1 c8yIcon="search"></h1>
+      <div>
+        <p>
+          <strong>{{ "Device details are not available." | translate }}</strong>
+        </p>
+      </div>
+    </div>
+    <ng-container *ngFor="let column of columns">
+      <c8y-column [name]="column.name"></c8y-column>
+    </ng-container>
+  </c8y-data-grid>
+</div>

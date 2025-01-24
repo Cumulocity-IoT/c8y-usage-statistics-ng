@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test MicroserviceConfigurationComponent should load expected component 1`] = `
+<microservice-configuration
+  alertService={[Function AlertService]}
+  fb={[Function FormBuilder]}
+  microserviceConfigurationService={[Function Object]}
+  modalService={[Function ModalService]}
+>
+  <c8y-title>
+  </c8y-title>
+</microservice-configuration>
+`;

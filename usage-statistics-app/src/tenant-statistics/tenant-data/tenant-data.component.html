@@ -1,0 +1,129 @@
+<c8y-title>
+  {{ "Tenant Data" | translate }}
+</c8y-title>
+
+<statistics-action-bar [feature]="feature"></statistics-action-bar>
+
+<div class="row" *ngIf="tenantData">
+  <div class="col-xs-12 col-sm-6">
+    <div class="card">
+      <div class="card-body" style="padding: 8.18px;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{'Property' | translate}}</th>
+              <th>{{'Value' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{'Devices' | translate}} <span class="text-light" style="font-size: smaller; font-style: italic;">(c8y_IsDevice)</span></td>
+              <td>{{tenantData.deviceCount}}</td>
+            </tr>
+            <tr>
+              <td>{{'Device Endpoints' | translate}}</td>
+              <td>{{tenantData.deviceEndpointCount}}</td>
+            </tr>
+            <tr>
+              <td>{{'Devices With Children' | translate}}</td>
+              <td>{{tenantData.deviceWithChildrenCount}}</td>
+            </tr>
+            <tr>
+              <td>{{'Total Requests' | translate}}</td>
+              <td>{{tenantData.requestCount}}</td>
+            </tr>
+            <tr>
+              <td class="level-1">{{'Device Requests' | translate}}</td>
+              <td>{{tenantData.deviceRequestCount}}</td>
+            </tr>
+            <tr>
+              <td>{{'Total Memory (GiB)' | translate}}</td>
+              <td>{{tenantStatisticsService.getTotalMemoryInGiB(tenantData.resources.memory)}}</td>
+            </tr>
+            <tr>
+              <td>{{'Total CPU (CPUs)' | translate}}</td>
+              <td>{{ tenantStatisticsService.getTotalCPUs(tenantData.resources.cpu)}}</td>
+            </tr>
+            <tr>
+              <td>{{'Storage Size (MiB)' | translate}}</td>
+              <td>{{tenantStatisticsService.getStorageSizeInMiB(tenantData.storageSize)}}</td>
+            </tr>
+            <tr style="font-weight: bold;">
+              <td>{{'Total Resources Created & Updated' | translate}}</td>
+              <td>{{tenantData.totalResourceCreateAndUpdateCount}}</td>
+            </tr>
+            <tr>
+              <td class="level-1">{{'Inventories Created' | translate}}</td>
+              <td>{{tenantData.inventoriesCreatedCount}}</td>
+            </tr>
+            <tr>
+              <td class="level-1">{{'Inventories Updated' | translate}}</td>
+              <td>{{tenantData.inventoriesUpdatedCount}}</td>
+            </tr>
+            <tr style="font-weight: bold;">
+              <td class="level-1">{{'Total MEA' | translate}}</td>
+              <td>{{tenantStatisticsService.getTotalMea(tenantData)}}</td>
+            </tr>
+            <tr>
+              <td class="level-2">{{'Events Created' | translate}}</td>
+              <td>{{tenantData.eventsCreatedCount}}</td>
+            </tr>
+            <tr>
+              <td class="level-2">{{'Events Updated' | translate}}</td>
+              <td>{{tenantData.eventsUpdatedCount}}</td>
+            </tr>
+            <tr>
+              <td class="level-2">{{'Alarms Created' | translate}}</td>
+              <td>{{tenantData.alarmsCreatedCount}}</td>
+            </tr>
+            <tr>
+              <td class="level-2">{{'Alarms Updated' | translate}}</td>
+              <td>{{tenantData.alarmsUpdatedCount}}</td>
+            </tr>
+            <tr>
+              <td class="level-2">{{'Measurements Created' | translate}}</td>
+              <td>{{tenantData.measurementsCreatedCount}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-xs-12 col-sm-4">
+    <div class="card">
+      <div class="card-header card-title" style="font-weight: bold; font-size: small; display: flex;
+      gap: 8.18px;">
+        <div>{{'Subscribed applications' | translate | uppercase}} </div>
+        <div class="badge badge-info">{{tenantData.subscribedApplications?.length}}</div>
+      </div>
+      <div class="card-body" style="display: flex;
+      flex-wrap: wrap;
+      gap: 8.18px;
+      padding: 16.16px;">
+        <div class="input-group input-group-search">
+          <input class="form-control" type="search" placeholder="Search…" [(ngModel)]="searchString" />
+          <span class="input-group-btn">
+            <button class="btn btn-clean" type="button" title="Search"
+              *ngIf="!searchString || searchString.length === 0">
+              <i c8yIcon="search"></i>
+            </button>
+            <button class="btn btn-clean" type="button" title="Clear search"
+              *ngIf="searchString && searchString.length > 0" (click)="searchString = ''">
+              <i c8yIcon="times"></i>
+            </button>
+          </span>
+        </div>
+
+        <ul class="list-group list-group-flush" style="width: 100%;">
+          <li class="list-group-item" *ngFor="let app of getFilteredTenantSubscriptions(searchString) | sortStringAsc">{{app}}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showAlert">
+  <div class="alert alert-info" role="alert">
+    {{'No usage data is available for the selected month' | translate}}
+  </div>
+</div>
