@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test DeviceDataComponent should load expected component 1`] = `
+<device-data
+  columns={[Function Array]}
+  commonService={[Function CommonService]}
+  deviceStatisticsService={[Function Object]}
+  displayOptions={[Function Object]}
+  element={[Function ElementRef]}
+  feature={[Function String]}
+  loadMoreItemsLabel={[Function String]}
+  loadingItemsLabel={[Function String]}
+  monthPickerService={[Function MonthPickerService]}
+  pagination={[Function Object]}
+>
+  <c8y-title>
+  </c8y-title><statistics-action-bar /><div
+    class="content-fullpage d-flex d-col shadow1"
+  >
+    <c8y-data-grid
+      class="d-contents"
+    >
+      <div
+        class="table-data-grid-scroll"
+        data-cy="c8y-data-grid--table-data-grid-scroll"
+      >
+        <table
+          cdk-table=""
+          class="cdk-table table table-hover table-filtered-sorted table-data-grid large-padding"
+          data-cy="c8y-data-grid--table"
+          role="table"
+        >
+        </table>
+      </div>
+    </c8y-data-grid>
+  </div>
+</device-data>
+`;

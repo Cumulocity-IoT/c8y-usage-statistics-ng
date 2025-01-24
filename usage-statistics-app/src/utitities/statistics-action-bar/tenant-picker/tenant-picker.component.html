@@ -1,0 +1,108 @@
+<ng-container *ngIf="currentlyActiveTenant">
+  <button type="button" title="Active Tenant" class="btn btn-primary btn-style" [class.btn-pending]="isLoading"
+    (click)="openModal(template)"><span class="m-r-4 dlt-c8y-icon-layers"></span> {{currentlyActiveTenant}}</button>
+</ng-container>
+
+<ng-template #template>
+  <div class="modal-header" style="margin-bottom: 24px;">
+    <h4 class="modal-title pull-left">{{'Select a tenant' | translate}}</h4>
+    <button type="button" class="btn-close close pull-right" aria-label="Close" (click)="modalRef?.hide()">
+      <span aria-hidden="true" class="visually-hidden">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <ng-container *ngIf="tenantList && tenantList.length > 0">
+      <div id="search" class="input-group input-group-search" style="margin-bottom: 16.18px 0px">
+        <input type="search" class="form-control" placeholder="Search…" [(ngModel)]="searchString"
+          (input)="searchTenant()" />
+        <span class="input-group-addon">
+          <i c8yIcon="search" *ngIf="!searchString || searchString.length === 0"></i>
+          <i c8yIcon="times" class="text-muted" *ngIf="searchString && searchString.length > 0"
+            (click)="searchString = ''; searchTenant()"></i>
+        </span>
+      </div>
+
+      <div style="max-height: 54vh; overflow: auto; margin-top: 16.18px">
+        <ul>
+          <li>
+            <div (click)="selectedTenant(sourceTenant)" [class.disable-tenant]="!isActiveTenant(getTenant(sourceTenant))">
+              <div class="extra">
+                <div class="m-r-4 dlt-c8y-icon-communication-internet" [class.text-primary]="isActiveTenant(getTenant(sourceTenant))"></div>
+                <div class="tenant-layout">
+                  <div class="extra item-center">
+                    <div class="negative-margin-top">{{getDomain(sourceTenant)}}</div>
+                    <div class="badge badge-system" style="align-self: flex-start;"
+                      *ngIf="getSubtenantCount(sourceTenant) > 0">
+                      {{tenantHierarchy[sourceTenant]?.length}}
+                    </div>
+                  </div>
+                  <div class="extra extra-column">
+                    <div class="custom-label micro-layout" *ngIf="getCompany(sourceTenant)">
+                      <div class="m-r-4 dlt-c8y-icon-company"></div>
+                      <div>{{getCompany(sourceTenant)}}</div>
+                    </div>
+                    <div class="custom-label micro-layout" [title] = 'getDomain(sourceTenant)' *ngIf="getDomain(sourceTenant)">
+                      <div class="m-r-4 dlt-c8y-icon-layers"></div>
+                          <div>{{sourceTenant}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ul>
+              <li *ngFor="let parent of tenantHierarchy[sourceTenant]" class="li-left">
+                <div [class.hide-item]="parent.hideItem" (click)="selectedTenant(parent.id)" [class.disable-tenant]="!isActiveTenant(parent)">
+                  <div class="extra">
+                    <div class="m-r-4 dlt-c8y-icon-communication-internet" [class.text-primary]="isActiveTenant(parent)"></div>
+                    <div class="tenant-layout">
+                      <div class="extra item-center">
+                        <div class="negative-margin-top">{{getDomain(parent.id)}}</div>
+                        <div class="badge badge-system" style="align-self: flex-start;"
+                          *ngIf="getSubtenantCount(parent.id) > 0">
+                          {{getSubtenantCount(parent.id)}}</div>
+                      </div>
+                      <div class="extra extra-column">
+                        <div class="custom-label micro-layout" *ngIf="getCompany(parent.id)">
+                          <div class="m-r-4 dlt-c8y-icon-company"></div>
+                          <div>{{getCompany(parent.id)}}</div>
+                        </div>
+                        <div class="custom-label micro-layout" [title] = 'getDomain(parent.id)' *ngIf="getDomain(parent.id)">
+                          <div class="m-r-4 dlt-c8y-icon-layers "></div>
+                          <div>{{parent.id}}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <ul>
+                  <li *ngFor="let child of tenantHierarchy[parent.id]" class="li-left">
+                    <div [class.hide-item]="child.hideItem" (click)="selectedTenant(child.id)" [class.disable-tenant]="!isActiveTenant(child)">
+                      <div class="extra">
+                        <div class="m-r-4 dlt-c8y-icon-communication-internet" [class.text-primary]="isActiveTenant(child)"></div>
+                        <div class="tenant-layout">
+                          <div class="extra item-center">
+                            <div class="negative-margin-top">{{getDomain(child.id)}}</div>
+                          </div>
+                          <div class="extra extra-column">
+                            <div class="custom-label micro-layout" *ngIf="getCompany(child.id)">
+                              <div class="m-r-4 dlt-c8y-icon-company"></div>
+                              <div>{{getCompany(child.id)}}</div>
+                            </div>
+                            <div class="custom-label micro-layout" [title] = 'getDomain(child.id)' *ngIf="getDomain(child.id)">
+                              <div class="m-r-4 dlt-c8y-icon-layers"></div>
+                              <div>{{child.id}}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </ng-container>
+  </div>
+</ng-template>

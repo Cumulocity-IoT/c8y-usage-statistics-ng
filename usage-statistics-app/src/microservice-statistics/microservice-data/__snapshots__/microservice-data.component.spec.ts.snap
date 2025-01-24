@@ -1,0 +1,46 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test MicroserviceDataComponent should load expected component 1`] = `
+<app-microservice-data
+  AVG_CPU={[Function String]}
+  AVG_MEMORY={[Function String]}
+  CATEGORY={[Function String]}
+  CAUSE={[Function String]}
+  CPU={[Function String]}
+  MEMORY={[Function String]}
+  NAME={[Function String]}
+  columns={[Function Array]}
+  commonService={[Function CommonService]}
+  displayOptions={[Function Object]}
+  element={[Function ElementRef]}
+  feature={[Function String]}
+  isLoading={[Function Boolean]}
+  loadMoreItemsLabel={[Function String]}
+  loadingItemsLabel={[Function String]}
+  microserviceStatisticsService={[Function Object]}
+  monthPickerService={[Function MonthPickerService]}
+  pagination={[Function Object]}
+>
+  <c8y-title>
+  </c8y-title><statistics-action-bar /><div
+    class="content-fullpage d-flex d-col shadow1"
+  >
+    <c8y-data-grid
+      class="d-contents"
+    >
+      <div
+        class="table-data-grid-scroll"
+        data-cy="c8y-data-grid--table-data-grid-scroll"
+      >
+        <table
+          cdk-table=""
+          class="cdk-table table table-hover table-filtered-sorted table-data-grid large-padding"
+          data-cy="c8y-data-grid--table"
+          role="table"
+        >
+        </table>
+      </div>
+    </c8y-data-grid>
+  </div>
+</app-microservice-data>
+`;

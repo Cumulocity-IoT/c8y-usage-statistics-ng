@@ -1,0 +1,12 @@
+<c8y-action-bar-item [placement]="'right'" >
+    <tenant-picker style="display: flex; align-items: center;"></tenant-picker>
+    <month-picker style="display: flex; align-items: center;"></month-picker>
+    <csv-exporter [feature]="feature"></csv-exporter>   
+</c8y-action-bar-item>
+
+
+<c8y-action-bar-item [placement]="'left'" >
+    <ng-content></ng-content>
+</c8y-action-bar-item>
+
+

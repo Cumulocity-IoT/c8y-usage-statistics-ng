@@ -1,0 +1,62 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test DeviceConfigurationComponentList should load expected component 1`] = `
+<app-device-configuration-list
+  alert={[Function Object]}
+  deviceConfigService={[Function Object]}
+  isLoading="false"
+  router={[Function Router]}
+>
+  <div
+    class="col-xs-12 col-sm-12 col-md-8"
+  >
+    <div
+      class="card--fullpage"
+    >
+      <c8y-title>
+      </c8y-title>
+      <c8y-action-bar-item
+        translate=""
+      >
+      </c8y-action-bar-item>
+      <div
+        class="content-fullpage d-flex d-col shadow1"
+      >
+        <table
+          class="table"
+        >
+          <thead
+            class="page-sticky-header"
+          >
+            <tr>
+              <th
+                class="col-4 p-l-16"
+              >
+              </th>
+              <th
+                class="col-4"
+              >
+                <button
+                  class="btn btn-clean text-primary"
+                  placement="auto"
+                  triggers="focus"
+                  type="button"
+                >
+                  <i
+                    c8y-icon="question-circle-o"
+                    class="dlt-c8y-icon-question-circle-o"
+                  />
+                </button>
+              </th>
+              <th
+                class="col-4"
+              >
+              </th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+</app-device-configuration-list>
+`;

@@ -1,0 +1,240 @@
+<div class="card card--fullpage">
+  <c8y-title>
+    {{ "Device Configuration" | translate }}
+  </c8y-title>
+  
+  <div class="card-header hidden-xs separator">
+    <div class="form-group m-0 col-sm-3">
+      <label for="className">{{ "Classification" | translate}}</label>
+    </div>
+    <div class="form-group m-0 col-sm-3">
+      <label for="className">{{ "Min daily MEA" | translate}}</label>
+    </div>
+    <div class="form-group m-0 col-sm-3">
+      <label for="className">{{ "Max daily MEA" | translate}}</label>
+    </div>
+    <div class="form-group m-0 col-sm-3">
+      <label for="className">{{ "Monthly device threshold" | translate}}</label>
+    </div>
+  </div>
+
+  <div class="inner-scroll">
+    <div class="card-block">
+      <div [formGroup]="configurationForm">
+        <ng-container formArrayName="configurations">
+          <div class="row"
+            *ngFor="
+              let configurationListForm of configurations.controls;
+              let first = first;
+              let index = index;
+              let last = last;
+              let even = even;
+            "
+            [ngClass]="{'alternate-grey': even}"
+          >
+            <div [formGroupName]="index">
+              <div class="form-group m-0 col-sm-3">
+                <c8y-form-group
+                  [hasError]="
+                    configurationForm?.controls['configurations']?.controls[
+                    index]?.controls?.className?.errors?.invalidClassname 
+                  ">
+                  <label class="visible-xs">{{ "Classification" | translate}}</label>
+                  <input
+                    formControlName="className"
+                    type="string"
+                    class="form-control"
+                    (input)="duplicateClassnameValidate(
+                      configurationForm?.controls['configurations']?.controls[index].controls?.className.value, index)"
+                  />
+                  <c8y-messages>
+                    <c8y-message
+                      *ngIf="
+                        configurationForm?.controls['configurations']?.controls[
+                        index]?.controls?.className?.errors?.invalidClassname
+                      "
+                    >
+                      {{ "Classification names cannot be same." | translate}}
+                    </c8y-message>
+                  </c8y-messages>
+                </c8y-form-group>
+              </div>
+
+              <!--First row's minMEA value should be always 0-->
+              <div class="form-group m-0 col-sm-3" *ngIf="first">
+                <c8y-form-group>
+                  <label class="visible-xs">{{ "Min daily MEA" | translate}}</label>
+                  <input
+                    formControlName="avgMinMea"
+                    type="number"
+                    class="form-control"
+                    placeholder="0"
+                    disabled
+                  />
+                </c8y-form-group>
+              </div>
+
+              <!--When it is not First row-->
+              <div class="form-group m-0 col-sm-3" *ngIf="!first">
+                <c8y-form-group>
+                  <label class="visible-xs">{{ "Min daily MEA" | translate}}</label>
+                  <input
+                    formControlName="avgMinMea"
+                    type="number"
+                    class="form-control"
+                    required
+                    disabled
+                  />
+                </c8y-form-group>
+              </div>
+
+              <!--If not last row, then maxMEA will be default/saved value-->
+              <div class="form-group m-0 col-sm-3" *ngIf="!last">
+                <c8y-form-group
+                  [hasError]="
+                    avgMaxMea !== '' &&
+                    (configurationForm?.controls['configurations']?.controls[
+                      index
+                    ].controls?.avgMaxMea?.errors?.greaterMin ||
+                      configurationForm?.controls['configurations']?.controls[
+                        index
+                      ].controls?.avgMaxMea?.errors) ||
+                  configurationForm?.controls['configurations']?.controls[
+                    index
+                  ].controls?.avgMaxMea?.errors?.greaterMax ||
+                  configurationForm?.controls['configurations']?.controls[
+                    index
+                  ].controls?.avgMaxMea?.errors?.required
+                  "
+                >
+                  <label class="visible-xs">{{ "Max daily MEA" | translate}}</label>
+                  <input
+                    formControlName="avgMaxMea"
+                    type="number"
+                    class="form-control"
+                    min="0"
+                    required
+                    (input)="isValidValue()"
+                  />
+                  <c8y-messages>
+                    <c8y-message
+                      *ngIf="
+                        avgMaxMea !== '' &&
+                        configurationForm?.controls['configurations']?.controls[
+                          index
+                        ].controls?.avgMaxMea?.errors?.greaterMin
+                      "
+                    >
+                      {{ "Max value should be greater than Min value." | translate}}
+                    </c8y-message>
+                    <c8y-message
+                      *ngIf="
+                        avgMaxMea !== '' &&
+                        configurationForm?.controls['configurations']?.controls[
+                          index
+                        ].controls?.avgMaxMea?.errors?.min ||
+                        configurationForm?.controls['configurations']?.controls[
+                        index
+                      ].controls?.avgMaxMea?.errors?.required
+                    "
+                  >
+                    {{ "Max value should be a positive number." | translate }}
+                  </c8y-message>
+                  <c8y-message
+                    *ngIf="
+                        avgMaxMea !== '' &&
+                        configurationForm?.controls['configurations']?.controls[
+                          index
+                        ].controls?.avgMaxMea?.errors?.greaterMax
+                  "
+                  translate
+                    >
+          Max value {{configurationForm?.controls['configurations']?.controls[
+                      index
+                    ].controls?.className?.value}} should be less than max value of {{configurationForm?.controls['configurations']?.controls[
+                    index+1
+                  ].controls?.className?.value}}.
+                    </c8y-message>
+                  </c8y-messages>
+                </c8y-form-group>
+              </div>
+
+              <!--Last row's maxMEA value should be INFINITY always-->
+              <div class="form-group m-0 col-sm-3" *ngIf="last">
+                <c8y-form-group>
+                  <label class="visible-xs">{{ "Max daily MEA" | translate}}</label>
+                  <input
+                    formControlName="avgMaxMea"
+                    type="text"
+                    class="form-control"
+                    placeholder="INFINITY"
+                    disabled
+                  />
+                </c8y-form-group>
+              </div>
+
+              <div class="form-group m-0 col-sm-3">
+                <c8y-form-group
+                  [hasError]="
+                    monthlyThreshold !== '' &&
+                    configurationForm?.controls['configurations']?.controls[
+                      index
+                    ].errors?.invalidThreshold
+                  "
+                >
+                  <label class="visible-xs">{{ "Monthly device threshold" | translate}}</label>
+                  <input
+                    formControlName="monthlyThreshold"
+                    type="number"
+                    class="form-control"
+                    min="0"
+                  />
+                  <c8y-messages>
+                    <c8y-message
+                      *ngIf="
+                        monthlyThreshold !== '' &&
+                        configurationForm?.controls['configurations']?.controls[
+                          index
+                        ].errors?.invalidThreshold
+                      "
+                    >
+                      {{ "Threshold value should be a positive number." | translate}}
+                    </c8y-message>
+                  </c8y-messages>
+                </c8y-form-group>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer separator">
+    <button
+      type="button"
+      class="btn btn-default"
+      title="{{ 'Reset' | translate }}"
+      (click)="resetToDefault()"
+    >
+      <span>{{ "Reset" | translate }}</span>
+    </button>
+    <button
+      (click)="onCancel()"
+      type="button"
+      class="btn btn-default"
+      title="{{ 'Cancel' | translate }}"
+    >
+      <span>{{ "Cancel" | translate }}</span>
+    </button>
+    <button
+      type="button"
+      (click)="onSubmit()"
+      class="btn btn-primary"
+      title="{{ 'Save' | translate }}"
+      [disabled]="!isSaveEnabled"
+    >
+      <span>{{ "Save" | translate }}</span>
+    </button>
+  </div>
+</div>

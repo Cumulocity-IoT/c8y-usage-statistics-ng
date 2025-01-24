@@ -1,0 +1,19 @@
+
+    <form class="container" style="width: 180px;">
+        <div class="form-group datepicker" style="margin:0">
+            <input 
+        [(ngModel)]="selectedDate" 
+        autocomplete="off" 
+        class="form-control" 
+        name="date" 
+        bsDatepicker 
+        [bsConfig]="{dateInputFormat: 'MMMM/YYYY', adaptivePosition: true }" 
+        (onShown)="onOpenCalendar($event)"
+        (onHidden)="update()"
+        [maxDate]="maxDate"
+        style="cursor: pointer; color: black;"
+        readonly
+        >
+        </div>
+     
+    </form>

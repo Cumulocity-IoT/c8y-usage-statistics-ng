@@ -1,0 +1,48 @@
+  .progress-meter-chart-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px;
+  }
+
+  .class-comparison-chart-container .card {
+    height: calc(51.304vh - 8.09px);
+  }
+
+  .holder {
+    width: 50%;
+    margin: auto;
+  }
+
+  .btn-container {
+    position: absolute;
+    width: fit-content;
+    right: 16px;
+    top: 16px;
+  }
+
+  .btn-active {
+    background-color: #1C8CE3;
+    color: #FFFFFF
+  }
+
+  .hide-container{
+    visibility: hidden;
+  }
+
+  .remove-container{
+    display: none;
+  }
+
+  @media only screen and (max-width: 600px) {
+    .progress-meter-chart-container  {
+      flex-direction: column;
+      margin-bottom: 8.09px
+    }
+    .holder {
+      width: 100%;
+    }
+    .unit {
+      margin:auto !important;
+    }
+  }
