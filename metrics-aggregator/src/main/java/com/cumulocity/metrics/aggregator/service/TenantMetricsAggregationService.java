@@ -9,6 +9,7 @@ import org.springframework.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
@@ -46,6 +47,9 @@ public class TenantMetricsAggregationService {
 	}
 
 	@Autowired
+	private CacheManager cacheManager;
+
+	@Autowired
 	MicroserviceSubscriptionsService subscriptionsService;
 
 	@Autowired
@@ -59,7 +63,14 @@ public class TenantMetricsAggregationService {
 
 	@EventListener
 	public void initialize(MicroserviceSubscriptionAddedEvent event) {
-		log.info("Tenant Sub: " + event.toString());
+		log.info("Tenant Sub: " + event.toString() + " Clear Caches");
+		this.clearCache();
+	}
+
+	public void clearCache() {
+		cacheManager.getCache("tenantCache").clear();
+		cacheManager.getCache("deviceCache").clear();
+		cacheManager.getCache("microserviceCache").clear();
 	}
 
 	@Cacheable(value = "tenantCache", key = "#dateFrom.toString() + '-' + #dateTo.toString()")
