@@ -1,0 +1,232 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /tenants/:
+    get:
+      tags:
+      - tenant-aggregation-controller
+      operationId: getMicroservicesStatisticsOverview
+      parameters:
+      - name: arg0
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: arg1
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantStatisticsAggregation"
+  /microservices/:
+    get:
+      tags:
+      - microservices-aggregation-controller
+      operationId: getMicroservicesStatisticsOverview_1
+      parameters:
+      - name: dateFrom
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: dateTo
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MicroservicesStatisticsAggregation"
+  /devices/{type}/{statDate}:
+    get:
+      tags:
+      - device-aggregation-controller
+      operationId: getAggregatedDevicesPerClass
+      parameters:
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: statDate
+        in: path
+        required: true
+        schema:
+          type: string
+          format: date-time
+      - name: includeSubtenants
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: useTenantDeviceClasses
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceStatisticsAggregation"
+components:
+  schemas:
+    Resources:
+      type: object
+      properties:
+        cpu:
+          type: integer
+          format: int64
+        avgCPU:
+          type: number
+          format: double
+        memory:
+          type: integer
+          format: int64
+        avgMemory:
+          type: number
+          format: double
+        usedBy:
+          type: array
+          items:
+            $ref: "#/components/schemas/UsedBy"
+        ccus:
+          type: number
+          format: double
+    TenantStatistics:
+      type: object
+      properties:
+        deviceEndpointCount:
+          type: integer
+          format: int32
+        deviceWithChildrenCount:
+          type: integer
+          format: int32
+        inventoriesUpdatedCount:
+          type: integer
+          format: int32
+        eventsUpdatedCount:
+          type: integer
+          format: int32
+        requestCount:
+          type: integer
+          format: int32
+        deviceCount:
+          type: integer
+          format: int32
+        deviceRequestCount:
+          type: integer
+          format: int32
+        resources:
+          $ref: "#/components/schemas/Resources"
+        storageLimitPerDevice:
+          type: integer
+          format: int32
+        eventsCreatedCount:
+          type: integer
+          format: int32
+        alarmsCreatedCount:
+          type: integer
+          format: int32
+        alarmsUpdatedCount:
+          type: integer
+          format: int32
+        inventoriesCreatedCount:
+          type: integer
+          format: int32
+        storageSize:
+          type: integer
+          format: int64
+        storageHumanReadable:
+          type: string
+        measurementsCreatedCount:
+          type: integer
+          format: int32
+        totalResourceCreateAndUpdateCount:
+          type: integer
+          format: int32
+    TenantStatisticsAggregation:
+      type: object
+      properties:
+        subTenantStat:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/TenantStatistics"
+        totalTenantStat:
+          $ref: "#/components/schemas/TenantStatistics"
+    UsedBy:
+      type: object
+      properties:
+        memory:
+          type: integer
+          format: int64
+        avgMemory:
+          type: number
+          format: double
+        avgCPU:
+          type: number
+          format: double
+        name:
+          type: string
+        cpu:
+          type: integer
+          format: int64
+        cause:
+          type: string
+    MicroservicesStatisticsAggregation:
+      type: object
+      properties:
+        totalUsage:
+          $ref: "#/components/schemas/Resources"
+        subTenantStat:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Resources"
+    DeviceStatisticsAggregation:
+      type: object
+      properties:
+        totalMeas:
+          type: integer
+        totalDeviceCount:
+          type: integer
+          format: int32
+        tenantAggregation:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/TenantAggregation"
+    TenantAggregation:
+      type: object
+      properties:
+        meas:
+          type: integer
+          format: int32
+        devicesCount:
+          type: integer
+          format: int32
+        errors:
+          type: array
+          items:
+            type: string
