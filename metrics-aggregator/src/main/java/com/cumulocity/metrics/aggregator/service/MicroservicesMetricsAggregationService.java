@@ -182,7 +182,7 @@ public class MicroservicesMetricsAggregationService {
 					tenantStatistics.getResources().getUsedBy().forEach(ub-> {
 						ub.setAvgMemory(getMEMAverage(ub.getMemory(), daysInMonth));
 					});
-					// sum up resources and averages on current tenant level
+					// sum up resources on current tenant level
 					tenantStatistics.getResources().setCpu(tenantStatistics.getResources().getUsedBy().stream()
 							.mapToLong(ub -> ub.getCpu()  ).sum());
 					tenantStatistics.getResources().setMemory(tenantStatistics.getResources().getUsedBy().stream()
@@ -191,6 +191,7 @@ public class MicroservicesMetricsAggregationService {
 					// Calculate averages on current tenant level
 					tenantStatistics.getResources().setAvgMemory(getMEMAverage(tenantStatistics.getResources().getMemory(), daysInMonth));
 					tenantStatistics.getResources().setAvgCPU(getCPUAverage(tenantStatistics.getResources().getCpu(),daysInMonth));
+					tenantStatistics.getResources().setCCUs(calcCCUs(tenantStatistics.getResources().getAvgCPU(), tenantStatistics.getResources().getAvgMemory()));
 					
 					// Add current tenant to aggregation
 					microservicesStatisticsAggregation.getSubTenantStat().put(currentTenant,
@@ -253,14 +254,19 @@ public class MicroservicesMetricsAggregationService {
 				}
 	
 			}
-	
+			// Calc ccus
+			double ccus = calcCCUs(
+				getCPUAverage(totalUsage.getCpu(), daysInMonth),
+				getMEMAverage(totalUsage.getMemory(), daysInMonth)
+				);
+
 			// add summary and return
 			microservicesStatisticsAggregation.setTotalUsage(
 					new Resources(totalUsage.getCpu(),
 							totalUsage.getMemory(),
 							totalUsage.getAvgCPU(),
 							totalUsage.getAvgMemory(),
-							calcCCUs(totalUsage.getAvgCPU(), totalUsage.getAvgMemory()),
+							ccus,
 							new ArrayList<UsedBy>(agg.values())));
 			return microservicesStatisticsAggregation;
 		}
@@ -288,7 +294,7 @@ public class MicroservicesMetricsAggregationService {
 			log.info("Calc CCUs avgCPU: " + avgCpu + " avgMem: " +avgMem + " greatest: " + greatest + " greatestFloor: " + greatestFloor );
 			if ( (greatest - greatestFloor) <= 0.1){
 				log.info("Calc CCUs Using floor CCUs:" + greatestFloor);
-				return greatestFloor;
+				return  greatestFloor;
 			}else{
 				double greatestCeiling = Math.ceil(greatest);
 				log.info("Calc CCUs Using ceiling CCUs:" + greatestCeiling);
