@@ -13,7 +13,7 @@ on:
         type: string
 
 permissions:
-  contents: write # This is required for creating releases
+  contents: write
 
 jobs:
   build:
@@ -24,25 +24,61 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get commit messages since last release
+        id: get_changes
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            CHANGES=$(git log --pretty=format:"- %s" --no-merges)
+          else
+            CHANGES=$(git log --pretty=format:"- %s" --no-merges ${LAST_TAG}..HEAD)
+          fi
+          echo "CHANGES<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: "11"
+          java-version: "17"
           distribution: "temurin"
           cache: maven
 
       - name: Build with Maven
         env:
           C8Y_BOOTSTRAP_TENANT: ${{ secrets.C8Y_BOOTSTRAP_TENANT }}
-          C8Y_BASE_URL: ${{ secrets.C8Y_BASE_URL }}
+          C8Y_BASEURL: ${{ secrets.C8Y_BASE_URL }}
           C8Y_BOOTSTRAP_USER: ${{ secrets.C8Y_BOOTSTRAP_USER }}
           C8Y_BOOTSTRAP_PASSWORD: ${{ secrets.C8Y_BOOTSTRAP_PASSWORD }}
         run: mvn package
-        #  -DC8Y.bootstrap.tenant="${C8Y_BOOTSTRAP_TENANT}"
-        #  -DC8Y.baseURL="${C8Y_BASE_URL}"
-        #  -DC8Y.bootstrap.user="${C8Y_BOOTSTRAP_USER}"
-        #  -DC8Y.bootstrap.password="${C8Y_BOOTSTRAP_PASSWORD}"
         working-directory: ./metrics-aggregator
+
+      # Angular build steps
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './usage-statistics-app/package-lock.json'
+
+      - name: Get app version
+        id: get_app_version
+        run: |
+          echo "APP_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+        working-directory: ./usage-statistics-app
+
+      - name: Install Angular dependencies
+        run: npm ci
+        working-directory: ./usage-statistics-app
+
+      - name: Build Angular app
+        run: npm run build
+        working-directory: ./usage-statistics-app
+
+      - name: Rename Angular app zip
+        run: |
+          mv dist/usage-statistics-app.zip dist/usage-statistics-app-${{ steps.get_app_version.outputs.APP_VERSION }}.zip
+        working-directory: ./usage-statistics-app
 
       - name: Get project version
         id: get_version
@@ -55,16 +91,23 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.version || github.ref_name }}
-          files: metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
+          body: |
+            Changelog:
+            ${{ steps.get_changes.outputs.CHANGES }}
+          files: |
+            metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
+            usage-statistics-app/dist/usage-statistics-app-${{ steps.get_app_version.outputs.APP_VERSION }}.zip
           draft: false
           prerelease: false
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload artifact (for manual triggers)
-        uses: actions/upload-artifact@v4
+      - name: Upload artifacts (for manual triggers)
+        uses: actions/upload-artifact@v3
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: ${{ steps.get_version.outputs.PROJECT_VERSION }}
-          path: metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
+          name: release-artifacts
+          path: |
+            metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
+            usage-statistics-app/dist/usage-statistics-app-${{ steps.get_app_version.outputs.APP_VERSION }}.zip

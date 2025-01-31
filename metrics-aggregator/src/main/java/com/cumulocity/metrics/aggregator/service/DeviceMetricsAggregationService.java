@@ -17,19 +17,22 @@ import org.springframework.stereotype.Service;
 
 import com.cumulocity.sdk.client.RestConnector;
 import com.cumulocity.sdk.client.SDKException;
+
+
 import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration;
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatistics;
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatisticsAggregation;
 import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration.DeviceClass;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.cumulocity.model.option.OptionPK;
+import com.cumulocity.rest.representation.CumulocityMediaType;
 import com.cumulocity.rest.representation.tenant.OptionRepresentation;
 import com.cumulocity.sdk.client.option.TenantOptionApi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.ws.rs.core.MediaType;
+
 
 /**
  * This is a service to aggregate device an microservices metrics to display in
@@ -73,7 +76,7 @@ public class DeviceMetricsAggregationService {
 			DeviceStatistics dspage = restConnector.get(
 					"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
 							+ "?pageSize=2000&withTotalPages=true",
-					MediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
+					CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
 			dspage.setDaysInMonth(statDate);
 			log.debug("Statistics: " + dspage.getStatistics().toString());
 			dsMap.put(currentTenant, dspage);
