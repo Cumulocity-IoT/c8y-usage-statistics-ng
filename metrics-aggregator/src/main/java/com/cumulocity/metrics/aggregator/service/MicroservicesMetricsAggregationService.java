@@ -215,7 +215,7 @@ public class MicroservicesMetricsAggregationService {
 					.collect(Collectors.groupingBy(TenantStatistics.UsedBy::getName));
 	
 			// Target map to gather sum results of each service by name
-			Map<String, TenantStatistics.UsedBy> agg = new HashMap<String, TenantStatistics.UsedBy>();
+			Map<String, TenantStatistics.UsedBy> aggForOneService = new HashMap<String, TenantStatistics.UsedBy>();
 	
 			// Object to hold the sum of all services
 			UsedBy totalUsage = new UsedBy();
@@ -223,51 +223,59 @@ public class MicroservicesMetricsAggregationService {
 			// iterate over grouped entries to sum up the values for total
 			Iterator<Entry<String, List<UsedBy>>> it = usedByGrouped.entrySet().iterator();
 			while (it.hasNext()) {
-				Map.Entry<String, List<UsedBy>> pair = it.next();
-				Long cpu = pair.getValue().stream().mapToLong(ub -> ub.getCpu()).sum();
-				Long mem = pair.getValue().stream().mapToLong(ub -> ub.getMemory()).sum();
-				double avgCpu = getCPUAverage(cpu, daysInMonth);
-				double avgMem = getMEMAverage(mem, daysInMonth);
-				totalUsage.setCpu(totalUsage.getCpu() + cpu);
-				totalUsage.setMemory(totalUsage.getMemory() + mem);
+				Map.Entry<String, List<UsedBy>> oneServiceMultiUsedBy = it.next();
+				Long oneServiceCpu = oneServiceMultiUsedBy.getValue().stream().mapToLong(ub -> ub.getCpu()).sum();
+				Long oneServiceMem = oneServiceMultiUsedBy.getValue().stream().mapToLong(ub -> ub.getMemory()).sum();
+				double avgCpu = getCPUAverage(oneServiceCpu, daysInMonth);
+				double avgMem = getMEMAverage(oneServiceMem, daysInMonth);
+				totalUsage.setCpu(totalUsage.getCpu() + oneServiceCpu);
+				totalUsage.setMemory(totalUsage.getMemory() + oneServiceMem);
 				totalUsage.setAvgCPU(totalUsage.getAvgCPU() + avgCpu);
 				totalUsage.setAvgMemory(totalUsage.getAvgMemory() + avgMem);
 	
-				// Check if entry exists
-				if (agg.containsKey(pair.getKey())) {
-					Long allCpu = agg.get(pair.getKey()).getCpu();
-					Long allMem = agg.get(pair.getKey()).getMemory();
-					agg.get(pair.getKey()).setCpu(allCpu + cpu);
-					agg.get(pair.getKey()).setMemory(allMem + mem);
-					double allAvgCpu = agg.get(pair.getKey()).getAvgCPU();
-					double allAvgMem = agg.get(pair.getKey()).getAvgMemory();
-					agg.get(pair.getKey()).setAvgCPU(allAvgCpu + avgCpu);
-					agg.get(pair.getKey()).setAvgMemory(allAvgMem + avgMem);
+				// Check if service entry exists
+				if (aggForOneService.containsKey(oneServiceMultiUsedBy.getKey())) {
+					// Fetch summed up values
+
+					// CPU
+					Long oneServiceTotalCpu = aggForOneService.get(oneServiceMultiUsedBy.getKey()).getCpu();
+					oneServiceTotalCpu = oneServiceTotalCpu + oneServiceCpu;
+					aggForOneService.get(oneServiceMultiUsedBy.getKey()).setCpu(oneServiceTotalCpu);
+
+					// Mem
+					Long oneServiceTotalMem = aggForOneService.get(oneServiceMultiUsedBy.getKey()).getMemory();
+					oneServiceTotalMem = oneServiceTotalMem + oneServiceMem;
+					aggForOneService.get(oneServiceMultiUsedBy.getKey()).setMemory(oneServiceTotalMem);
+
+					// Calc Averages
+					aggForOneService.get(oneServiceMultiUsedBy.getKey()).setAvgCPU(getCPUAverage(oneServiceTotalCpu, daysInMonth));
+					aggForOneService.get(oneServiceMultiUsedBy.getKey()).setAvgMemory(getMEMAverage(oneServiceTotalMem, daysInMonth));
+					
 				} else {
 					UsedBy ub = new UsedBy();
-					ub.setCpu(cpu);
-					ub.setMemory(mem);
-					ub.setName(pair.getKey());
+					ub.setCpu(oneServiceCpu);
+					ub.setMemory(oneServiceMem);
+					ub.setName(oneServiceMultiUsedBy.getKey());
 					ub.setAvgCPU(avgCpu);
 					ub.setAvgMemory(avgMem);
-					agg.put(pair.getKey(), ub);
+					aggForOneService.put(oneServiceMultiUsedBy.getKey(), ub);
 				}
 	
 			}
 			// Calc ccus
-			double ccus = calcCCUs(
-				getCPUAverage(totalUsage.getCpu(), daysInMonth),
-				getMEMAverage(totalUsage.getMemory(), daysInMonth)
-				);
+			double avCPU = getCPUAverage(totalUsage.getCpu(), daysInMonth);
+			double avMem = getMEMAverage(totalUsage.getMemory(), daysInMonth);
+			double ccus = calcCCUs(avCPU,avMem);
 
 			// add summary and return
 			microservicesStatisticsAggregation.setTotalUsage(
-					new Resources(totalUsage.getCpu(),
+					new Resources(
+							totalUsage.getCpu(),
 							totalUsage.getMemory(),
-							totalUsage.getAvgCPU(),
-							totalUsage.getAvgMemory(),
+							avCPU,
+							avMem,
 							ccus,
-							new ArrayList<UsedBy>(agg.values())));
+							new ArrayList<UsedBy>(aggForOneService.values())));
 			return microservicesStatisticsAggregation;
 		}
 	
