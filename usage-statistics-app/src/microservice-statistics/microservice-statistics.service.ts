@@ -108,12 +108,8 @@ export class MicroserviceStatisticsService {
     public async getMonthlyMicroserviceAggregation(date: Date):Promise<any> {
 
         var dateTo: Date;
-        
-        if (date.getMonth() == 11) {
-            dateTo = new Date(date.getFullYear() + 1, 0, 1);
-        } else {
-            dateTo = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-        }
+        dateTo= new Date(date.getFullYear(), date.getMonth() + 1, 0);
+       
         console.log("dateTo: " + dateTo)
 
         try {
