@@ -4,7 +4,7 @@
 	"provider": {
 		"name": "Cumulocity GmbH"
 	},
-	"isolation": "MULTI_TENANT",
+	"isolation": "PER_TENANT",
 	"resources": {
         "cpu": "0.5",
         "memory": "512M"

@@ -24,7 +24,12 @@ import com.cumulocity.microservice.context.ContextService;
 import com.cumulocity.microservice.context.credentials.MicroserviceCredentials;
 import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
+import com.cumulocity.rest.representation.CumulocityMediaType;
+import com.cumulocity.sdk.client.RestConnector;
+import com.cumulocity.sdk.client.inventory.InventoryApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.ws.rs.core.Response;
 
 /**
  * This service will aggregate microservices metrics to display in
@@ -45,6 +50,8 @@ public class TenantMetricsAggregationService {
 		this.df = new SimpleDateFormat("yyyy-MM-dd");
 	}
 
+	private String currentTenant = "";
+
 	@Autowired
 	MicroserviceSubscriptionsService subscriptionsService;
 
@@ -57,10 +64,18 @@ public class TenantMetricsAggregationService {
 	@Autowired
 	CumulocityClientProperties clientProperties;
 
+	@Autowired
+	CommonService commonService;
+
+	@Autowired
+	RestConnector restConnector;
+
 	@EventListener
 	public void initialize(MicroserviceSubscriptionAddedEvent event) {
 		log.info("Tenant Sub: " + event.toString());
 	}
+
+
 
 	@Cacheable(value = "tenantCache", key = "#dateFrom.toString() + '-' + #dateTo.toString()")
 	public TenantStatisticsAggregation getTenantStatisticsOverview(Date dateFrom, Date dateTo) {
@@ -68,37 +83,39 @@ public class TenantMetricsAggregationService {
 		// Aggregation object will hold all statistics
 		TenantStatisticsAggregation tenantStatisticsAggregation = new TenantStatisticsAggregation();
 
+
 		subscriptionsService.runForEachTenant(() -> {
 			// Will hold the c8y API response
 			TenantStatistics tenantStatistics = new TenantStatistics();
 			HttpHeaders headers = new HttpHeaders();
-			String currentTenant = subscriptionsService.getTenant();
-			headers.set("Authorization",
-					contextService.getContext().toCumulocityCredentials()
-							.getAuthenticationString());
-
-			headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-
-			log.info("Get Tenant Statistics for Tenant: " + currentTenant + "  date: " + df.format(dateFrom));
-
-			String serverUrl = clientProperties.getBaseURL()
-					+ "/tenant/statistics/summary/?tenant="
-					+ currentTenant
-					+ "&dateFrom=" + df.format(dateFrom)
-					+ "&dateTo=" + df.format(dateTo)
-					+ "&pageSize=2000&withTotalPages=true";
-
-			RestTemplate restTemplate = new RestTemplate();
-			HttpEntity<TenantStatistics> entity = new HttpEntity<TenantStatistics>(headers);
-			ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,
-					entity, TenantStatistics.class);
-
-			tenantStatistics = response.getBody();
-			tenantStatistics.setResources(null);
-			tenantStatisticsAggregation.getSubTenantStat().put(currentTenant, tenantStatistics);
-			tenantStatisticsAggregation.addToTotalStatistics(tenantStatistics);
-			tenantStatisticsAggregation.convertStorageToHumanReadable(tenantStatisticsAggregation.getTotalTenantStat().getStorageSize());
-
+			for (String currentTenant : commonService.getTenantList()) {
+				headers.set("Authorization",
+						contextService.getContext().toCumulocityCredentials()
+								.getAuthenticationString());
+	
+				headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+	
+				log.info("Get Tenant Statistics for Tenant: " + currentTenant + "  date: " + df.format(dateFrom));
+	
+				String serverUrl = clientProperties.getBaseURL()
+						+ "/tenant/statistics/summary/?tenant="
+						+ currentTenant
+						+ "&dateFrom=" + df.format(dateFrom)
+						+ "&dateTo=" + df.format(dateTo)
+						+ "&pageSize=2000&withTotalPages=true";
+	
+				RestTemplate restTemplate = new RestTemplate();
+				HttpEntity<TenantStatistics> entity = new HttpEntity<TenantStatistics>(headers);
+				ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,
+						entity, TenantStatistics.class);
+	
+				tenantStatistics = response.getBody();
+				tenantStatistics.setResources(null);
+				tenantStatisticsAggregation.getSubTenantStat().put(currentTenant, tenantStatistics);
+				tenantStatisticsAggregation.addToTotalStatistics(tenantStatistics);
+				tenantStatisticsAggregation.convertStorageToHumanReadable(tenantStatisticsAggregation.getTotalTenantStat().getStorageSize());
+				
+			}
 		});
 
 		return tenantStatisticsAggregation;
