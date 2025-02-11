@@ -40,6 +40,7 @@ export class TenantPickerComponent implements OnInit {
   async loadSubTenantList() {
     try {
       this.sourceTenant = await this.commonService.getSourceTenant()
+      console.log('sourceTenant: ' + this.sourceTenant)
       this.currentlyActiveTenant = await this.commonService.getCurrentlyActiveTenant();
       this.tenantList = await this.commonService.getAllSubtenants(this.sourceTenant);
       this.tenantHierarchy = this.getTenantHierarchyAndBuildDictionary();
@@ -49,7 +50,7 @@ export class TenantPickerComponent implements OnInit {
     }
     catch (error) {
       const alert: Alert = {
-        text: gettext('Unable to get the  subtenants of the current tenant'),
+        text: gettext('Unable to get the  subtenants of the current tenant. Are there any subtenants attached?'),
         type: 'danger',
         detailedData: error.message
       }

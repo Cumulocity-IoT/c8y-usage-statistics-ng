@@ -134,7 +134,7 @@ export class CommonService {
       }
       catch (error) {
         const alert: Alert = {
-          text: gettext('Unable to get the subtenants list'),
+          text: gettext('Unable to get the subtenants list. Are there any subtenants attached?'),
           type: 'danger',
           detailedData: error.message
         }
