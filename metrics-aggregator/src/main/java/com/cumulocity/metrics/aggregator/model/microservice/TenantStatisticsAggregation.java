@@ -90,7 +90,7 @@ public class TenantStatisticsAggregation {
                         ci.next();
                 }
                 value *= Long.signum(bytes);
-                this.totalTenantStat.setStorageHumanReadable(String.format("%.1f %ciB", value / 1024.0, ci.current()));
+                this.totalTenantStat.setStorageHumanReadable(String.format("%.1f %ciB", value / 1073.74, ci.current()));
         }
 
 }
