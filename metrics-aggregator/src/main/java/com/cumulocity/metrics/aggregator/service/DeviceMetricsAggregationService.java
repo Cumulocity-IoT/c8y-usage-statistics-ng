@@ -65,21 +65,24 @@ public class DeviceMetricsAggregationService {
 	@Autowired
 	ObjectMapper objectMapper;
 
+	@Autowired
+	CommonService commonService;
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
 	public Map<String, DeviceStatistics> getDeviceStatisticsOverview(String type, Date statDate) {
 
 		HashMap<String, DeviceStatistics> dsMap = new HashMap<String, DeviceStatistics>();
 		subscriptionsService.runForEachTenant(() -> {
-			String currentTenant = subscriptionsService.getTenant();
-			log.info("Get Statistics for Tenant: " + currentTenant);
-			DeviceStatistics dspage = restConnector.get(
-					"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
-							+ "?pageSize=2000&withTotalPages=true",
-					CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
-			dspage.setDaysInMonth(statDate);
-			log.debug("Statistics: " + dspage.getStatistics().toString());
-			dsMap.put(currentTenant, dspage);
+			for (String currentTenant : commonService.getTenantList()) {
+				log.info("Get Statistics for Tenant: " + currentTenant);
+				DeviceStatistics dspage = restConnector.get(
+						"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
+								+ "?pageSize=2000&withTotalPages=true",
+						CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
+				dspage.setDaysInMonth(statDate);
+				log.debug("Statistics: " + dspage.getStatistics().toString());
+				dsMap.put(currentTenant, dspage);
+			}
 		});
 		return dsMap;
 	}
