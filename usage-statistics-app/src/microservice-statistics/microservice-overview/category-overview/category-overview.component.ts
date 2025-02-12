@@ -56,7 +56,7 @@ export class CategoryOverviewComponent implements OnInit {
       setTimeout(() => {
         this.loadDataGenerateCharts();
         this.isLoading = false;
-      }, 5000);
+      }, 1000);
     } catch (err) {
       console.log(gettext("Error in chart generation"));
       console.error(err.message);

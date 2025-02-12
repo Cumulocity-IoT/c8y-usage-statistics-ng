@@ -50,7 +50,7 @@ export class DeviceOverviewComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         this.getDeviceDataAndGenerateCharts()
         this.isLoading = false
-      }, 5000)
+      }, 1000)
     }
     catch (err) {
       console.log(gettext('Error in chart generation'))

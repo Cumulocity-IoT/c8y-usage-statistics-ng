@@ -52,11 +52,16 @@ const ADMIN_ROUTES = [
 export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
   navs: NavigatorNode[] = [];
   private readonly header: any = { "Content-Type": "application/json" };
+  public aggregation: boolean = false;
+  private  childrenDevice = [];
+  private  childrenMicroservice = [];
+  private  childrenTenant = [];
   constructor(
     private client: FetchClient,
     private alertService: AlertService,
     private router: Router
   ) {
+    this.isMetricsAggregatorAvailable();
     this.isConfigAccessible().then(res => {
       if (res) {
         this.router.config.splice(-3, 3);
@@ -74,12 +79,6 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         label: gettext('Device Overview'),
         icon: 'combo-chart'
       })
-      const DEVICE_STATISTICS_AGGREGATION = new NavigatorNode({
-        path: 'device-statistics/aggregation',
-        priority: 70,
-        label: gettext('Device Aggregation'),
-        icon: 'summary-list'
-      })
       const DEVICE_STATISTICS_DEVICE_DATA = new NavigatorNode({
         path: 'device-statistics/device-data',
         priority: 60,
@@ -94,11 +93,14 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         priority: 60
       })
 
+      
+      this.childrenDevice = [DEVICE_STATISTICS_OVERVIEW, DEVICE_STATISTICS_DEVICE_DATA];
+
       const DEVICE_STATISTICS = new NavigatorNode({
         label: gettext('Device Statistics'),
         icon: 'devices',
         path: '/device-statistics',
-        children: [DEVICE_STATISTICS_OVERVIEW, DEVICE_STATISTICS_AGGREGATION, DEVICE_STATISTICS_DEVICE_DATA],
+        children: this.childrenDevice,
         priority: 80
       })
 
@@ -110,14 +112,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         icon: 'combo-chart',
         routerLinkExact: false
       })
-      // Microservice Statistics
-      const MICROSERVICE_STATISTICS_AGGREGATION = new NavigatorNode({
-        path: 'microservice-statistics/microservice-aggregation',
-        priority: 70,
-        label: gettext('Microservice Aggregation'),
-        icon: 'summary-list',
-        routerLinkExact: false
-      })
+      
       const MICROSERVICE_STATISTICS_DEVICE_DATA = new NavigatorNode({
         path: 'microservice-statistics/microservice-data',
         priority: 60,
@@ -132,11 +127,13 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         priority: 60
       })
 
+
+      this.childrenMicroservice = [MICROSERVICE_STATISTICS_OVERVIEW,MICROSERVICE_STATISTICS_DEVICE_DATA]
       const MICROSERVICE_STATISTICS = new NavigatorNode({
         label: gettext('Microservice Statistics'),
         icon: 'centralized-network',
         path: '/microservice-statistics',
-        children: [MICROSERVICE_STATISTICS_OVERVIEW, MICROSERVICE_STATISTICS_AGGREGATION,MICROSERVICE_STATISTICS_DEVICE_DATA],
+        children: this.childrenMicroservice,
         priority: 80
       })
 
@@ -147,19 +144,14 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         label: gettext('Tenant Data'),
         icon: 'grid-view'
       })
-      // Tenant Aggregation
-      const TENANT_STATISTICS_AGGREGATION = new NavigatorNode({
-        path: 'tenant-statistics/tenant-aggregation',
-        priority: 60,
-        label: gettext('Tenant Aggregation'),
-        icon: 'summary-list'
-      })
+      
 
+      this.childrenTenant = [TENANT_STATISTICS_DATA];
       const TENANT_STATISTICS = new NavigatorNode({
         label: gettext('Tenant Statistics'),
         icon: 'contact-us',
         path: '/tenant-statistics',
-        children: [TENANT_STATISTICS_DATA,TENANT_STATISTICS_AGGREGATION],
+        children: this.childrenTenant,
         priority: 80
       })
 
@@ -172,6 +164,52 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
     }
 
     return this.navs;
+  }
+
+  async isMetricsAggregatorAvailable(){
+    try {
+      const options = {
+        method: 'GET'
+      };
+      var api = '/service/metrics-aggregator/health'
+      const response = await this.client.fetch(api, options);
+      if (response.ok){
+        // Tenant Aggregation
+        const TENANT_STATISTICS_AGGREGATION = new NavigatorNode({
+          path: 'tenant-statistics/tenant-aggregation',
+          priority: 60,
+          label: gettext('Tenant Aggregation'),
+          icon: 'summary-list'
+        });
+        this.childrenTenant.push(TENANT_STATISTICS_AGGREGATION);
+        // Microservice Statistics
+        const MICROSERVICE_STATISTICS_AGGREGATION = new NavigatorNode({
+          path: 'microservice-statistics/microservice-aggregation',
+          priority: 70,
+          label: gettext('Microservice Aggregation'),
+          icon: 'summary-list',
+          routerLinkExact: false
+        });
+        this.childrenMicroservice.push(MICROSERVICE_STATISTICS_AGGREGATION);
+        const DEVICE_STATISTICS_AGGREGATION = new NavigatorNode({
+          path: 'device-statistics/aggregation',
+          priority: 70,
+          label: gettext('Device Aggregation'),
+          icon: 'summary-list'
+        });
+        this.childrenDevice.push(DEVICE_STATISTICS_AGGREGATION);
+        this.aggregation = true;
+        console.log("Metrics Aggregator Microservice found. Activating aggregation. "+ await(response.json()));
+
+      }else {
+
+        this.aggregation= false;
+        console.log("Metrics Aggregator Microservice not found. No aggregation possible. " , await(response.json()));
+      }
+      } catch (err) {
+      console.log("ERRRR Metrics Aggregator Microservice not found. No aggregation possible. " +err);
+      this.aggregation = false;
+    }
   }
 
   async isConfigAccessible() {

@@ -50,7 +50,7 @@ export class TenantPickerComponent implements OnInit {
     }
     catch (error) {
       const alert: Alert = {
-        text: gettext('Unable to get the  subtenants of the current tenant. Are there any subtenants attached?'),
+        text: gettext('Unable to get the  subtenants of the current tenant. Does your user have role Tenant Management READ attached?'),
         type: 'danger',
         detailedData: error.message
       }
