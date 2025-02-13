@@ -173,7 +173,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
       };
       var api = '/service/metrics-aggregator/health'
       const response = await this.client.fetch(api, options);
-      if (!response.ok){
+      if (response.ok){
         // Tenant Aggregation
         const TENANT_STATISTICS_AGGREGATION = new NavigatorNode({
           path: 'tenant-statistics/tenant-aggregation',
