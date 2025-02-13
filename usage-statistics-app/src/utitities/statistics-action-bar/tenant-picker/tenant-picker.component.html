@@ -25,7 +25,7 @@
       <div style="max-height: 54vh; overflow: auto; margin-top: 16.18px">
         <ul>
           <li>
-            <div (click)="selectedTenant(sourceTenant)" [class.disable-tenant]="!isActiveTenant(getTenant(sourceTenant))">
+            <div (click)="selectedTenant(sourceTenant)">
               <div class="extra">
                 <div class="m-r-4 dlt-c8y-icon-communication-internet" [class.text-primary]="isActiveTenant(getTenant(sourceTenant))"></div>
                 <div class="tenant-layout">
@@ -51,7 +51,7 @@
             </div>
             <ul>
               <li *ngFor="let parent of tenantHierarchy[sourceTenant]" class="li-left">
-                <div [class.hide-item]="parent.hideItem" (click)="selectedTenant(parent.id)" [class.disable-tenant]="!isActiveTenant(parent)">
+                <div [class.hide-item]="parent.hideItem" (click)="selectedTenant(parent.id)">
                   <div class="extra">
                     <div class="m-r-4 dlt-c8y-icon-communication-internet" [class.text-primary]="isActiveTenant(parent)"></div>
                     <div class="tenant-layout">
