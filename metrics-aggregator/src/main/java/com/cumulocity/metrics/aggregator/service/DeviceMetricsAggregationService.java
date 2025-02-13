@@ -90,14 +90,15 @@ public class DeviceMetricsAggregationService {
 	public Map<String, DeviceClassConfiguration> getAllDeviceClassConfiguration(boolean useTenantDeviceClasses) {
 		log.info("# Fetching all deviceClassConfigurations, useTenantDeviceClasses: " + useTenantDeviceClasses);
 		this.allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
-		subscriptionsService.runForEachTenant(() -> {
-			String currentTenant = subscriptionsService.getTenant();
-			if (useTenantDeviceClasses) {
-				this.allDeviceClassConfiguration.put(currentTenant, getDeviceClasseConfiguration(currentTenant));
-			} else {
-				this.allDeviceClassConfiguration.put(currentTenant, new DeviceClassConfiguration());
-			}
-		});
+		for (String currentTenant : commonService.getTenantList()) {
+			subscriptionsService.runForEachTenant(() -> {
+				if (useTenantDeviceClasses) {
+					this.allDeviceClassConfiguration.put(currentTenant, getDeviceClasseConfiguration(currentTenant));
+				} else {
+					this.allDeviceClassConfiguration.put(currentTenant, new DeviceClassConfiguration());
+				}
+			});
+		}
 		return allDeviceClassConfiguration;
 	}
 
