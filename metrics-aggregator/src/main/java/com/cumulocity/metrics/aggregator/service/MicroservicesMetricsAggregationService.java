@@ -117,6 +117,14 @@ public class MicroservicesMetricsAggregationService {
 			"metrics-aggregator",
 			"device-statistics-week").collect(Collectors.toList());
 
+	public List<String> getProductServices() {
+		return productServices;
+	}
+
+	public void setProductServices(List<String> productServices) {
+		this.productServices = productServices;
+	}
+
 	public MicroservicesMetricsAggregationService() {
 		this.df = new SimpleDateFormat("yyyy-MM-dd");
 	}
