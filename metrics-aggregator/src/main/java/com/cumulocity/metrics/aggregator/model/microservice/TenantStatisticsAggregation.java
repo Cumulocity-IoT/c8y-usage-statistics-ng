@@ -93,4 +93,14 @@ public class TenantStatisticsAggregation {
                 this.totalTenantStat.setStorageHumanReadable(String.format("%.1f %ciB", value / 1073.74, ci.current()));
         }
 
+        public void calcTotalMeas(TenantStatistics tenantStatistics){
+                tenantStatistics.setMeas(    
+                        tenantStatistics.getAlarmsCreatedCount() +
+                        tenantStatistics.getAlarmsUpdatedCount() +
+                        tenantStatistics.getEventsCreatedCount() +
+                        tenantStatistics.getEventsUpdatedCount() +
+                        tenantStatistics.getMeasurementsCreatedCount()
+            );
+        }
+
 }
