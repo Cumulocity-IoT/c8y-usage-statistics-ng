@@ -1,6 +1,5 @@
 package com.cumulocity.metrics.aggregator.controller;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
