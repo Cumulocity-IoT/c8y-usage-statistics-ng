@@ -32,7 +32,16 @@ public class TenantStatistics {
     private int inventoriesCreatedCount;
     private long storageSize;
     private String storageHumanReadable;
+    private int meas;
     
+    public int getMeas() {
+        return meas;
+    }
+
+    public void setMeas(int meas) {
+        this.meas = meas;
+    }
+
     public String getStorageHumanReadable() {
         return storageHumanReadable;
     }
