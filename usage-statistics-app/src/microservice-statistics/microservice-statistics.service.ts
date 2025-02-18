@@ -16,7 +16,6 @@ export interface TenantSummaryResources {
 }
 
 export interface MonthlyMicroserviceProdCategoryMap extends TenantSummaryResources {
-    [PropertyName.Product]: string,
     [PropertyName.Microservice]: string,
     avgCpu?: string,
     avgMemory?: string
@@ -26,9 +25,11 @@ export interface MonthlyMicroserviceProdCategoryMap extends TenantSummaryResourc
     providedIn: 'root'
 })
 export class MicroserviceStatisticsService {
-    microserviceStatisticsDataStore = {
+    public microserviceStatisticsDataStore = {
         response: <MonthlyMicroserviceProdCategoryMap[]>[],
-        date: <Date>new Date()
+        date: <Date>new Date(),
+        avgCPU: "",
+        avgMEM: "" 
     }
 
     constructor(
@@ -37,25 +38,94 @@ export class MicroserviceStatisticsService {
         private client: FetchClient,
     ) { }
 
+   
+    
+    getProductService(): string[]{
+        return ["actility",
+                "administration",
+                "advanced-software-mgmt",
+                "apama-ctrl-1c-4g",
+                "apama-ctrl-250mc-1g",
+                "apama-ctrl-2c-8g",
+                "apama-ctrl-smartrulesmt",
+                "apama-ctrl-starter",
+                "apama-oeeapp", "apama-subscription-mgr",
+                "billwerk-agent-server",
+                "cellid", "c8y-community-utils",
+                "c8ydata", "cloud-remote-access",
+                "cockpit",
+                "cockpitbeta",
+                "connectivity-agent-server",
+                "core",
+                "databroker-agent-server",
+                "datahub",
+                "DataHub",
+                "device-counter-exporter",
+                "devicemanagement",
+                "device-simulator",
+                "device-statistics-week",
+                "digital-twin-manager",
+                "dtm-ms",
+                "dtm",
+                "feature-cep-custom-rules",
+                "feature-fieldbus4",
+                "feature-microservice-hosting",
+                "feature-user-hierarchy",
+                "impact",
+                "loriot-agent",
+                "management", "metadata-collector",
+                "OEE", "onnx",
+                "opcua-mgmt-service",
+                "oee-bundle",
+                "public-options",
+                "report-agent",
+                "repository-connect",
+                "sigfox-agent",
+                "smartrule",
+                "sms-gateway",
+                "sslmanagement",
+                "stratos-client",
+                "Streaming Analytics",
+                "tenant-cleanup",
+                "tenant-data-exporter",
+                "tenant-recovery",
+                "zementis-small",
+                "mlw",
+                "nyoka",
+                "cep",
+                "apama-ctrl-24c-16g",
+                "apama-ctrl-4c-8g",
+                "apama-ctrl-025c-1g",
+                "apama-ctrl-mt-4c-16g",
+                "metrics-aggregator",
+                "device-statistics-week"]
+      }
+
     async getMonthlyMicroserviceProdCategoryMap(selectedDate: Date): Promise<MonthlyMicroserviceProdCategoryMap[]> {
-        const productCategories: ProductCategory[] = await this.microserviceConfigurationService.getCategories(Api.Product, false)        
-        const defaultProductCategory = productCategories.find((elem: ProductCategory) => elem.isDefault).productCategory
-        const microserviceCategories = await this.microserviceConfigurationService.getCategories(Api.Microservice, false)
+        //const productCategories: ProductCategory[] = await this.microserviceConfigurationService.getCategories(Api.Product, false)        
+        const defaultProductCategory = "Custom Microservice"
+        //const microserviceCategories = await this.microserviceConfigurationService.getCategories(Api.Microservice, false)
         const tenantSummaryResources = await this.getTenantSummaryResources(selectedDate)
         const response: MonthlyMicroserviceProdCategoryMap[] = [];
         const numberOfDaysInMonth = moment(selectedDate, DATE_FORMAT_MONTH).daysInMonth();
+        let totalCPU:number = 0;
+        let totalMEM:number= 0;
+
         tenantSummaryResources.forEach((elem: TenantSummaryResources) => {
             const microserviceName = elem.name
-            const productCategory = this.getProductCategory(microserviceCategories, defaultProductCategory, microserviceName)
-            response.push({
-                ...elem,
-                productCategory: productCategory,
-                microserviceName: microserviceName,
-                avgCpu: (elem.cpu / (1000 * numberOfDaysInMonth)).toFixed(2),
-                avgMemory: (elem.memory / (1073.74 * numberOfDaysInMonth)).toFixed(2)
-            })
+            if (!this.getProductService().includes( microserviceName)){
+                totalCPU = totalCPU + elem.cpu;
+                totalMEM = totalMEM + elem.memory;
+                response.push({
+                    ...elem,
+                    microserviceName: microserviceName,
+                    avgCpu: (elem.cpu / (1000 * numberOfDaysInMonth)).toFixed(2),
+                    avgMemory: (elem.memory / (4294.97 * numberOfDaysInMonth)).toFixed(2)
+                })
+            }
         })
-       
+        this.microserviceStatisticsDataStore.avgCPU = (totalCPU / (1000 * numberOfDaysInMonth)).toFixed(2);
+        this.microserviceStatisticsDataStore.avgMEM = (totalMEM  / (4294.97 * numberOfDaysInMonth)).toFixed(2);
 
         this.microserviceStatisticsDataStore.response = response
         this.microserviceStatisticsDataStore.date = selectedDate

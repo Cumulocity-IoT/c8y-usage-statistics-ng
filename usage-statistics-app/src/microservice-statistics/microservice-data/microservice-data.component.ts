@@ -30,17 +30,19 @@ export class MicroserviceDataComponent implements OnInit, OnDestroy {
     hover: true
   };
   isLoading = true;
-
+  
+  avgCPU = "";
+  avgMEM = "";
   MEMORY: string = 'memory';
   NAME: string = 'microserviceName';
   CPU: string = 'cpu';
   CAUSE: string = 'cause';
-  CATEGORY: string = 'productCategory';
   AVG_CPU: string = 'avgCpu';
   AVG_MEMORY: string = 'avgMemory';
 
   columns: Column[] = this.getColumns();
   pagination: Pagination = this.getPagination();
+showSearch: boolean;
 
   constructor(
     private monthPickerService: MonthPickerService,
@@ -49,6 +51,7 @@ export class MicroserviceDataComponent implements OnInit, OnDestroy {
     private commonService: CommonService
   ) {
   }
+ 
 
   ngOnInit(): void {
     this.monthChangedSubscription = this.monthPickerService.dateChanged.subscribe((selectedDate: Date) => {
@@ -74,13 +77,6 @@ export class MicroserviceDataComponent implements OnInit, OnDestroy {
         name: this.NAME,
         header: COLUMN_FIELDS.MICROSERVICE,
         path: this.NAME,
-        filterable: true,
-        sortable: true
-      },
-      {
-        name: this.CATEGORY,
-        header: COLUMN_FIELDS.PROD_CATEGORY,
-        path: this.CATEGORY,
         filterable: true,
         sortable: true
       },
@@ -138,6 +134,9 @@ export class MicroserviceDataComponent implements OnInit, OnDestroy {
   async getMicroserviceData(selectedDate = this.monthPickerService.selectedDate) {
     try {
       this.microserviceData = await this.microserviceStatisticsService.getMonthlyMicroserviceProdCategoryMap(selectedDate);
+      console.log("MS DATA: " ,this.microserviceData , " averages: " , this.microserviceStatisticsService.microserviceStatisticsDataStore.avgCPU);
+      this.avgCPU = this.microserviceStatisticsService.microserviceStatisticsDataStore.avgCPU;
+      this.avgMEM = this.microserviceStatisticsService.microserviceStatisticsDataStore.avgMEM;
     }
     catch (error) {
       this.commonService.microserviceUnavailableAlert(error)

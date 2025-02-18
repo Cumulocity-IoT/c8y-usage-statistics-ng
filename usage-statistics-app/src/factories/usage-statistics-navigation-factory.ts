@@ -8,8 +8,6 @@ import { DeviceOverviewComponent } from '../device-statistics/device-overview/de
 import { DeviceAggregationComponent } from '../device-statistics/device-aggregation/device-aggregation.component';
 import { MicroserviceConfigurationComponent } from '../microservice-statistics/microservice-configuration/microservice-configuration.component';
 import { MicroserviceDataComponent } from '../microservice-statistics/microservice-data/microservice-data.component';
-import { CategoryOverviewComponent } from '../microservice-statistics/microservice-overview/category-overview/category-overview.component';
-import { ServicesOverviewComponent } from '../microservice-statistics/microservice-overview/services-overview/services-overview.component';
 import { TenantDataComponent } from '../tenant-statistics/tenant-data/tenant-data.component';
 import { Router } from '@angular/router';
 import { MicroserviceAggregationComponent } from '../microservice-statistics/microservice-aggregation/microservice-aggregation.component';
@@ -30,8 +28,6 @@ export const ROUTES: Route[] = [
   { path: 'device-statistics/aggregation', component: DeviceAggregationComponent },
   { path: 'microservice-statistics', pathMatch: 'prefix', redirectTo: 'microservice-statistics/overview/category-overview' },
   { path: 'microservice-statistics/overview', pathMatch: 'prefix', redirectTo: 'microservice-statistics/overview/category-overview' },
-  { path: 'microservice-statistics/overview/category-overview', component: CategoryOverviewComponent },
-  { path: 'microservice-statistics/overview/services-overview', component: ServicesOverviewComponent },
   { path: 'microservice-statistics/microservice-data', component: MicroserviceDataComponent },
   { path: 'microservice-statistics/microservice-aggregation', component: MicroserviceAggregationComponent },
   { path: 'tenant-statistics', pathMatch: 'prefix', redirectTo: 'tenant-statistics/tenant-data' },
@@ -104,13 +100,13 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
       })
 
       // Microservice Statistics
-      const MICROSERVICE_STATISTICS_OVERVIEW = new NavigatorNode({
-        path: 'microservice-statistics/overview',
-        priority: 70,
-        label: gettext('Microservice Overview'),
-        icon: 'combo-chart',
-        routerLinkExact: false
-      })
+      // const MICROSERVICE_STATISTICS_OVERVIEW = new NavigatorNode({
+      //   path: 'microservice-statistics/overview',
+      //   priority: 70,
+      //   label: gettext('Microservice Overview'),
+      //   icon: 'combo-chart',
+      //   routerLinkExact: false
+      // })
       
       const MICROSERVICE_STATISTICS_DEVICE_DATA = new NavigatorNode({
         path: 'microservice-statistics/microservice-data',
@@ -127,7 +123,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
       })
 
 
-      this.childrenMicroservice = [MICROSERVICE_STATISTICS_OVERVIEW,MICROSERVICE_STATISTICS_DEVICE_DATA]
+      this.childrenMicroservice = [MICROSERVICE_STATISTICS_DEVICE_DATA]
       const MICROSERVICE_STATISTICS = new NavigatorNode({
         label: gettext('Microservice Statistics'),
         icon: 'centralized-network',
@@ -155,14 +151,12 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
       })
 
       if (await this.isConfigAccessible()) {
-        DEVICE_STATISTICS.children.push(DEVICE_CONFIGURATION_LIST)
+        //DEVICE_STATISTICS.children.push(DEVICE_CONFIGURATION_LIST)
         MICROSERVICE_STATISTICS.children.push(MICROSERVICE_CONFIGURATION)
       }
       this.navs.push(DEVICE_STATISTICS, MICROSERVICE_STATISTICS, TENANT_STATISTICS)
       this.isMetricsAggregatorAvailable();
-
     }
-
     return this.navs;
   }
 

@@ -1,7 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { RouterTestingModule } from '@angular/router/testing';
+
 import { CoreModule } from '@c8y/ngx-components';
 import { MicroserviceStatisticsService } from '../microservice-statistics.service';
 import { MicroserviceDataComponent } from './microservice-data.component';
@@ -17,7 +17,7 @@ describe('Test MicroserviceDataComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [RouterTestingModule, CoreModule.forRoot(), BrowserAnimationsModule],
+      imports: [CoreModule.forRoot(), BrowserAnimationsModule],
       declarations: [MicroserviceDataComponent],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [

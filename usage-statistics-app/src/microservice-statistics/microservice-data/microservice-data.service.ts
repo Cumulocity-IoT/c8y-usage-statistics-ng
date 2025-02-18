@@ -9,7 +9,6 @@ export const CAUSE: string = 'cause';
 export const CATEGORY: string = 'category'
 export const COLUMN_FIELDS = {
   MICROSERVICE: gettext('Microservice'),
-  PROD_CATEGORY: gettext('Product category'),
   MEMORY_TOTAL: gettext('Memory (MiB)'),
   MEMORY_AVG: gettext('Daily Avg Memory (GiB)'),
   CPU_TOTAL: gettext('CPU (mCPU)'),

@@ -45,6 +45,7 @@ export interface TenantAggregationResources {
   storageSize: number,
   storageHumanReadable: string,
   totalResourceCreateAndUpdateCount: number
+  meas: number
 }
 
 const moment = require('moment');

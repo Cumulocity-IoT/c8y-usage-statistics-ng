@@ -52,12 +52,13 @@ export class DeviceConfigurationService {
         monthlyThreshold: null,
       },
     ];
+    this.deviceStatisticsConfigurationStore = this.defaultConfig;
   }
 
   async getConfigurationOptions() {
-    const response = await this.getOptions();
-    this.previousConfiguration = this.deviceStatisticsConfigurationStore;
-    this.deviceStatisticsConfigurationStore = JSON.parse(response.data.value);
+    //const response = await this.getOptions();
+    // this.previousConfiguration = this.deviceStatisticsConfigurationStore;
+    // this.deviceStatisticsConfigurationStore = JSON.parse(response.data.value);
     return this.deviceStatisticsConfigurationStore;
   }
 
@@ -78,7 +79,7 @@ export class DeviceConfigurationService {
     if (res.status !== 200) {
       await this.setOptions(this.defaultConfig);
       data.value = JSON.stringify(this.defaultConfig);
-    }
+     }
 
     return { res, data };
   }

@@ -25,8 +25,6 @@ import { DeviceTypeCellRendererComponent } from './device-statistics/device-data
 import { MicroserviceConfigurationComponent } from './microservice-statistics/microservice-configuration/microservice-configuration.component';
 import { MicroserviceDataComponent } from './microservice-statistics/microservice-data/microservice-data.component';
 import { MicroserviceAggregationComponent } from './microservice-statistics/microservice-aggregation/microservice-aggregation.component';
-import { CategoryOverviewComponent } from './microservice-statistics/microservice-overview/category-overview/category-overview.component';
-import { ServicesOverviewComponent } from './microservice-statistics/microservice-overview/services-overview/services-overview.component';
 import { UsageStatisticsTabFactory } from './factories/usage-statistics-tabs-factory';
 import { TenantDataComponent } from './tenant-statistics/tenant-data/tenant-data.component';
 import { TenantAggregationComponent } from './tenant-statistics/tenant-aggregation/tenant-aggregation.component';
@@ -70,8 +68,6 @@ export const hooks = [
     StatisticsActionBarComponent,
     DeviceIdCellRendererComponent,
     DeviceTypeCellRendererComponent,
-    CategoryOverviewComponent,
-    ServicesOverviewComponent,
     MicroserviceDataComponent,
     MicroserviceConfigurationComponent,
     TenantDataComponent,

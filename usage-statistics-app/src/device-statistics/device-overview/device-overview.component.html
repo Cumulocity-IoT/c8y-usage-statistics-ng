@@ -3,7 +3,7 @@
 <div class="text-center" *ngIf="isLoading">
     <c8y-loading></c8y-loading>
 </div>
-<div [class.remove-container]="isAnyThresholdSet || !(showPanel && !isLoading)">
+<!--div [class.remove-container]="isAnyThresholdSet || !(showPanel && !isLoading)">
     <div class="card no-threshold-set">
         <div class="card-body" style="padding:10px">
             <div style="display: flex; justify-content: space-around;">
@@ -20,7 +20,7 @@
             </div>
         </div>
     </div>
-</div>
+</div-->
 <div class="progress-meter-chart-container"></div>
 <div *ngIf="!deviceData || !showPanel || !isLoading">
     <div class="class-comparison-chart-container" [class.hide-container]="!deviceData || !showPanel">

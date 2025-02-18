@@ -61,7 +61,6 @@ export class CsvExporterComponent {
       this.dataStore = this.microserviceStatisticsService.microserviceStatisticsDataStore;
       this.rows = [[
         COLUMN_FIELDS.MICROSERVICE,
-        COLUMN_FIELDS.PROD_CATEGORY,
         COLUMN_FIELDS.MEMORY_TOTAL,
         COLUMN_FIELDS.MEMORY_AVG,
         COLUMN_FIELDS.CPU_TOTAL,
@@ -70,7 +69,7 @@ export class CsvExporterComponent {
       ]];
    
       this.dataStore.response.forEach((elem: MonthlyMicroserviceProdCategoryMap) => {
-        this.rows.push([elem.microserviceName, elem.productCategory,elem.memory, elem.avgMemory, elem.cpu, elem.avgCpu, elem.cause])
+        this.rows.push([elem.microserviceName, elem.avgMemory, elem.cpu, elem.avgCpu, elem.cause])
       });
       this.fileName = `microservice_statistics_${moment(this.dataStore.date, DATE_FORMAT_MONTH).format('MMMM-YYYY').split('-').join('_').toLowerCase()}.csv`
     }

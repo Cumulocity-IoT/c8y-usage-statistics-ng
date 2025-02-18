@@ -3,7 +3,29 @@
   </c8y-title>
   
   <statistics-action-bar [feature]="feature"></statistics-action-bar>
-  
+  <ng-container>
+    <div class="container-fluid">
+      <table class="table">
+        <!-- <colgroup>
+          <col width="20px">
+          <col width="50%">
+        </colgroup> -->
+        <thead>
+          <tr>
+            <th>Total avg Memory</th>
+            <th>Total avg CPU</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td >{{avgMEM}}</td>
+            <td >{{avgCPU}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    </ng-container>
   <div class="content-fullpage d-flex d-col shadow1">
       <c8y-data-grid
       [loadMoreItemsLabel]="loadMoreItemsLabel"
