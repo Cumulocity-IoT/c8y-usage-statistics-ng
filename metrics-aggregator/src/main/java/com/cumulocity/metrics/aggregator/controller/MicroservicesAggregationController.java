@@ -1,6 +1,9 @@
 package com.cumulocity.metrics.aggregator.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -37,6 +40,12 @@ public class MicroservicesAggregationController {
 			@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateTo) {
 		MicroservicesStatisticsAggregation response = microservicesMetricsAggregationServiceService.getMicroservicesStatisticsOverview(dateFrom,dateTo);
 		return new ResponseEntity<MicroservicesStatisticsAggregation>(response, HttpStatus.OK);
+	}
+
+	@GetMapping(value = "/productServices", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<String>> getProductServices(){
+		List<String> response = microservicesMetricsAggregationServiceService.getProductServices();
+		return new ResponseEntity<List<String>>(response, HttpStatus.OK);
 	}
 }
 
