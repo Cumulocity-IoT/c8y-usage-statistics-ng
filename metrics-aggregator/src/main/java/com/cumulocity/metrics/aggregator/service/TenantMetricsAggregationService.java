@@ -111,13 +111,15 @@ public class TenantMetricsAggregationService {
 	
 				tenantStatistics = response.getBody();
 				tenantStatistics.setResources(null);
+				tenantStatisticsAggregation.calcTotalMeas(tenantStatistics);
 				tenantStatisticsAggregation.getSubTenantStat().put(currentTenant, tenantStatistics);
 				tenantStatisticsAggregation.addToTotalStatistics(tenantStatistics);
 				tenantStatisticsAggregation.convertStorageToHumanReadable(tenantStatisticsAggregation.getTotalTenantStat().getStorageSize());
 				
 			}
 		});
-
+		
+		tenantStatisticsAggregation.calcTotalMeas(tenantStatisticsAggregation.getTotalTenantStat());
 		return tenantStatisticsAggregation;
 	}
 
