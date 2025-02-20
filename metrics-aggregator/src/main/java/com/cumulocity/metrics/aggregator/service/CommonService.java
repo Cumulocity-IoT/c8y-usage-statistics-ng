@@ -65,7 +65,7 @@ public class CommonService {
 
     private Optional<ArrayList<String>> getSubTenants(){
         Response tenants = restConnector.get(
-                "/tenant/tenants?pageSize=2000&withTotalPages=true",
+                "/tenant/tenants?pageSize=2000&withTotalPages=true&withApps=false",
                 CumulocityMediaType.APPLICATION_JSON_TYPE);
             String tenantJSON = tenants.readEntity(String.class);
             //log.info("Tenants: " + tenantJSON);
