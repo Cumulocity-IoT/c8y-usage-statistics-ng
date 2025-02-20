@@ -139,13 +139,16 @@ export class MicroserviceStatisticsService {
 
 
     private async getTenantSummaryResources(selectedDate: Date): Promise<TenantSummaryResources[]> {
-        const data = await this.commonService.getCurrentTenantSummary(selectedDate)
-        if (data && data.resources && data.resources.usedBy) {
-            return this.getAggregatedTenantSummary(data.resources.usedBy) as TenantSummaryResources[];
-        }
-        else {
+        let data = await this.commonService.getCurrentTenantSummary(selectedDate)
+        let tenantSummaryResources: TenantSummaryResources[] = [];  
+        if (!data){
             throw { message: gettext('Microservice data is not available') }
         }
+        if (data && data.resources && data.resources.usedBy ) {
+            tenantSummaryResources = data.resources.usedBy;
+        }
+
+        return this.getAggregatedTenantSummary(tenantSummaryResources) as TenantSummaryResources[];
     }
 
     private getAggregatedTenantSummary(data: TenantSummaryResources[]): TenantSummaryResources[] | null {
