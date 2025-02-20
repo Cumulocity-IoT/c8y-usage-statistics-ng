@@ -134,7 +134,6 @@ showSearch: boolean;
   async getMicroserviceData(selectedDate = this.monthPickerService.selectedDate) {
     try {
       this.microserviceData = await this.microserviceStatisticsService.getMonthlyMicroserviceProdCategoryMap(selectedDate);
-      console.log("MS DATA: " ,this.microserviceData , " averages: " , this.microserviceStatisticsService.microserviceStatisticsDataStore.avgCPU);
       this.avgCPU = this.microserviceStatisticsService.microserviceStatisticsDataStore.avgCPU;
       this.avgMEM = this.microserviceStatisticsService.microserviceStatisticsDataStore.avgMEM;
     }
