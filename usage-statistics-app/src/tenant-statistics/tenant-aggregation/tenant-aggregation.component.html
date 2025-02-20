@@ -18,7 +18,7 @@
           <tbody>
             <tr>
               <td >{{'Total MEAs' | translate}}</td>
-              <td>{{tenantAggregation.meas}}</td>
+              <td>{{tenantAggregation.meas| number }}</td>
             </tr>
             <tr>
               <td >{{'Storage Size' | translate}}</td>
@@ -30,55 +30,55 @@
             </tr> -->
             <tr>
               <td>{{'Devices' | translate}} <span class="text-light" style="font-size: smaller; font-style: italic;">(c8y_IsDevice)</span></td>
-              <td>{{tenantAggregation.deviceCount}}</td>
+              <td>{{tenantAggregation.deviceCount| number}}</td>
             </tr>
             <tr>
               <td>{{'Device Endpoints' | translate}}</td>
-              <td>{{tenantAggregation.deviceEndpointCount}}</td>
+              <td>{{tenantAggregation.deviceEndpointCount| number}}</td>
             </tr>
             <tr>
               <td>{{'Devices With Children' | translate}}</td>
-              <td>{{tenantAggregation.deviceWithChildrenCount}}</td>
+              <td>{{tenantAggregation.deviceWithChildrenCount| number}}</td>
             </tr>
             <tr>
               <td>{{'Total Requests' | translate}}</td>
-              <td>{{tenantAggregation.requestCount}}</td>
+              <td>{{tenantAggregation.requestCount| number}}</td>
             </tr>
             <tr>
               <td >{{'Device Requests' | translate}}</td>
-              <td>{{tenantAggregation.deviceRequestCount}}</td>
+              <td>{{tenantAggregation.deviceRequestCount| number}}</td>
             </tr>
             <tr >
               <td>{{'Total Resources Created & Updated' | translate}}</td>
-              <td>{{tenantAggregation.totalResourceCreateAndUpdateCount}}</td>
+              <td>{{tenantAggregation.totalResourceCreateAndUpdateCount| number}}</td>
             </tr>
             <tr>
               <td >{{'Inventories Created' | translate}}</td>
-              <td>{{tenantAggregation.inventoriesCreatedCount}}</td>
+              <td>{{tenantAggregation.inventoriesCreatedCount| number}}</td>
             </tr>
             <tr>
               <td >{{'Inventories Updated' | translate}}</td>
-              <td>{{tenantAggregation.inventoriesUpdatedCount}}</td>
+              <td>{{tenantAggregation.inventoriesUpdatedCount| number}}</td>
             </tr>
             <tr>
               <td >{{'Events Created' | translate}}</td>
-              <td>{{tenantAggregation.eventsCreatedCount}}</td>
+              <td>{{tenantAggregation.eventsCreatedCount| number}}</td>
             </tr>
             <tr>
               <td >{{'Events Updated' | translate}}</td>
-              <td>{{tenantAggregation.eventsUpdatedCount}}</td>
+              <td>{{tenantAggregation.eventsUpdatedCount| number}}</td>
             </tr>
             <tr>
               <td >{{'Alarms Created' | translate}}</td>
-              <td>{{tenantAggregation.alarmsCreatedCount}}</td>
+              <td>{{tenantAggregation.alarmsCreatedCount| number}}</td>
             </tr>
             <tr>
               <td >{{'Alarms Updated' | translate}}</td>
-              <td>{{tenantAggregation.alarmsUpdatedCount}}</td>
+              <td>{{tenantAggregation.alarmsUpdatedCount| number}}</td>
             </tr>
             <tr>
               <td >{{'Measurements Created' | translate}}</td>
-              <td>{{tenantAggregation.measurementsCreatedCount}}</td>
+              <td>{{tenantAggregation.measurementsCreatedCount| number}}</td>
             </tr>
           </tbody>
         </table>
