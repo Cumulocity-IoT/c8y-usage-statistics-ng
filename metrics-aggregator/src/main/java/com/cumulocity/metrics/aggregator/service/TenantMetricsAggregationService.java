@@ -24,12 +24,8 @@ import com.cumulocity.microservice.context.ContextService;
 import com.cumulocity.microservice.context.credentials.MicroserviceCredentials;
 import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
-import com.cumulocity.rest.representation.CumulocityMediaType;
 import com.cumulocity.sdk.client.RestConnector;
-import com.cumulocity.sdk.client.inventory.InventoryApi;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import jakarta.ws.rs.core.Response;
 
 /**
  * This service will aggregate microservices metrics to display in
@@ -82,8 +78,6 @@ public class TenantMetricsAggregationService {
 
 		// Aggregation object will hold all statistics
 		TenantStatisticsAggregation tenantStatisticsAggregation = new TenantStatisticsAggregation();
-
-
 		subscriptionsService.runForEachTenant(() -> {
 			// Will hold the c8y API response
 			TenantStatistics tenantStatistics = new TenantStatistics();
@@ -94,7 +88,6 @@ public class TenantMetricsAggregationService {
 								.getAuthenticationString());
 	
 				headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-	
 				log.info("Get Tenant Statistics for Tenant: " + currentTenant + "  date: " + df.format(dateFrom));
 	
 				String serverUrl = clientProperties.getBaseURL()
