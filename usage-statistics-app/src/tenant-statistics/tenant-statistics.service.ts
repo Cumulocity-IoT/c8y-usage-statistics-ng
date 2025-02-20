@@ -69,12 +69,17 @@ export class TenantStatisticsService {
 
   async getTenantSummaryDetailedResources(selectedDate: Date): Promise<TenantSummaryDetailedResources> {
     const data = await this.commonService.getCurrentTenantSummary(selectedDate)
-    if (data && data.resources && data.resources.usedBy) {
-      data.resources.usedBy = null;
+    data.resources = {
+      memory: 0,
+      cpu: 0,
+      usedBy:  null
     }
-    else {
-      throw { message: gettext('Microservice data is not available') }
-    }
+
+    // if (data && data.resources && data.resources.usedBy) {
+    // }
+    // else {
+    //   throw { message: gettext('Microservice data is not available') }
+    // }
 
     this.tenantSummaryDetailedResourcesStore = {
       data: data,
@@ -107,11 +112,12 @@ export class TenantStatisticsService {
 
     var dateTo: Date;
     
-    if (date.getMonth() == 11) {
-        dateTo = new Date(date.getFullYear() + 1, 0, 1);
-    } else {
-        dateTo = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-    }
+    // if (date.getMonth() == 11) {
+    //     dateTo = new Date(date.getFullYear() + 1, 0, 1);
+    // } else {
+    //     dateTo = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+    // }
+    dateTo = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59)
     console.log("dateTo: " + dateTo)
 
     try {
