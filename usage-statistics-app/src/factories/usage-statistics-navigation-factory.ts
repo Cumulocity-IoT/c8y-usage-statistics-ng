@@ -152,7 +152,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
 
       if (await this.isConfigAccessible()) {
         //DEVICE_STATISTICS.children.push(DEVICE_CONFIGURATION_LIST)
-        MICROSERVICE_STATISTICS.children.push(MICROSERVICE_CONFIGURATION)
+        //MICROSERVICE_STATISTICS.children.push(MICROSERVICE_CONFIGURATION)
       }
       this.navs.push(DEVICE_STATISTICS, MICROSERVICE_STATISTICS, TENANT_STATISTICS)
       this.isMetricsAggregatorAvailable();
