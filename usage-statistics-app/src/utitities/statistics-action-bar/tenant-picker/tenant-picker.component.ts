@@ -45,8 +45,8 @@ export class TenantPickerComponent implements OnInit {
       this.tenantList = await this.commonService.getAllSubtenants(this.sourceTenant);
       this.tenantHierarchy = this.getTenantHierarchyAndBuildDictionary();
       this.allTenantIdList = Object.keys(this.tenantListDict)
-      this.allCompaniesList = [... new Set(this.tenantList.map(elem => elem.company))]
-      this.allDomainList = [... new Set(this.tenantList.map(elem => elem.domain))]
+      this.allCompaniesList = [... new Set(this.tenantList.map(elem => elem.company).filter(elem => elem))]
+      this.allDomainList = [... new Set(this.tenantList.map(elem => elem.domain).filter(elem => elem))]
     }
     catch (error) {
       const alert: Alert = {
