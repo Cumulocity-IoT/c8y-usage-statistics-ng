@@ -1,6 +1,6 @@
 # Cumulocity IoT Usage Statistics Application
 ## Overview 
-The `Usage Statistics Application` enables you to view consumption and usage information for your tenant and any child tenants within Cumulocity IoT. Many different types of data are present, including device statistics, microservice statistics, and tenant statistics. In addition, for select metrics, you have the ability to configure custom categories and thresholds, so that you can track your usage against pre-defined values. 
+The `Usage Statistics Application` enables you to view consumption and usage information for your tenant and any child tenants within Cumulocity IoT. Many different types of data are present, including device statistics, microservice statistics, and tenant statistics.
 
 **`Note: The Usage Statistics Application is still actively in development, and this release should be considered a preliminary public preview of the full application. See below for roadmap (subject to change). This preliminary version of the application works best in Google Chrome.`**
 
@@ -16,10 +16,11 @@ The `Usage Statistics Application` consists of the following statistics:
 The data in the app is available monthly on a per-tenant basis. Parent tenants can view statistics for individual child tenants. The month and tenant selectors are universal and apply throughout the application. 
 #### Configuration Screenshots
 ##### Tenant Selector
-![Tenant Selector](assets/images/tenant_selector.png)
+![Tenant Selector](usage-statistics-app/assets/images/tenant_selector.png)
+Inactive tenants are black
 
 ##### Month Selector
-![Month Selector](assets/images/date_selector.png)
+![Month Selector](usage-statistics-app/assets/images/date_selector.png)
 
 
 ### Device Statistics
@@ -39,13 +40,11 @@ The `Device Statistics` data is available monthly for the selected tenant, and y
 
 #### **Device Statistics Screenshots**
 ##### **Device Overview**
-![Device Overview](assets/images/device_stats-overview.png)
+![Device Overview](usage-statistics-app/assets/images/device_stats-overview.png)
 
 ##### **Device Data**
-![Device Data](assets/images/device_stats-data.png)
+![Device Data](usage-statistics-app/assets/images/device_stats-data.png)
 
-##### **Device Configuration**
-![Device Configuration](assets/images/device_stats-config.png)
 
 
 ### Microservice Statistics
@@ -57,13 +56,13 @@ The `Microservice Statistics` data is available monthly, and you can export the 
 
 #### Microservice Statistics Screenshots
 ##### Microservice Overview - Category Overview
-![Microservice Overview - Category Overview](assets/images/ms_stats-category_overview.png)
+![Microservice Overview - Category Overview](usage-statistics-app/assets/images/ms_stats-category_overview.png)
 ##### Microservice Overview - Services Overview
-![Microservice Overview - Services Overview](assets/images/ms_stats-services_overview.png)
+![Microservice Overview - Services Overview](usage-statistics-app/assets/images/ms_stats-services_overview.png)
 ##### Microservice Data
-![Microservice Data](assets/images/ms_stats-data.png)
+![Microservice Data](usage-statistics-app/assets/images/ms_stats-data.png)
 ##### Microservice Configuration
-![Microservice Configuration](assets/images/ms_stats-config.png)
+![Microservice Configuration](usage-statistics-app/assets/images/ms_stats-config.png)
 
 ### Tenant Statistics
 `Tenant Statistics` grants you access to other metrics associated with tenant usage in Cumulocity IoT. This includes data for storage, API requests, and other ways counting the number of devices connected. You can also see all of the subscribed applications for the tenant, which includes both microservices and UI apps. 
@@ -72,16 +71,31 @@ The `Tenant Statistics` data is available monthly, and you can export the data t
 
 #### Tenant Statistics Screenshots
 ##### Tenant Data
-![Tenant Data](assets/images/tenant_stats-data.png)
+![Tenant Data](usage-statistics-app/assets/images/tenant_stats-data.png)
 
 
-## Roadmap
-The intent of this initial version of the 'Usage Statistics Application' is to collect feedback and define a clear roadmap. There are many directions that this application could be taken, and we want to hear from users on what would be the most valuable path to go down. Please submit your feedback at the link below!
+# Metrics Aggregator Microservice
+This microservice serves as a backend for the Usage Statistics Webapp of Cumulocity IoT.
+It performs an aggregation of all subtenants assets of an Enterpreise Tenant (including itself). I covers Device Classes-, Microservices- and Tenant-Statistics The following endpoint lets you request the statistics:
+
+# Statistics Endpoints
+
+## Devices
+https://<deployed tenant>.cumulocity.com/service/metrics-aggregator/devices/{type monthly|daily}/{date e.g. 2024-12-01}?includeSubtenants=true
+
+Given the date it will gather either a daily (type) or monthly statistics. Given includeSubtenants=true it will also output the subtenant device class statistics. The output will consist of an array of device classes which are requested form the tenant options of each tenant. Is not device class definition found in the tenant options a default device class configuration is used.
+
+### Microservices
+https://<deployed tenant>.cumulocity.com/service/metrics-aggregator/microservices/?dateFrom=2024-12-01&dateTo=2024-12-31
+
+### Tenant
+https://<deployed tenant>.cumulocity.com/service/metrics-aggregator/tenants/?dateFrom=2024-12-01&dateTo=2024-12-31
+
 
 ## We want your feedback!
 The `Usage Statistics Application` is available to you in a public preview so that we can collect your feedback. Please share any and all of your feedback, both positive and negative, on the [Cumulocity IoT Feedback Portal](https://cumulocityiot.ideas.aha.io/). 
 
-Please note that this tool is provided as-is and withuot warranty or support. It does not constitute part of the Software AG product suite. 
+Please note that this tool is provided as-is and without warranty or support. It does not constitute part of the Software AG product suite. 
 This application works best with [Google Chrome](https://www.google.com/chrome/) and Cumulocity UI version as mentioned below
 
 ### Compatibility
