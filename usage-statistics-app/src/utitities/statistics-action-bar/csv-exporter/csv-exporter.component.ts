@@ -68,9 +68,9 @@ export class CsvExporterComponent {
         COLUMN_FIELDS.CAUSE       
       ]];
    
-      this.dataStore.response.forEach((elem: MonthlyMicroserviceProdCategoryMap) => {
-        this.rows.push([elem.microserviceName, elem.avgMemory, elem.cpu, elem.avgCpu, elem.cause])
-      });
+      // this.dataStore.response.forEach((elem: MonthlyMicroserviceProdCategoryMap) => {
+      //   this.rows.push([elem.microserviceName, elem.avgMemory, elem.cpu, elem.avgCpu, elem.cause])
+      // });
       this.fileName = `microservice_statistics_${moment(this.dataStore.date, DATE_FORMAT_MONTH).format('MMMM-YYYY').split('-').join('_').toLowerCase()}.csv`
     }
     else if (this.feature === FeatureList.TenantStatistics) {

@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { DateTimePickerComponent, gettext } from "@c8y/ngx-components";
 
-import { Api, MicroserviceCategory, MicroserviceConfigurationService, ProductCategory, PropertyName } from './microservice-configuration/microservice-configuration.service';
+//import { Api, MicroserviceCategory, MicroserviceConfigurationService, ProductCategory, PropertyName } from './microservice-configuration/microservice-configuration.service';
 import { CommonService, DATE_FORMAT_MONTH } from "../common.service";
 import { FetchClient } from "@c8y/client";
 
@@ -16,7 +16,7 @@ export interface TenantSummaryResources {
 }
 
 export interface MonthlyMicroserviceProdCategoryMap extends TenantSummaryResources {
-    [PropertyName.Microservice]: string,
+    microserviceName: string,
     avgCpu?: string,
     avgMemory?: string
 }
@@ -33,7 +33,7 @@ export class MicroserviceStatisticsService {
     }
 
     constructor(
-        private microserviceConfigurationService: MicroserviceConfigurationService,
+      //  private microserviceConfigurationService: MicroserviceConfigurationService,
         private commonService: CommonService,
         private client: FetchClient,
     ) { }
@@ -102,9 +102,7 @@ export class MicroserviceStatisticsService {
       }
 
     async getMonthlyMicroserviceProdCategoryMap(selectedDate: Date): Promise<MonthlyMicroserviceProdCategoryMap[]> {
-        //const productCategories: ProductCategory[] = await this.microserviceConfigurationService.getCategories(Api.Product, false)        
         const defaultProductCategory = "Custom Microservice"
-        //const microserviceCategories = await this.microserviceConfigurationService.getCategories(Api.Microservice, false)
         const tenantSummaryResources = await this.getTenantSummaryResources(selectedDate)
         const response: MonthlyMicroserviceProdCategoryMap[] = [];
         const numberOfDaysInMonth = moment(selectedDate, DATE_FORMAT_MONTH).daysInMonth();
@@ -132,10 +130,7 @@ export class MicroserviceStatisticsService {
         return response
     }
 
-    private getProductCategory(microserviceCategories: MicroserviceCategory[], defaultProductCategory, microserviceName: string) {
-        const microserviceMapping = microserviceCategories.find((elem: MicroserviceCategory) => elem.microserviceName.trim() === microserviceName.trim())
-        return microserviceMapping ? microserviceMapping.productCategory : defaultProductCategory;
-    }
+
 
 
     private async getTenantSummaryResources(selectedDate: Date): Promise<TenantSummaryResources[]> {

@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
 import { FetchClient, IFetchOptions } from '@c8y/client';
 import { Alert, AlertService, gettext, NavigatorNode, NavigatorNodeFactory, Route } from '@c8y/ngx-components';
-import { DeviceConfigurationComponentDetails } from '../device-statistics/device-configuration/device-configuration-details.component';
-import { DeviceConfigurationComponentList } from '../device-statistics/device-configuration/device-configuration-list.component';
 import { DeviceDataComponent } from '../device-statistics/device-data/device-data.component';
 import { DeviceOverviewComponent } from '../device-statistics/device-overview/device-overview.component';
 import { DeviceAggregationComponent } from '../device-statistics/device-aggregation/device-aggregation.component';
-import { MicroserviceConfigurationComponent } from '../microservice-statistics/microservice-configuration/microservice-configuration.component';
 import { MicroserviceDataComponent } from '../microservice-statistics/microservice-data/microservice-data.component';
 import { TenantDataComponent } from '../tenant-statistics/tenant-data/tenant-data.component';
 import { Router } from '@angular/router';
@@ -38,11 +35,6 @@ export const ROUTES: Route[] = [
   { path: 'microservice-statistics/microservice-configuration', pathMatch: 'prefix', redirectTo: 'microservice-statistics/overview/category-overview' },
 ]
 
-const ADMIN_ROUTES = [
-  { path: 'device-statistics/device-configuration-list', component: DeviceConfigurationComponentList },
-  { path: 'device-statistics/device-configuration-details', component: DeviceConfigurationComponentDetails },
-  { path: 'microservice-statistics/microservice-configuration', component: MicroserviceConfigurationComponent },
-]
 
 @Injectable()
 export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
@@ -60,7 +52,6 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
     this.isConfigAccessible().then(res => {
       if (res) {
         this.router.config.splice(-3, 3);
-        this.router.config.unshift(...ADMIN_ROUTES);
         this.router.resetConfig(this.router.config);
       }
     })
@@ -81,12 +72,6 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         icon: 'grid-view'
       })
 
-      const DEVICE_CONFIGURATION_LIST = new NavigatorNode({
-        path: 'device-statistics/device-configuration-list',
-        label: gettext('Device Configuration'),
-        icon: 'icon dlt-c8y-icon-cog-complex',
-        priority: 60
-      })
 
       
       this.childrenDevice = [DEVICE_STATISTICS_OVERVIEW, DEVICE_STATISTICS_DEVICE_DATA];
@@ -98,15 +83,6 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         children: this.childrenDevice,
         priority: 80
       })
-
-      // Microservice Statistics
-      // const MICROSERVICE_STATISTICS_OVERVIEW = new NavigatorNode({
-      //   path: 'microservice-statistics/overview',
-      //   priority: 70,
-      //   label: gettext('Microservice Overview'),
-      //   icon: 'combo-chart',
-      //   routerLinkExact: false
-      // })
       
       const MICROSERVICE_STATISTICS_DEVICE_DATA = new NavigatorNode({
         path: 'microservice-statistics/microservice-data',
@@ -115,14 +91,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         icon: 'grid-view'
       })
 
-      const MICROSERVICE_CONFIGURATION = new NavigatorNode({
-        path: 'microservice-statistics/microservice-configuration',
-        label: gettext('Microservice Configuration'),
-        icon: 'icon dlt-c8y-icon-cog-complex',
-        priority: 60
-      })
-
-
+  
       this.childrenMicroservice = [MICROSERVICE_STATISTICS_DEVICE_DATA]
       const MICROSERVICE_STATISTICS = new NavigatorNode({
         label: gettext('Microservice Statistics'),
@@ -150,10 +119,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         priority: 80
       })
 
-      if (await this.isConfigAccessible()) {
-        //DEVICE_STATISTICS.children.push(DEVICE_CONFIGURATION_LIST)
-        //MICROSERVICE_STATISTICS.children.push(MICROSERVICE_CONFIGURATION)
-      }
+
       this.navs.push(DEVICE_STATISTICS, MICROSERVICE_STATISTICS, TENANT_STATISTICS)
       this.isMetricsAggregatorAvailable();
     }

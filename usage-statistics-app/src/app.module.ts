@@ -10,8 +10,6 @@ import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { ROUTES, UsageStatisticsNavigationFactory } from './factories/usage-statistics-navigation-factory';
 
 // Custom Components
-import { DeviceConfigurationComponentList } from './device-statistics/device-configuration/device-configuration-list.component';
-import { DeviceConfigurationComponentDetails } from './device-statistics/device-configuration/device-configuration-details.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule as NgCommonModule } from '@angular/common';
 import { PopoverModule } from 'ngx-bootstrap/popover';
@@ -22,7 +20,6 @@ import { CsvExporterComponent } from './utitities/statistics-action-bar/csv-expo
 import { StatisticsActionBarComponent } from './utitities/statistics-action-bar/statistics-action-bar.component'
 import { DeviceIdCellRendererComponent } from './device-statistics/device-data/device-id.cell-renderer.component';
 import { DeviceTypeCellRendererComponent } from './device-statistics/device-data/device-type.cell-renderer.component';
-import { MicroserviceConfigurationComponent } from './microservice-statistics/microservice-configuration/microservice-configuration.component';
 import { MicroserviceDataComponent } from './microservice-statistics/microservice-data/microservice-data.component';
 import { MicroserviceAggregationComponent } from './microservice-statistics/microservice-aggregation/microservice-aggregation.component';
 import { UsageStatisticsTabFactory } from './factories/usage-statistics-tabs-factory';
@@ -57,8 +54,6 @@ export const hooks = [
     PluginsModule
   ],
   declarations: [
-    DeviceConfigurationComponentList,
-    DeviceConfigurationComponentDetails,
     DeviceOverviewComponent,
     DeviceAggregationComponent,
     MicroserviceAggregationComponent,
@@ -69,7 +64,6 @@ export const hooks = [
     DeviceIdCellRendererComponent,
     DeviceTypeCellRendererComponent,
     MicroserviceDataComponent,
-    MicroserviceConfigurationComponent,
     TenantDataComponent,
     TenantAggregationComponent,
     TenantPickerComponent,

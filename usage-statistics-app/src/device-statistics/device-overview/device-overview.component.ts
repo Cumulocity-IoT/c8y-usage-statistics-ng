@@ -3,7 +3,6 @@ import { Subscription } from 'rxjs';
 import { MonthPickerService } from '../../utitities/statistics-action-bar/month-picker/month-picker.service';
 import { CLASS_COLORS, DeviceStatisticsService } from '../device-statistics.service';
 import { gettext } from '@c8y/ngx-components';
-import { DeviceConfigurationService } from '../device-configuration/device-configuration.service';
 import { CommonService, FeatureList } from '../../common.service';
 
 const d3 = require('d3')
@@ -34,7 +33,6 @@ export class DeviceOverviewComponent implements OnInit, OnDestroy {
   constructor(
     private monthPickerService: MonthPickerService,
     private deviceStatisticsService: DeviceStatisticsService,
-    private deviceConfigurationService: DeviceConfigurationService,
     private commonService: CommonService
   ) { }
 
@@ -67,8 +65,6 @@ export class DeviceOverviewComponent implements OnInit, OnDestroy {
   async getDeviceDataAndGenerateCharts(selectedDate = this.monthPickerService.selectedDate) {
     try {
       this.deviceData = await this.deviceStatisticsService.getFormattedDeviceData(selectedDate);
-      this.isAnyThresholdSet = this.deviceConfigurationService.deviceStatisticsConfigurationStore.some(elem => elem.monthlyThreshold)
-      this.generateProgressMeter(this.deviceData.overview)
       this.generateClassComparisonChart(this.deviceData.overview)
       this.showPanel = true
     }
@@ -159,161 +155,6 @@ export class DeviceOverviewComponent implements OnInit, OnDestroy {
         self.append('title')
           .text(text)
       })
-  }
-
-  private generateProgressMeter(overviewData) {
-    const chartData = Object.values(overviewData)
-    const configuration = this.deviceConfigurationService.deviceStatisticsConfigurationStore;
-    const chartContainer = d3.select(".progress-meter-chart-container")
-    chartContainer.selectAll("div").remove()
-    const chartContainerDimensions = chartContainer.node().getBoundingClientRect()
-    let baseHeight = (chartContainerDimensions.width / chartData.length) + 40.45;
-    let baseWidth = (chartContainerDimensions.width / chartData.length) - 10;
-
-    if (chartContainerDimensions.width < 600) {
-      baseHeight = chartContainerDimensions.width + 40.45;
-      baseWidth = chartContainerDimensions.width - 10;
-    }
-    else {
-      baseHeight = (chartContainerDimensions.width / chartData.length) + 40.45;
-      baseWidth = (chartContainerDimensions.width / chartData.length) - 10;
-    }
-
-    const svgHeight = baseHeight - 10;
-    const svgWidth = baseWidth - 10;
-    const x = svgWidth / 2
-    const y = svgHeight / 2 - 40.45;
-    const arcRadius = d3.min([x, y]) - 10
-
-    const arcDimensions = {
-      innerRadius: 0.8 * arcRadius,
-      outerRadius: arcRadius
-    }
-    const totalRange = 1.5 * Math.PI;
-    const arcGenerator = d3.arc().cornerRadius(10);
-    const pathData = arcGenerator({
-      startAngle: 0,
-      endAngle: totalRange,
-      innerRadius: arcDimensions.innerRadius,
-      outerRadius: arcDimensions.outerRadius,
-    });
-
-
-    const g = chartContainer
-      .selectAll("div")
-      .data(chartData)
-      .join("div")
-      .style('height', baseHeight + 'px')
-      .style('width', baseWidth + 'px')
-      .style('margin', d => chartContainerDimensions.width < 600 ? 'auto' : 'auto')
-      .attr("class", "unit");
-
-    const svgContainer = d3
-      .selectAll(".unit")
-      .classed("card", true)
-      .append("svg")
-
-      .attr("height", svgHeight)
-      .attr("width", svgWidth)
-      .attr(
-        "transform",
-        `translate(${baseWidth - svgWidth - 5}, ${baseHeight - svgHeight - 5})`
-      )
-      .append("g")
-      .attr("transform", `translate(${x}, ${y} )`)
-      .attr("class", "device-class");
-
-    const progressMeter = svgContainer
-      .append("g")
-      .attr("class", "progress-meter")
-      .style("transform", "rotate(-0135deg)");
-
-    d3.selectAll("g.progress-meter")
-      .append("path")
-      .attr("d", pathData)
-      .attr("fill", "#D3D3D3");
-
-    const progressStageVisual = d3
-      .scaleLinear()
-      .domain([0, totalRange / 2, totalRange])
-      .range(["green", "orange", "red"]);
-
-    d3.selectAll("g.progress-meter").each(function (d, i) {
-      const node = d3.select(this);
-      const achievedState = d['deviceIdStore'].length / d.threshold;
-      const achivedStateProgress =
-        achievedState > 1 ? totalRange : achievedState * totalRange;
-      const newPathData = arcGenerator({
-        startAngle: 0,
-        endAngle: achivedStateProgress,
-        innerRadius: arcDimensions.innerRadius,
-        outerRadius: arcDimensions.outerRadius,
-      });
-      node
-        .append("path")
-        .attr("d", newPathData)
-        .attr("fill", function (x) {
-          return progressStageVisual(achivedStateProgress);
-        });
-
-      const parentNode = d3.select(this.parentNode);
-      parentNode
-        .append("text")
-        .html(d => isFinite(d.threshold) ? `${(achievedState * 100).toFixed(1)}%` : gettext('No threshold defined'))
-        .style("font-size", d => isFinite(d.threshold) ? "24.27px" : "12.135px")
-        .style("text-anchor", "middle")
-        .style("dominant-baseline", "middle")
-
-      const labelNode = parentNode.append('g').style('transform', `translate(0, 24.27px)`)
-      labelNode
-        .append("text")
-        .text((d) => d['deviceIdStore'].length)
-        .attr("y", svgHeight / 4 - 4)
-        .style("font-size", "24.27px")
-        .style("text-anchor", "middle")
-        .style("dominant-baseline", "middle");
-
-      const classNode = labelNode
-        .append("text")
-
-      classNode.text((d) => d.className)
-        .attr("y", svgHeight / 4 + 24.27)
-        .style("font-size", "24.27px")
-        .style("text-anchor", "middle")
-        .style("dominant-baseline", "hanging").each(wrap);
-      classNode.append('title').text((d) => d.className)
-
-      labelNode
-        .append("text")
-        .text((d) => {
-          const config = configuration.find(elem => elem.className === d.className)
-          return isFinite(Number(config.avgMaxMea)) ? `${config.avgMinMea} < ${config.avgMaxMea}` : `≥ ${config.avgMinMea}`;
-        })
-        .attr("y", svgHeight / 4 + 60.72)
-        .attr('fill', 'grey')
-        .style("font-size", "12.18px")
-        .style("text-anchor", "middle")
-        .style("dominant-baseline", "middle");
-    });
-
-    function wrap() {
-      const self = d3.select(this);
-      let textLength = self.node().getComputedTextLength();
-      let text = self.text();
-      while (textLength > (svgWidth - 2) && text.length > 0) {
-        text = text.slice(0, -1);
-        self.text(text + '...');
-        textLength = self.node().getComputedTextLength();
-      }
-    }
-
-    if (!this.isAnyThresholdSet) {
-      d3.select('.progress-meter-chart-container')
-        .classed('remove-container', true)
-      d3.select('.no-threshold-set').style('min-height', `${baseHeight}px`).style('margin-top', '10px')
-      d3.select('.overvew-img').attr('height', `${baseHeight - 32}px`)
-      d3.select('.attention').style('font-size', `${baseHeight / 2}px`)
-    }
   }
 
   private yScaleCalc(d, func?) {

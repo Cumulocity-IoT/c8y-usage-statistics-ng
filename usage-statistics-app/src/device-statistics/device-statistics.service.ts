@@ -39,15 +39,11 @@ export class DeviceStatisticsService {
   ) { }
 
   async getFormattedDeviceData(selectedDate: Date) {
-    const previousConfiguration = this.deviceConfigurationService.previousConfiguration ?
-      JSON.parse(JSON.stringify(this.deviceConfigurationService.previousConfiguration)) : undefined;
-    const currentConfiguration = await this.deviceConfigurationService.getConfigurationOptions()
-    const isSameConfiguration = previousConfiguration ? _.isEqual(previousConfiguration, currentConfiguration) : false
-    const isSameDate = !(!this.deviceDataStore.selectedDate || selectedDate.getTime() !== this.deviceDataStore.selectedDate.getTime())
-    const isSameTenant = await this.commonService.isSameTenant()
+
+    const currentConfiguration = this.deviceConfigurationService.defaultConfig;
     const deviceData = await this.getDeviceData(selectedDate);
     
-    if (!(isSameConfiguration && isSameDate && isSameTenant)) {
+    
       this.formattedDeviceDataStore = {}
       this.deviceClassDataStore = {};
       currentConfiguration.forEach(config => this.deviceClassDataStore[config.className] = {
@@ -78,7 +74,7 @@ export class DeviceStatisticsService {
         overview: this.deviceClassDataStore,
         date: selectedDate
       }
-    }
+    
     return this.deviceStatisticsDataStore
   }
 

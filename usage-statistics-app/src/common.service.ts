@@ -114,7 +114,7 @@ export class CommonService {
       try {
         this.tenantListStore = [];
         let response = undefined;
-        let api = "tenant/tenants?pageSize=2000"
+        let api = "tenant/tenants?withApps=false&pageSize=2000"
         do {
           response = await this.getSubtenantsList(api)
           api = response.next ? response.next.substring(response.next.indexOf('/tenant')) : response.next;

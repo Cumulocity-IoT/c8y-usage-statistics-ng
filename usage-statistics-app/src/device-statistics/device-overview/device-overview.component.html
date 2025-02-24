@@ -3,24 +3,7 @@
 <div class="text-center" *ngIf="isLoading">
     <c8y-loading></c8y-loading>
 </div>
-<!--div [class.remove-container]="isAnyThresholdSet || !(showPanel && !isLoading)">
-    <div class="card no-threshold-set">
-        <div class="card-body" style="padding:10px">
-            <div style="display: flex; justify-content: space-around;">
-                <div>
-                    <div><i [c8yIcon]="'child'" class="attention"></i></div> 
-                    <div><span style="font-weight: bold;">{{"Hello!" | translate}}</span>{{" It appears that you haven't set any thresholds for any of the device classes." | translate}}</div>
-                    <div>{{"Just navigate to Device Configuration and set some." | translate}}</div>
-                </div>
-                <div>                 
-                    <div>
-                        <img src="../../../assets/images/device_stats-overview.png" alt="Threshold Meter" class="overvew-img">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div-->
+
 <div class="progress-meter-chart-container"></div>
 <div *ngIf="!deviceData || !showPanel || !isLoading">
     <div class="class-comparison-chart-container" [class.hide-container]="!deviceData || !showPanel">
@@ -35,7 +18,7 @@
                     </div>
                     <div class="btn-group" role="group" (click)="changeUnit(CLASS_CATEGORY.TOTAL_MEA)">
                         <button type="button" class="btn btn-default"
-                            [class.btn-active]="classCategory === CLASS_CATEGORY.TOTAL_MEA">{{'Total MEAs' |
+                            [class.btn-active]="classCategory === CLASS_CATEGORY.TOTAL_MEA">{{'Total Requests' |
                             translate}}</button>
                     </div>
                 </div>
