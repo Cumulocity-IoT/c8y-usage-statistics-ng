@@ -12,9 +12,9 @@ import { TenantAggregationComponent } from '../tenant-statistics/tenant-aggregat
 
 const navs: NavigatorNode[] = [];
 const APPROVED_ROLES = [
-  'ROLE_OPTION_MANAGEMENT_ADMIN',
-  'ROLE_OPTION_MANAGEMENT_CREATE',
-  'ROLE_OPTION_MANAGEMENT_UPDATE'
+  "ROLE_TENANT_STATISTICS_READ",
+  "ROLE_OPTION_MANAGEMENT_READ",
+  "ROLE_TENANT_MANAGEMENT_READ"
 ]
 
 export const ROUTES: Route[] = [
@@ -72,10 +72,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         icon: 'grid-view'
       })
 
-
-      
       this.childrenDevice = [DEVICE_STATISTICS_OVERVIEW, DEVICE_STATISTICS_DEVICE_DATA];
-
       const DEVICE_STATISTICS = new NavigatorNode({
         label: gettext('Device Statistics'),
         icon: 'devices',
@@ -90,8 +87,6 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         label: gettext('Microservice Data'),
         icon: 'grid-view'
       })
-
-  
       this.childrenMicroservice = [MICROSERVICE_STATISTICS_DEVICE_DATA]
       const MICROSERVICE_STATISTICS = new NavigatorNode({
         label: gettext('Microservice Statistics'),
