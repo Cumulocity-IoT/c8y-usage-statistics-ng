@@ -1,4 +1,4 @@
-<button title="Import template" class="btn btn-link" (click)="downloadCsvData()">
+<button *ngIf="!disable" title="Import template" class="btn btn-link" (click)="downloadCsvData()">
     <i c8y-icon="import" class="dlt-c8y-icon-export"></i>
     <span>  {{ 'Export CSV' | translate }}</span>
   </button>

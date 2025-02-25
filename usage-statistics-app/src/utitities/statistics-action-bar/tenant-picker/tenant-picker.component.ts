@@ -1,5 +1,5 @@
-import { Component, OnInit, TemplateRef } from '@angular/core';
-import { CommonService } from '../../../common.service';
+import { Component, Input, OnInit, TemplateRef } from '@angular/core';
+import { CommonService,FeatureList } from '../../../common.service';
 import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
 import { Alert, AlertService, gettext } from '@c8y/ngx-components';
 
@@ -11,6 +11,7 @@ import { Alert, AlertService, gettext } from '@c8y/ngx-components';
   styleUrls: ['./tenant-picker.component.css']
 })
 export class TenantPickerComponent implements OnInit {
+  @Input() feature: string;
   modalRef?: BsModalRef;
   tenantList: any = []
   tenantListDict = {}
@@ -22,6 +23,7 @@ export class TenantPickerComponent implements OnInit {
   allCompaniesList = []
   allDomainList = []
   isLoading = true;
+  private disable:boolean = false;
 
   constructor(
     private commonService: CommonService,
@@ -34,7 +36,15 @@ export class TenantPickerComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadSubTenantList()
+    this.loadSubTenantList();
+    console.log("Feature: " ,this.feature );
+    if (
+          this.feature === FeatureList.DeviceAggregation || 
+          this.feature === FeatureList.MicroserviceAggregation  ||
+          this.feature === FeatureList.TenantAggregation
+        ) {
+          this.disable = true;
+        }
   }
 
   async loadSubTenantList() {

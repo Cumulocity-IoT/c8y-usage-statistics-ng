@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { gettext } from '@c8y/ngx-components';
 import { MicroserviceStatisticsService, MonthlyMicroserviceProdCategoryMap } from '../../../microservice-statistics/microservice-statistics.service';
 import { DATE_FORMAT_MONTH, FeatureList} from '../../../common.service';
@@ -14,18 +14,29 @@ const moment = require('moment');
   templateUrl: './csv-exporter.component.html',
   styleUrls: ['./csv-exporter.component.css']
 })
-export class CsvExporterComponent {
+export class CsvExporterComponent implements OnInit {
   @Input() feature: string;
   private csvContent: string;
   private dataStore;
   private rows;
   private fileName;
 
+  private disable:boolean = false;
   constructor(
     private deviceStatisticsService: DeviceStatisticsService,
     private microserviceStatisticsService: MicroserviceStatisticsService,
     private tenantStatisticsService: TenantStatisticsService
-  ) { }
+  ) {}
+
+  ngOnInit(): void {
+     if (
+      this.feature === FeatureList.DeviceAggregation || 
+      this.feature === FeatureList.MicroserviceAggregation  ||
+      this.feature === FeatureList.TenantAggregation
+    ) {
+      this.disable = true;
+    }
+  }
 
   downloadCsvData() {
     this.setCSVHeadersAndData();

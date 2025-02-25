@@ -1,5 +1,5 @@
 <ng-container *ngIf="currentlyActiveTenant">
-  <button type="button" title="Active Tenant" class="btn btn-primary btn-style" [class.btn-pending]="isLoading"
+  <button *ngIf="!disable" type="button" title="Active Tenant" class="btn btn-primary btn-style" [class.btn-pending]="isLoading"
     (click)="openModal(template)"><span class="m-r-4 dlt-c8y-icon-layers"></span> {{currentlyActiveTenant}}</button>
 </ng-container>
 
