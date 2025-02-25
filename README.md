@@ -9,12 +9,12 @@ The `Usage Statistics Application` enables you to view consumption and usage inf
 
 ### Overview of Features
 The `Usage Statistics Application` consists of the following statistics:
-- `Device Statistics` - Calculates the device classification for each device connected to Cumulocity IoT, giving you greater ability to investigate the amount of data each device is sending to the platform. 
-- `Microservice Statistics` - Understand the resources used behind each deployed microservice and identify areas of optimization.
-- `Tenant Statistics` - Discover other data points related to tenant consumption, including metrics such as total storage used and subscribed applications. 
+- `Device Statistics` - Calculates the device classification for each device connected to Cumulocity IoT, giving you greater ability to investigate the amount of data each device is sending to the platform. This includes also the Device Aggregation that sums up all subtenants blow the (including) enterprise  tenant.
+- `Microservice Statistics` - Understand the resources used behind each deployed microservice and identify areas of optimization. This includes also the Microservice Aggregation that sums up all subtenants blow the (including) enterprise  tenant.
+- `Tenant Statistics` - Discover other data points related to tenant consumption, including metrics such as total storage used and subscribed applications. This includes also the Tenant Aggregation that sums up all subtenants blow the (including) enterprise  tenant. 
 
-The data in the app is available monthly on a per-tenant basis. Parent tenants can view statistics for individual child tenants. The month and tenant selectors are universal and apply throughout the application. 
-#### Configuration Screenshots
+The data in the app is available monthly on a per-tenant basis. Parent tenants can view statistics for individual child tenants. The month and tenant selectors are universal and apply throughout the application. Tenant selector is naturally not available in aggregated views.
+
 ##### Tenant Selector
 ![Tenant Selector](usage-statistics-app/assets/images/tenant_selector.png)
 Inactive tenants are black
@@ -24,9 +24,9 @@ Inactive tenants are black
 
 
 ### Device Statistics
-`Device Statistics` gives you the ability to configure and analyze classification of devices for the selected tenant. In this context, a device is any inventory object that has at least one  measurement, event, or alarm over a month. You are able to investigate the total number of measurements, events, and alarms that each device sent over the course of a month. In addition, you are able to set custom classes based on the average frequency of data being sent, along with thresholds per class.
+`Device Statistics` gives you the ability to configure and analyze classification of devices for the selected tenant. In this context, a device is any inventory object that has at least one  measurement, event, or alarm over a month. You are able to investigate the total number of measurements, events, and alarms that each device sent over the course of a month.
 
-By default, there are six device classes defined as follows:
+There are six device classes defined as follows:
 1. Class A = between 0 and 24 MEAs per day
 2. Class B = between 24 and 144 MEAs per day
 3. Class C = between 144 and 1440 MEAs per day
@@ -34,7 +34,7 @@ By default, there are six device classes defined as follows:
 5. Class E = between 8640 and 86400 MEAs per day
 6. Class F = greater than 86400 MEAs per day
 
-These ranges are inclusive for the lower bound and exclusive for the upper bound. The ranges and names of each classification can be modified by the end user. In addition, for each classification, the user can define a threshold. This threshold will compare the amount of devices in each class, and then calculate a percentage on the `Device Overview` page. 
+These ranges are inclusive for the lower bound and exclusive for the upper bound.
 
 The `Device Statistics` data is available monthly for the selected tenant, and you can export the data to CSV for analysis outside of Cumulocity IoT. 
 
@@ -50,19 +50,16 @@ The `Device Statistics` data is available monthly for the selected tenant, and y
 ### Microservice Statistics
 `Microservice Statistics` enables you to look at your subscribed microservices and their resource usage for the selected tenant. When a microservice is subscribed to a tenant, it requests a certain amount of CPU power and Memory capacity. Whenever the microservice is active, Cumulocity IoT will allocate these resources to ensure the microservice can run appropropriately. Via `Microservice Statistics`, you can investigate the resources used by your deployed microservices.
 
-In addition, just like with the devices, you have the ability to define custom categories and thresholds for your microservices. There are 3 default categories for microservices - Product Services, Streaming Analytics, and Machine Learning. These correspond to Software AG provided microservices and are the default values. Every other microservice that does not fit in these categories is considered a "Custom Microservice" and treated like a fourth category. You are able to view each category individually, enabling you to draw conclusions about your usage and where you can optimize your deployments. 
 
 The `Microservice Statistics` data is available monthly, and you can export the data to CSV for analysis outside of Cumulocity IoT. 
 
-#### Microservice Statistics Screenshots
-##### Microservice Overview - Category Overview
-![Microservice Overview - Category Overview](usage-statistics-app/assets/images/ms_stats-category_overview.png)
-##### Microservice Overview - Services Overview
-![Microservice Overview - Services Overview](usage-statistics-app/assets/images/ms_stats-services_overview.png)
+
 ##### Microservice Data
 ![Microservice Data](usage-statistics-app/assets/images/ms_stats-data.png)
-##### Microservice Configuration
-![Microservice Configuration](usage-statistics-app/assets/images/ms_stats-config.png)
+
+##### Microservices Aggregation
+Aggregation over all tenants, meaning when a microservice is deployed multiple times its values will be aggregated to a total. All values will also be aggregate to top level  which includes the total CCUs.
+![Microservice Aggregation](usage-statistics-app/assets/images/ms_stats-aggreagation.png)
 
 ### Tenant Statistics
 `Tenant Statistics` grants you access to other metrics associated with tenant usage in Cumulocity IoT. This includes data for storage, API requests, and other ways counting the number of devices connected. You can also see all of the subscribed applications for the tenant, which includes both microservices and UI apps. 
@@ -76,7 +73,7 @@ The `Tenant Statistics` data is available monthly, and you can export the data t
 
 # Metrics Aggregator Microservice
 This microservice serves as a backend for the Usage Statistics Webapp of Cumulocity IoT.
-It performs an aggregation of all subtenants assets of an Enterpreise Tenant (including itself). I covers Device Classes-, Microservices- and Tenant-Statistics The following endpoint lets you request the statistics:
+It performs an aggregation of all subtenants assets of an Enterprise Tenant (including itself). I covers Device Classes-, Microservices- and Tenant-Statistics The following endpoint lets you request the statistics:
 
 # Statistics Endpoints
 
@@ -93,9 +90,9 @@ https://<deployed tenant>.cumulocity.com/service/metrics-aggregator/tenants/?dat
 
 
 ## We want your feedback!
-The `Usage Statistics Application` is available to you in a public preview so that we can collect your feedback. Please share any and all of your feedback, both positive and negative, on the [Cumulocity IoT Feedback Portal](https://cumulocityiot.ideas.aha.io/). 
+The `Usage Statistics Application` is available to you in a public preview so that we can collect your feedback. Please share any and all of your feedback, both positive and negative. Please contact marco.stoffel@cumulocity.com
 
-Please note that this tool is provided as-is and without warranty or support. It does not constitute part of the Software AG product suite. 
+Please note that this tool is provided as-is and without warranty or support. It does not constitute part of the Cumulocity product. 
 This application works best with [Google Chrome](https://www.google.com/chrome/) and Cumulocity UI version as mentioned below
 
 ### Compatibility
