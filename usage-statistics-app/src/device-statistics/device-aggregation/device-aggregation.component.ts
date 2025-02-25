@@ -88,9 +88,6 @@ export class DeviceAggregationComponent implements OnInit, OnDestroy {
 
 
   private generateClassComparisonChart(chartData) {
-
-
-    console.log("chartData: " , chartData);
     const deviceClasses=[];
     chartData.forEach(element => {
       deviceClasses.push(element["className"])
