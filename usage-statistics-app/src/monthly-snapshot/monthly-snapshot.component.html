@@ -11,14 +11,24 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Total Successful Requests</th>
-            <th>Total Devices</th>
+            <th>Successful Requests</th>
+            <th>Devices</th>
+            <th>Memory</th>
+            <th>CPU</th>
+            <th>CCUs</th>
+            <th>MEAs</th>
+            <th>Storage</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>{{totalMeas | number: '2.'}}</td>
             <td>{{totalDeviceCount| number: '2.'}}</td>
+            <td>{{totalMem| number: '2.'}}</td>
+            <td>{{totalCpu| number: '2.'}}</td>
+            <td>{{CCUs| number: '2.'}}</td>
+            <td>{{tenantAggregation.meas| number }}</td>
+            <td>{{tenantAggregation.storageHumanReadable}}</td>
           </tr>
         </tbody>
       </table>
@@ -31,7 +41,7 @@
       [rows]="deviceData"
       [actionControls]="[]" 
       [pagination]="pagination" 
-      [displayOptions]="{ striped: true, bordered: false, gridHeader: true, filter: false, hover: true, search:false }"
+      [displayOptions]="{ striped: true, bordered: false, gridHeader: true, filter: false, hover: true, search: false }"
       class="d-contents">
       </c8y-data-grid>
     </div>

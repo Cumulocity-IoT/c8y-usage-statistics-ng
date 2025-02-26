@@ -29,6 +29,8 @@ import { TenantPickerComponent } from './utitities/statistics-action-bar/tenant-
 import { SortStringAscPipe } from './utitities/sort-string-asc/sort-string-asc.pipe';
 import { DeviceAggregationComponent } from './device-statistics/device-aggregation/device-aggregation.component';
 import { NumberRendererComponent} from './microservice-statistics/microservice-aggregation/renderer/number.renderer.component' 
+import { DeviceClassChart } from './device-statistics/device-class-chart/device-class-chart.component';
+import { MonthlySnapshotComponent } from './monthly-snapshot/monthly-snapshot.component';
 export const hooks = [
   { provide: HOOK_NAVIGATOR_NODES, useClass: UsageStatisticsNavigationFactory, multi: true },
   { provide: HOOK_TABS, useClass: UsageStatisticsTabFactory, multi: true }
@@ -68,7 +70,9 @@ export const hooks = [
     TenantAggregationComponent,
     TenantPickerComponent,
     SortStringAscPipe,
-    NumberRendererComponent
+    NumberRendererComponent,
+    DeviceClassChart,
+    MonthlySnapshotComponent
   ],
   providers: [...hooks],
   bootstrap: [BootstrapComponent]

@@ -9,8 +9,10 @@ import { TenantDataComponent } from '../tenant-statistics/tenant-data/tenant-dat
 import { Router } from '@angular/router';
 import { MicroserviceAggregationComponent } from '../microservice-statistics/microservice-aggregation/microservice-aggregation.component';
 import { TenantAggregationComponent } from '../tenant-statistics/tenant-aggregation/tenant-aggregation.component';
+import { MonthPickerComponent } from '../utitities/statistics-action-bar/month-picker/month-picker.component';
+import { MonthlySnapshotComponent } from '../monthly-snapshot/monthly-snapshot.component';
 
-const navs: NavigatorNode[] = [];
+
 const APPROVED_ROLES = [
   "ROLE_TENANT_STATISTICS_READ",
   "ROLE_OPTION_MANAGEMENT_READ",
@@ -18,7 +20,7 @@ const APPROVED_ROLES = [
 ]
 
 export const ROUTES: Route[] = [
-  { path: '', pathMatch: 'prefix', redirectTo: 'device-statistics/overview' },
+  { path: '', pathMatch: 'prefix', component: MonthlySnapshotComponent },
   { path: 'device-statistics', pathMatch: 'prefix', redirectTo: 'device-statistics/overview' },
   { path: 'device-statistics/overview', component: DeviceOverviewComponent },
   { path: 'device-statistics/device-data', component: DeviceDataComponent },
@@ -58,6 +60,15 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
   }
   async get() {
     if (this.navs.length === 0) {
+
+      const MONTHLY_SNAPSHOT = new NavigatorNode({
+        label: gettext('Last Month Overview'),
+        icon: 'devices',
+        path: '/last-month-overview',
+        priority: 100
+      })
+
+     
       // Device Statistics
       const DEVICE_STATISTICS_OVERVIEW = new NavigatorNode({
         path: 'device-statistics/overview',
@@ -115,7 +126,11 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
       })
 
 
-      this.navs.push(DEVICE_STATISTICS, MICROSERVICE_STATISTICS, TENANT_STATISTICS)
+      this.navs.push(
+        MONTHLY_SNAPSHOT,
+        DEVICE_STATISTICS,
+        MICROSERVICE_STATISTICS,
+        TENANT_STATISTICS)
       this.isMetricsAggregatorAvailable();
     }
     return this.navs;

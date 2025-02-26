@@ -75,12 +75,6 @@ export class TenantStatisticsService {
       usedBy:  null
     }
 
-    // if (data && data.resources && data.resources.usedBy) {
-    // }
-    // else {
-    //   throw { message: gettext('Microservice data is not available') }
-    // }
-
     this.tenantSummaryDetailedResourcesStore = {
       data: data,
       date: selectedDate
@@ -111,12 +105,7 @@ export class TenantStatisticsService {
   public async getMonthlyTenantAggregation(date: Date):Promise<any> {
 
     var dateTo: Date;
-    
-    // if (date.getMonth() == 11) {
-    //     dateTo = new Date(date.getFullYear() + 1, 0, 1);
-    // } else {
-    //     dateTo = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-    // }
+
     dateTo = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59)
     console.log("dateTo: " + dateTo)
 
