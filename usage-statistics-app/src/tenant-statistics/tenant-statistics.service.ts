@@ -103,18 +103,24 @@ export class TenantStatisticsService {
   }
 
   public async getMonthlyTenantAggregation(date: Date):Promise<any> {
+    
+    return await this.getTenantAggregation(
+      this.commonService.getDatesStartAndEndMonth(date).startOfMonth,
+      this.commonService.getDatesStartAndEndMonth(date).endOfMonth);
+  }
 
-    var dateTo: Date;
+  public async getMonthlySnapshot(date: Date):Promise<any>{
+    return await this.getTenantAggregation(
+      this.commonService.getDatesStartAndEndMonth(date).startOfMonth,date);
+  }
 
-    dateTo = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59)
-    console.log("dateTo: " + dateTo)
-
+  private async getTenantAggregation(dateFrom: Date, dateTo: Date){
     try {
       const options = {
         method: 'GET'
       };
       const response = await this.client.fetch(
-        `/service/metrics-aggregator/tenants/?dateFrom=${moment(date).format(DATE_FORMAT_DAY)}&dateTo=${moment(dateTo).format(DATE_FORMAT_DAY)}`
+        `/service/metrics-aggregator/tenants/?dateFrom=${moment(dateFrom).format(DATE_FORMAT_DAY)}&dateTo=${moment(dateTo).format(DATE_FORMAT_DAY)}`
         , options);
       return (await response).json();
     } catch (err) {

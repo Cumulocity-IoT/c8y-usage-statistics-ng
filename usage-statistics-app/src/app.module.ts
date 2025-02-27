@@ -31,6 +31,14 @@ import { DeviceAggregationComponent } from './device-statistics/device-aggregati
 import { NumberRendererComponent} from './microservice-statistics/microservice-aggregation/renderer/number.renderer.component' 
 import { DeviceClassChart } from './device-statistics/device-class-chart/device-class-chart.component';
 import { MonthlySnapshotComponent } from './monthly-snapshot/monthly-snapshot.component';
+import { NgxEchartsModule } from 'ngx-echarts';
+// import echarts core
+import * as echarts from 'echarts/core';
+// import necessary echarts components
+import { BarChart } from 'echarts/charts';
+import { GridComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+echarts.use([BarChart, GridComponent, CanvasRenderer]);
 export const hooks = [
   { provide: HOOK_NAVIGATOR_NODES, useClass: UsageStatisticsNavigationFactory, multi: true },
   { provide: HOOK_TABS, useClass: UsageStatisticsTabFactory, multi: true }
@@ -53,7 +61,8 @@ export const hooks = [
       { enableTracing: false, useHash: true }
     ),
     CoreModule.forRoot(),
-    PluginsModule
+    PluginsModule,
+    NgxEchartsModule.forRoot({ echarts: () => import('echarts') })
   ],
   declarations: [
     DeviceOverviewComponent,

@@ -13,7 +13,8 @@ export enum FeatureList {
   TenantStatistics = 'Tenant Statistics',
   TenantAggregation = 'Tenant Aggregation',
   DeviceAggregation = 'Device Aggregation',
-  MicroserviceAggregation = 'Microservice Aggregation'
+  MicroserviceAggregation = 'Microservice Aggregation',
+  MonthlySnapshot= 'Monthly Snapshot'
 
 }
 
@@ -176,7 +177,7 @@ export class CommonService {
     return `${urlFragment}?dateFrom=${startOfMonth}&dateTo=${endOfMonth}&tenant=${await this.getCurrentlyActiveTenant()}&pageSize=2000`;
   }
 
-  private getDatesStartAndEndMonth(selectedDate: Date) {
+  public getDatesStartAndEndMonth(selectedDate: Date) {
     const startOfMonth = moment(selectedDate).startOf('month').format(DATE_FORMAT_DAY)
     const endOfMonth = moment(selectedDate).endOf('month').format(DATE_FORMAT_DAY)
     return { startOfMonth, endOfMonth }

@@ -25,13 +25,15 @@
     "@c8y/client": "1021.29.1",
     "@c8y/ngx-components": "1021.29.1",
     "@c8y/style": "1021.29.1",
+    "d3": "^7.6.1",
+    "jquery": "^3.6.1",
+    "moment": "^2.29.4",
     "ngx-bootstrap": "18.0.0",
+    "ngx-echarts": "^18.0.0",
     "rxjs": "^7.8.1",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10",
-    "d3": "^7.6.1",
-    "jquery": "^3.6.1",
-    "moment": "^2.29.4"
+    "echarts": "^5.5.1"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.2.12",

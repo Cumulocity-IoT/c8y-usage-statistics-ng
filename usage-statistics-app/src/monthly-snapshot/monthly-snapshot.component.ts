@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { gettext, DisplayOptions, Pagination, Column } from '@c8y/ngx-components';
 import { Subscription } from 'rxjs';
 import { DeviceStatisticsService, CLASS_COLORS, } from '../device-statistics/device-statistics.service';  
@@ -23,9 +23,9 @@ export class MonthlySnapshotComponent implements OnInit {
     hover: true
   };
   isLoading = true;
-  selectedDate: Date = new Date();
   microserviceData: any;
   tenantAggregation: any;
+  feature: FeatureList;
   constructor(
 
     private deviceStatisticsService: DeviceStatisticsService,
@@ -35,6 +35,7 @@ export class MonthlySnapshotComponent implements OnInit {
     
   ) { }
 
+
   pagination: Pagination = this.getPagination();
   totalMeas: Number= 0;
   totalDeviceCount: Number= 0;
@@ -42,6 +43,9 @@ export class MonthlySnapshotComponent implements OnInit {
   totalCpu: any = 0;
   totalMem: any = 0;
   CCUs: any= 0;
+  selectedDate: Date;
+  titlePrefix: String = "Monthly Snapshot";
+  title: String = "";
 
   columns: Column[] = [
     {
@@ -60,7 +64,7 @@ export class MonthlySnapshotComponent implements OnInit {
 
   
 
-  title = "Device Aggregation";
+
 
 
   getPagination(): Pagination {
@@ -71,21 +75,30 @@ export class MonthlySnapshotComponent implements OnInit {
   }
 
   ngOnInit(): void {
-        this.getData(this.selectedDate);
+        this.feature = FeatureList.MonthlySnapshot;
+        this.getData();
   }
 
-  async getData(selectedDate) {
+
+  async getData() {
     try {
-      this.deviceData = await this.deviceStatisticsService.getMonthlyDeviceAggregation(selectedDate)
+      let today:Date  = new Date();
+      this.selectedDate = new Date(today.getFullYear(),today.getMonth()-1,today.getMonth());
+      this.deviceData = await this.deviceStatisticsService.getMonthlyDeviceAggregation(this.selectedDate);
       this.totalMeas = this.deviceData['totalMeas'];
       this.totalDeviceCount = this.deviceData['totalDeviceCount'];
       this.deviceData = this.deviceData['totalDeviceClasses'];
-      this.microserviceData = await this.microserviceStatisticsService.getMonthlyMicroserviceAggregation(selectedDate)
+      this.microserviceData = await this.microserviceStatisticsService.getMonthlyMicroserviceAggregation(this.selectedDate)
       this.totalMem = Number(this.microserviceData['totalUsage']['avgMemory']).toFixed(2)
       this.totalCpu = Number(this.microserviceData['totalUsage']['avgCPU']).toFixed(2)
       this.CCUs = Number(this.microserviceData['totalUsage']['ccus']).toFixed(0)
-      var tenantAggregationData: any = await this.tenantStatisticsService.getMonthlyTenantAggregation(selectedDate)
+      var tenantAggregationData: any = await this.tenantStatisticsService.getMonthlyTenantAggregation(this.selectedDate)
       this.tenantAggregation = tenantAggregationData['totalTenantStat']
+      this.title = this.titlePrefix + " " + new Intl.DateTimeFormat(
+        Intl.DateTimeFormat().resolvedOptions().locale, {
+        year: 'numeric',
+        month: 'long'
+      }).format(this.selectedDate)
     }
     catch (error) {
       this.commonService.microserviceUnavailableAlert(error)

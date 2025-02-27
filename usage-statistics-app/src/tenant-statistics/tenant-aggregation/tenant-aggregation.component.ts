@@ -13,7 +13,7 @@ export class TenantAggregationComponent implements OnInit {
   feature = FeatureList.TenantAggregation;
   monthChangedSubscription: Subscription;
   tenantAggregation: TenantAggregationResources;
-  showAlert = false
+  showAlert = false;
   constructor(
     private monthPickerService: MonthPickerService,
     private tenantStatisticsService: TenantStatisticsService,
@@ -27,7 +27,6 @@ export class TenantAggregationComponent implements OnInit {
       });
       this.getData()
     }
-  
 
   async getData(selectedDate = this.monthPickerService.selectedDate) {
     try {

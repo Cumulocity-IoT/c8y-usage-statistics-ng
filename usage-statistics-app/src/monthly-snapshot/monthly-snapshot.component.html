@@ -1,12 +1,13 @@
-<c8y-title>{{'Device Aggregation' | translate}}</c8y-title>
-<statistics-action-bar [feature]="feature"></statistics-action-bar>
+<c8y-title>{{title | translate}}</c8y-title>
+<!-- <statistics-action-bar [feature]="feature"></statistics-action-bar> -->
+
 <div class="row d-flex show-grid">
   <div class="col-md-6">
     <div class="card m-b-0">
       <device-class-chart *ngIf="deviceData" [deviceData]="deviceData"></device-class-chart>
     </div>
   </div>
-  <div class="col-md-6">
+  <div class="col-md-6" *ngIf="deviceData && tenantAggregation && microserviceData">
     <div class="card m-b-0">
       <table class="table">
         <thead>
@@ -41,7 +42,7 @@
       [rows]="deviceData"
       [actionControls]="[]" 
       [pagination]="pagination" 
-      [displayOptions]="{ striped: true, bordered: false, gridHeader: true, filter: false, hover: true, search: false }"
+      [displayOptions]="{ striped: true, bordered: false, gridHeader: false, filter: false, hover: true }"
       class="d-contents">
       </c8y-data-grid>
     </div>

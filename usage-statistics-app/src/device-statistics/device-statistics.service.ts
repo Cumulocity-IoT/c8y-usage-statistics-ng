@@ -127,8 +127,8 @@ export class DeviceStatisticsService {
   }
 
   public async getMonthlyDeviceAggregation(date: Date):Promise<any> {
+  
     try {
-
       const options = {
         method: 'GET'
       };

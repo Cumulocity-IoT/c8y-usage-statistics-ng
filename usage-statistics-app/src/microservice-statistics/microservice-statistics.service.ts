@@ -174,24 +174,28 @@ export class MicroserviceStatisticsService {
     }
 
     public async getMonthlyMicroserviceAggregation(date: Date):Promise<any> {
-
-        var dateTo: Date;
-        dateTo= new Date(date.getFullYear(), date.getMonth() + 1, 0);
-       
-        console.log("dateTo: " + dateTo)
-
-        try {
+        return await this.getMicroserviceAggregation(
+            this.commonService.getDatesStartAndEndMonth(date).startOfMonth,
+            this.commonService.getDatesStartAndEndMonth(date).endOfMonth);
+    }
     
-          const options = {
-            method: 'GET'
-          };
-          const response = await this.client.fetch(
-            `/service/metrics-aggregator/microservices/?dateFrom=${moment(date).format(DATE_FORMAT_DAY)}&dateTo=${moment(dateTo).format(DATE_FORMAT_DAY)}`
-            , options);
-          return (await response).json();
-        } catch (err) {
-          console.log(err);
-        }
-      }
+    public async getMonthlySnapshot(date: Date):Promise<any> {
+        return await this.getMicroserviceAggregation(
+            this.commonService.getDatesStartAndEndMonth(date).startOfMonth,date);
+    }
+
+    private async getMicroserviceAggregation (dateFrom: Date, dateTo: Date){
+        try {
+            const options = {
+              method: 'GET'
+            };
+            const response = await this.client.fetch(
+              `/service/metrics-aggregator/microservices/?dateFrom=${moment(dateFrom).format(DATE_FORMAT_DAY)}&dateTo=${moment(dateTo).format(DATE_FORMAT_DAY)}`
+              , options);
+            return (await response).json();
+          } catch (err) {
+            console.log(err);
+          }
+    }
 
 }
