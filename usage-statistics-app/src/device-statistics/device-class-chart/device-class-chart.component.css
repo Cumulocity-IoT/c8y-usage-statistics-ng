@@ -9,6 +9,10 @@
     height: calc(50vh);
   }
 
+  .device-barchart-container{
+    height: 50vh;
+  }
+
   .holder {
     width: 50%;
     margin: auto;

@@ -1,6 +1,11 @@
-<div class="class-device-class-chart">
+<!-- <div class="class-device-class-chart">
     <div class="card">
       <div class="holder"></div>
     </div>
-  </div>
-    
+  </div> -->
+<div 
+echarts
+[options]="chartOptions"
+(chartInit)="onChartInit($event)"
+class="device-barchart-container">
+</div>
