@@ -2,7 +2,11 @@
 ## Overview 
 The `Usage Statistics Application` enables you to view consumption and usage information for your tenant and any child tenants within Cumulocity IoT. Many different types of data are present, including device statistics, microservice statistics, and tenant statistics.
 
+****NOTE****
+If you are using an enterprise tenant consider to install the  [metrics-aggregatro](https://github.com/Cumulocity-IoT/c8y-usage-statistics-ng/releases/latest) microservice in it. It will enable you to view aggregated metrics on top level.
+
 **`Note: The Usage Statistics Application is still actively in development, and this release should be considered a preliminary public preview of the full application. See below for roadmap (subject to change). This preliminary version of the application works best in Google Chrome.`**
+
 
 
 ## Features
