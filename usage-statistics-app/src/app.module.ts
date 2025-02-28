@@ -62,7 +62,7 @@ export const hooks = [
     ),
     CoreModule.forRoot(),
     PluginsModule,
-    NgxEchartsModule.forRoot({ echarts: () => import('echarts') })
+    NgxEchartsModule.forRoot({ echarts: () => import('echarts') }),
   ],
   declarations: [
     DeviceOverviewComponent,
@@ -83,7 +83,9 @@ export const hooks = [
     DeviceClassChart,
     MonthlySnapshotComponent
   ],
-  providers: [...hooks],
+  providers: [
+    ...hooks,
+  ],
   bootstrap: [BootstrapComponent]
 })
 export class AppModule { }

@@ -4,6 +4,7 @@ import { TenantSummaryDetailedResources } from './tenant-statistics/tenant-stati
 import { Alert, AlertService, gettext } from '@c8y/ngx-components';
 import { DATE_FORMAT_DAY } from './device-statistics/device-statistics.service';
 import { Subject } from 'rxjs';
+import {  Router, UrlTree } from '@angular/router';
 
 const moment = require('moment');
 export const DATE_FORMAT_MONTH = 'MMMM/YYYY'
@@ -32,7 +33,8 @@ export class CommonService {
   constructor(
     private tenantService: TenantService,
     private client: FetchClient,
-    private alertService: AlertService
+    private alertService: AlertService,
+    private router: Router
   ) { }
 
   async getSourceTenant() {
@@ -181,5 +183,17 @@ export class CommonService {
     const startOfMonth = moment(selectedDate).startOf('month').format(DATE_FORMAT_DAY)
     const endOfMonth = moment(selectedDate).endOf('month').format(DATE_FORMAT_DAY)
     return { startOfMonth, endOfMonth }
+  }
+
+  public  async isMetricsAggregatorAvailable(): Promise<boolean| UrlTree>{
+    var api = '/service/metrics-aggregator/health'
+    const r = await this.client.fetch(api, {method: 'GET'} )
+    if (r.ok){
+      console.log("Metrics Aggregator Microservice found. Activating aggregation. " , await r.json());
+      return true;
+    } else {
+      console.log("No Metrics Aggregator Microservice found. No aggregation possible. ");
+      return this.router.createUrlTree(['device-statistics/overview']);
+    }
   }
 }
