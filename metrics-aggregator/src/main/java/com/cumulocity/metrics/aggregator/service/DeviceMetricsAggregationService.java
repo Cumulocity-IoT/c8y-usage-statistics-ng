@@ -3,6 +3,7 @@ package com.cumulocity.metrics.aggregator.service;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,6 +22,7 @@ import com.cumulocity.sdk.client.SDKException;
 
 import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration;
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatistics;
+import com.cumulocity.metrics.aggregator.model.device.DeviceStatistics.Statistic;
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatisticsAggregation;
 import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration.DeviceClass;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
@@ -52,7 +54,11 @@ public class DeviceMetricsAggregationService {
 	private static final String OPTION_KEY = "device.statistics.class.details";
 
 	private Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
+	private Map<Date,DeviceStatisticsAggregation> deviceStatisticsAggregationCurrentMonth = new HashMap<Date,DeviceStatisticsAggregation>();
+	private Map<String,Integer> devicesDailyAggregation = new HashMap<String,Integer>();
 
+	DeviceClassConfiguration dailyDeviceClasses = new DeviceClassConfiguration();
+	int dailyDevicesCount = 0;
 	@Autowired
 	RestConnector restConnector;
 
@@ -65,39 +71,43 @@ public class DeviceMetricsAggregationService {
 	@Autowired
 	ObjectMapper objectMapper;
 
-	@Autowired
-	CommonService commonService;
+
+	private List<String> tenantList;
+	public List<String> getTenantList() {
+		return tenantList;
+	}
+
+	public void setTenantList(List<String> tenantList) {
+		this.tenantList = tenantList;
+	}
+
 	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 
 	public Map<String, DeviceStatistics> getDeviceStatisticsOverview(String type, Date statDate) {
-
 		HashMap<String, DeviceStatistics> dsMap = new HashMap<String, DeviceStatistics>();
-		subscriptionsService.runForEachTenant(() -> {
-			for (String currentTenant : commonService.getTenantList()) {
+			for (String currentTenant : this.getTenantList()) {
 				log.info("Get Statistics for Tenant: " + currentTenant);
 				DeviceStatistics dspage = restConnector.get(
 						"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
 								+ "?pageSize=2000&withTotalPages=true",
 						CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
-				dspage.setDaysInMonth(statDate);
+				dspage.setDaysInMonth(statDate,type);
 				log.debug("Statistics: " + dspage.getStatistics().toString());
 				dsMap.put(currentTenant, dspage);
 			}
-		});
 		return dsMap;
 	}
 
 	public Map<String, DeviceClassConfiguration> getAllDeviceClassConfiguration(boolean useTenantDeviceClasses) {
 		log.info("# Fetching all deviceClassConfigurations, useTenantDeviceClasses: " + useTenantDeviceClasses);
 		this.allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
-		for (String currentTenant : commonService.getTenantList()) {
-			subscriptionsService.runForEachTenant(() -> {
+		for (String currentTenant : this.getTenantList()) {
 				if (useTenantDeviceClasses) {
 					this.allDeviceClassConfiguration.put(currentTenant, getDeviceClasseConfiguration(currentTenant));
 				} else {
 					this.allDeviceClassConfiguration.put(currentTenant, new DeviceClassConfiguration());
 				}
-			});
+
 		}
 		return allDeviceClassConfiguration;
 	}
@@ -132,12 +142,14 @@ public class DeviceMetricsAggregationService {
 		Map<String, DeviceClassConfiguration> deviceClassConfigurationMap = this
 				.getAllDeviceClassConfiguration(useTenantDeviceClasses);
 		// Get all device class configurations
-		return getAggregatedDevicesPerClass(deviceStatisticsMap, deviceClassConfigurationMap, includeSubtenants);
+		return getAggregatedDevicesPerClass(deviceStatisticsMap, deviceClassConfigurationMap, includeSubtenants, type);
 	}
+
+
 
 	private DeviceStatisticsAggregation getAggregatedDevicesPerClass(
 			Map<String, DeviceStatistics> deviceStatisticsMap,
-			Map<String, DeviceClassConfiguration> deviceClassesMap, boolean includeSubtenants) {
+			Map<String, DeviceClassConfiguration> deviceClassesMap, boolean includeSubtenants, String type) {
 
 		final Boolean incSubtenants = includeSubtenants;
 		// Return object to gather statistics
@@ -189,4 +201,51 @@ public class DeviceMetricsAggregationService {
 			;
 		}
 	}
+
+
+
+
+
+	 public void updateDailyDeviceStatistics(){
+
+        Calendar cal = Calendar.getInstance();
+        int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MONTH, 1);
+		
+        for (int i = 1; i <= dayOfMonth; i++){
+
+            cal.set(Calendar.DAY_OF_MONTH, i);
+            Date statDate = cal.getTime();
+            
+            log.info(statDate.toString());
+            //this.deviceStatisticsAggregationCurrentMonth.put(statDate, getAggregatedDeviceClassStatistics("daily", statDate ,  false, false));
+			Map<String, DeviceStatistics> devstat = this.getDeviceStatisticsOverview("daily", statDate);
+
+			for (var entry : devstat.entrySet()) {
+				List<Statistic> ls =entry.getValue().getStatistics();
+				for (Statistic st : ls) {
+					this.devicesDailyAggregation.put(
+						st.getDeviceId(), 
+						this.devicesDailyAggregation.getOrDefault(st.getDeviceId(), dayOfMonth) +st.getCount()
+						);
+				}
+			}
+			
+			
+        }
+
+
+		this.dailyDevicesCount =0;
+		for (var device : this.devicesDailyAggregation.entrySet()){
+			this.dailyDevicesCount++;
+			this.updateDeviceClass(this.dailyDeviceClasses, device.getValue(), 28);
+		}
+
+        log.info("Daily Stat: " + this.deviceStatisticsAggregationCurrentMonth.toString());
+    }
+
+
 }

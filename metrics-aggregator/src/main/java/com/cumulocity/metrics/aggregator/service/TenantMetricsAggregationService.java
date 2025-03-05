@@ -4,6 +4,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.slf4j.Logger;
@@ -46,7 +48,6 @@ public class TenantMetricsAggregationService {
 		this.df = new SimpleDateFormat("yyyy-MM-dd");
 	}
 
-	private String currentTenant = "";
 
 	@Autowired
 	MicroserviceSubscriptionsService subscriptionsService;
@@ -60,15 +61,18 @@ public class TenantMetricsAggregationService {
 	@Autowired
 	CumulocityClientProperties clientProperties;
 
-	@Autowired
-	CommonService commonService;
+	
 
 	@Autowired
 	RestConnector restConnector;
 
-	@EventListener
-	public void initialize(MicroserviceSubscriptionAddedEvent event) {
-		log.info("Tenant Sub: " + event.toString());
+	private List<String> tenantList;
+	public List<String> getTenantList() {
+		return tenantList;
+	}
+
+	public void setTenantList(List<String> tenantList) {
+		this.tenantList = tenantList;
 	}
 
 
@@ -82,7 +86,7 @@ public class TenantMetricsAggregationService {
 			// Will hold the c8y API response
 			TenantStatistics tenantStatistics = new TenantStatistics();
 			HttpHeaders headers = new HttpHeaders();
-			for (String currentTenant : commonService.getTenantList()) {
+			for (String currentTenant : this.getTenantList()) {
 				headers.set("Authorization",
 						contextService.getContext().toCumulocityCredentials()
 								.getAuthenticationString());

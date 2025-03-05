@@ -24,12 +24,15 @@ public class DeviceStatistics {
         return daysInMonth;
     }
 
-    public void setDaysInMonth(Date date) {
+    public void setDaysInMonth(Date date,String type) {
+        if (type.equals("daily")) {
+            this.daysInMonth = 1 ;
+        } else {
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(date);
         YearMonth yearMonthObject = YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH ) +1 );
         this.daysInMonth = yearMonthObject.lengthOfMonth();
-
+        }
     }
 
     public String getSelf() {

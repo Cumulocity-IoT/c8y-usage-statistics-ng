@@ -53,8 +53,15 @@ public class MicroservicesMetricsAggregationService {
 	private static final Logger log = LoggerFactory.getLogger(MicroservicesMetricsAggregationService.class);
 	private DateFormat df;
 
-	@Autowired
-	CommonService commonService;
+	private List<String> tenantList;
+
+	public List<String> getTenantList() {
+		return tenantList;
+	}
+
+	public void setTenantList(List<String> tenantList) {
+		this.tenantList = tenantList;
+	}
 
 	// Product Services to exclude from statistics since they will not be billed.
 	private List<String> productServices = Stream.of(
@@ -152,7 +159,7 @@ public class MicroservicesMetricsAggregationService {
 				// Will hold the c8y API response for eacht tenant
 				TenantStatistics tenantStatistics = new TenantStatistics();
 				HttpHeaders headers = new HttpHeaders();
-				for (String currentTenant : commonService.getTenantList()) {
+				for (String currentTenant : this.getTenantList()) {
 					headers.set("Authorization",
 							contextService.getContext().toCumulocityCredentials()
 									.getAuthenticationString());
