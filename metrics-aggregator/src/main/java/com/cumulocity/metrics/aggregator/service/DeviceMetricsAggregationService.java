@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.cumulocity.sdk.client.RestConnector;
@@ -45,6 +48,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Marco Stoffel
  *
  */
+@Configuration
+@EnableScheduling
 @Service
 public class DeviceMetricsAggregationService {
 
@@ -57,8 +62,17 @@ public class DeviceMetricsAggregationService {
 	private Map<Date,DeviceStatisticsAggregation> deviceStatisticsAggregationCurrentMonth = new HashMap<Date,DeviceStatisticsAggregation>();
 	private Map<String,Integer> devicesDailyAggregation = new HashMap<String,Integer>();
 
-	DeviceClassConfiguration dailyDeviceClasses = new DeviceClassConfiguration();
+	DeviceStatisticsAggregation dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
+	
 	int dailyDevicesCount = 0;
+	int dailyMeas = 0;
+
+	
+
+	public int getDailyDevicesCount() {
+		return dailyDevicesCount;
+	}
+
 	@Autowired
 	RestConnector restConnector;
 
@@ -186,6 +200,7 @@ public class DeviceMetricsAggregationService {
 		return deviceStatisticsAggregation;
 	}
 
+	
 	private void updateDeviceClass(DeviceClassConfiguration deviceClassConfiguration, int count, int daysInMonth) {
 		float avgMea = count / daysInMonth;
 		Iterator<DeviceClass> idc = deviceClassConfiguration.getDeviceClasses().iterator();
@@ -203,11 +218,18 @@ public class DeviceMetricsAggregationService {
 	}
 
 
+	public DeviceStatisticsAggregation getDailyStatistics(boolean omitCache){
+		if (omitCache)	 {
+			createDailyDeviceStatistics();
+		}
+		return this.dailyDeviceStatisticsAggregation;
+	}
 
 
-
-	 public void updateDailyDeviceStatistics(){
-
+	//@Scheduled(cron = "1 * * * * ?")
+	public void createDailyDeviceStatistics(){
+		
+		this.dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
         Calendar cal = Calendar.getInstance();
         int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
         cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -220,32 +242,33 @@ public class DeviceMetricsAggregationService {
             cal.set(Calendar.DAY_OF_MONTH, i);
             Date statDate = cal.getTime();
             
-            log.info(statDate.toString());
+            log.info("Get daily statistic: "+ statDate.toString());
             //this.deviceStatisticsAggregationCurrentMonth.put(statDate, getAggregatedDeviceClassStatistics("daily", statDate ,  false, false));
 			Map<String, DeviceStatistics> devstat = this.getDeviceStatisticsOverview("daily", statDate);
 
 			for (var entry : devstat.entrySet()) {
+				
 				List<Statistic> ls =entry.getValue().getStatistics();
 				for (Statistic st : ls) {
 					this.devicesDailyAggregation.put(
 						st.getDeviceId(), 
 						this.devicesDailyAggregation.getOrDefault(st.getDeviceId(), dayOfMonth) +st.getCount()
 						);
+					
 				}
 			}
 			
 			
         }
 
-
-		this.dailyDevicesCount =0;
+		this.dailyDeviceStatisticsAggregation.setTotalDeviceCount(this.devicesDailyAggregation.size());
+		DeviceClassConfiguration dailyDeviceClasses = new DeviceClassConfiguration();
 		for (var device : this.devicesDailyAggregation.entrySet()){
-			this.dailyDevicesCount++;
-			this.updateDeviceClass(this.dailyDeviceClasses, device.getValue(), 28);
+			this.dailyDeviceStatisticsAggregation.addTotalMeas(device.getValue());
+			this.updateDeviceClass(dailyDeviceClasses, device.getValue(), dayOfMonth);
 		}
+		this.dailyDeviceStatisticsAggregation.setTotalDeviceClasses(dailyDeviceClasses);
 
-        log.info("Daily Stat: " + this.deviceStatisticsAggregationCurrentMonth.toString());
+        //log.info("Daily Stat: " + this.deviceStatisticsAggregationCurrentMonth.toString());
     }
-
-
 }

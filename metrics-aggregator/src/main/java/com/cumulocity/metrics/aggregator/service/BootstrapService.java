@@ -77,7 +77,7 @@ public class BootstrapService {
         microservicesMetricsAggregationService.setTenantList(tenantList);
         tenantMetricsAggregationService.setTenantList(tenantList);
         log.info(tenantList.toString());
-        deviceMetricsAggregationService.updateDailyDeviceStatistics();
+        deviceMetricsAggregationService.createDailyDeviceStatistics();
 	}
 
    
