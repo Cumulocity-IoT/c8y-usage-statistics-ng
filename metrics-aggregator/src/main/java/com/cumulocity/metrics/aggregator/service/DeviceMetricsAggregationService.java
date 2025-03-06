@@ -2,6 +2,9 @@ package com.cumulocity.metrics.aggregator.service;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -15,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -29,7 +31,6 @@ import com.cumulocity.metrics.aggregator.model.device.DeviceStatistics;
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatistics.Statistic;
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatisticsAggregation;
 import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration.DeviceClass;
-import com.cumulocity.microservice.context.ContextService;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.cumulocity.model.option.OptionPK;
 import com.cumulocity.rest.representation.CumulocityMediaType;
@@ -61,10 +62,11 @@ public class DeviceMetricsAggregationService {
 	private static final String OPTION_KEY = "device.statistics.class.details";
 
 	private Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
-	private Map<Date,DeviceStatisticsAggregation> deviceStatisticsAggregationCurrentMonth = new HashMap<Date,DeviceStatisticsAggregation>();
+	//private Map<Date,DeviceStatisticsAggregation> deviceStatisticsAggregationCurrentMonth = new HashMap<Date,DeviceStatisticsAggregation>();
 	private Map<String,Integer> devicesDailyAggregation = new HashMap<String,Integer>();
 
 	DeviceStatisticsAggregation dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
+	Instant dailyDeviceStatisticsAggregationLastRun=  Instant.now().minus(Period.ofDays(2));
 	
 
 	@Autowired
@@ -216,7 +218,11 @@ public class DeviceMetricsAggregationService {
 
 
 	public DeviceStatisticsAggregation getDailyStatistics(boolean omitCache){
-		if (omitCache)	 {
+		Instant now = Instant.now();
+		long hours = ChronoUnit.HOURS.between(this.dailyDeviceStatisticsAggregationLastRun, now );
+		// fetch only when older than 12 hours
+		if (omitCache || hours > 12)	 {
+			log.info("Getting Daily stats.");
 			createDailyDeviceStatistics();
 		}
 		return this.dailyDeviceStatisticsAggregation;
@@ -228,6 +234,7 @@ public class DeviceMetricsAggregationService {
 
 			this.dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
 			Calendar cal = Calendar.getInstance();
+			
 			int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
 			cal.set(Calendar.HOUR_OF_DAY, 0);
 			cal.set(Calendar.MINUTE, 0);
@@ -263,7 +270,7 @@ public class DeviceMetricsAggregationService {
 				this.updateDeviceClass(dailyDeviceClasses, device.getValue(), dayOfMonth);
 			}
 			this.dailyDeviceStatisticsAggregation.setTotalDeviceClasses(dailyDeviceClasses);
-	
+			this.dailyDeviceStatisticsAggregationLastRun = Instant.now();
 			//log.info("Daily Stat: " + this.deviceStatisticsAggregationCurrentMonth.toString());
 
     }
