@@ -127,7 +127,6 @@ export class DeviceStatisticsService {
   }
 
   public async getMonthlyDeviceAggregation(date: Date):Promise<any> {
-  
     try {
       const options = {
         method: 'GET'
@@ -135,6 +134,23 @@ export class DeviceStatisticsService {
       const response = await this.client.fetch(
         `/service/metrics-aggregator/devices/monthly/${moment(date).format(DATE_FORMAT_DAY)}?includeSubtenants=false`
         , options);
+      return (await response).json();
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+
+  public async getDailyDeviceAggregation(omitCache:boolean):Promise<any> {
+    try {
+      const options = {
+        method: 'GET'
+      };
+      let url = "/service/metrics-aggregator/devices/dailystatistics";
+      if (omitCache) {
+        url = url + "?omitCache=true"
+      }
+      const response = await this.client.fetch(url, options);
       return (await response).json();
     } catch (err) {
       console.log(err);

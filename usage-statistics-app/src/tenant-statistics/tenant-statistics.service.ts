@@ -109,7 +109,8 @@ export class TenantStatisticsService {
       this.commonService.getDatesStartAndEndMonth(date).endOfMonth);
   }
 
-  public async getMonthlySnapshot(date: Date):Promise<any>{
+  public async getMonthlySnapshot():Promise<any>{
+    let date: Date = new Date();
     return await this.getTenantAggregation(
       this.commonService.getDatesStartAndEndMonth(date).startOfMonth,date);
   }

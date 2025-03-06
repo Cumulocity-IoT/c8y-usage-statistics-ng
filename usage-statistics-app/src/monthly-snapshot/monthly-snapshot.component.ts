@@ -24,7 +24,9 @@ export class MonthlySnapshotComponent implements OnInit {
   };
   isLoading = true;
   microserviceData: any;
+  microserviceDataCurrentMonth: any;
   tenantAggregation: any;
+  tenantAggregationCurrentMonth: any;
   feature: FeatureList;
   constructor(
 
@@ -37,15 +39,31 @@ export class MonthlySnapshotComponent implements OnInit {
 
 
   pagination: Pagination = this.getPagination();
+  
   totalMeas: Number= 0;
   totalDeviceCount: Number= 0;
   deviceData: any[];
+  
+  deviceDataCurrentMonth: any[];
+  totalMeasCurrentMonth: Number= 0;
+  totalDeviceCountCurrentMonth: Number= 0;
+
+
   totalCpu: any = 0;
   totalMem: any = 0;
   CCUs: any= 0;
+
+  totalCpuCurrentMonth: any = 0;
+  totalMemCurrentMonth: any = 0;
+  CCUsCurrentMonth: any= 0;
+
+
   selectedDate: Date;
-  titlePrefix: String = "Monthly Snapshot";
-  title: String = "";
+
+  titleHeader: String = "Monthly Snapshot";
+  titleLastMonth: String = "Last Month";
+  titleSnapshot: String = "This Month until yesterday"
+
 
   columns: Column[] = [
     {
@@ -80,25 +98,53 @@ export class MonthlySnapshotComponent implements OnInit {
   }
 
 
+  async refreshSnapshot(){
+    this.deviceStatisticsService.getDailyDeviceAggregation(true);
+  }
   async getData() {
     try {
       let today:Date  = new Date();
       this.selectedDate = new Date(today.getFullYear(),today.getMonth()-1,today.getMonth());
+      let df = new Intl.DateTimeFormat(
+        Intl.DateTimeFormat().resolvedOptions().locale, {
+        year: 'numeric',
+        month: 'long'});
+      this.titleLastMonth = this.titleLastMonth + " " + df.format(this.selectedDate)
+
+     
       this.deviceData = await this.deviceStatisticsService.getMonthlyDeviceAggregation(this.selectedDate);
       this.totalMeas = this.deviceData['totalMeas'];
       this.totalDeviceCount = this.deviceData['totalDeviceCount'];
       this.deviceData = this.deviceData['totalDeviceClasses'];
+      
+      this.deviceDataCurrentMonth = await this.deviceStatisticsService.getDailyDeviceAggregation(false);
+      this.totalMeasCurrentMonth = this.deviceDataCurrentMonth['totalMeas'];
+      this.totalDeviceCountCurrentMonth = this.deviceDataCurrentMonth['totalDeviceCount'];
+      this.deviceDataCurrentMonth = this.deviceDataCurrentMonth['totalDeviceClasses'];
+
+
+
       this.microserviceData = await this.microserviceStatisticsService.getMonthlyMicroserviceAggregation(this.selectedDate)
       this.totalMem = Number(this.microserviceData['totalUsage']['avgMemory']).toFixed(2)
       this.totalCpu = Number(this.microserviceData['totalUsage']['avgCPU']).toFixed(2)
       this.CCUs = Number(this.microserviceData['totalUsage']['ccus']).toFixed(0)
+
+      this.microserviceDataCurrentMonth = await this.microserviceStatisticsService.getMonthlySnapshot();
+      this.totalMemCurrentMonth = Number(this.microserviceDataCurrentMonth['totalUsage']['avgMemory']).toFixed(2)
+      this.totalCpuCurrentMonth = Number(this.microserviceDataCurrentMonth['totalUsage']['avgCPU']).toFixed(2)
+      this.CCUsCurrentMonth = Number(this.microserviceDataCurrentMonth['totalUsage']['ccus']).toFixed(0)
+
+
+
       var tenantAggregationData: any = await this.tenantStatisticsService.getMonthlyTenantAggregation(this.selectedDate)
       this.tenantAggregation = tenantAggregationData['totalTenantStat']
-      this.title = this.titlePrefix + " " + new Intl.DateTimeFormat(
-        Intl.DateTimeFormat().resolvedOptions().locale, {
-        year: 'numeric',
-        month: 'long'
-      }).format(this.selectedDate)
+      
+      var tenantAggregationDataCurrentMonth: any = await this.tenantStatisticsService.getMonthlySnapshot();
+      this.tenantAggregationCurrentMonth = tenantAggregationDataCurrentMonth['totalTenantStat']
+      
+      
+
+
     }
     catch (error) {
       this.commonService.microserviceUnavailableAlert(error)
