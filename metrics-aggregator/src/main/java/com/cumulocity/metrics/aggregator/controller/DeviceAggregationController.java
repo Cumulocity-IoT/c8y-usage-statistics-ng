@@ -44,7 +44,7 @@ public class DeviceAggregationController {
 		return new ResponseEntity<DeviceStatisticsAggregation>(response, HttpStatus.OK);
 	}
 
-	@GetMapping(value = "/daily", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "/dailystatistics", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<DeviceStatisticsAggregation> getDailyAggregatedDevicesPerClass(
 			@RequestParam(value = "omitCache", required = false, defaultValue = "false") boolean omitCache) {
 		DeviceStatisticsAggregation response = deviceService.getDailyStatistics(omitCache);
