@@ -278,7 +278,7 @@ public class DeviceMetricsAggregationService {
     }
 
 
-	@Scheduled(cron = "0 50 23,11 * * ?")
+	@Scheduled(cron = "0 1 0 * * ?")
 	public void scheduleDailyStatistics(){
 		subscriptionsService.runForEachTenant(()->{
 			this.createDailyDeviceStatistics();
