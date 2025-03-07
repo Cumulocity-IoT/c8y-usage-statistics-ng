@@ -63,7 +63,7 @@ public class DeviceMetricsAggregationService {
 
 	private Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
 	//private Map<Date,DeviceStatisticsAggregation> deviceStatisticsAggregationCurrentMonth = new HashMap<Date,DeviceStatisticsAggregation>();
-	private Map<String,Integer> devicesDailyAggregation = new HashMap<String,Integer>();
+
 
 	DeviceStatisticsAggregation dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
 	Instant dailyDeviceStatisticsAggregationLastRun=  Instant.now().minus(Period.ofDays(2));
@@ -233,6 +233,7 @@ public class DeviceMetricsAggregationService {
 	public void createDailyDeviceStatistics(){
 
 			this.dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
+			Map<String,Integer> devicesDailyAggregation = new HashMap<String,Integer>();
 			Calendar cal = Calendar.getInstance();
 			
 			int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
@@ -254,9 +255,9 @@ public class DeviceMetricsAggregationService {
 				for (var entry : devstat.entrySet()) {
 					List<Statistic> ls =entry.getValue().getStatistics();
 					for (Statistic st : ls) {
-						this.devicesDailyAggregation.put(
+						devicesDailyAggregation.put(
 							st.getDeviceId(), 
-							this.devicesDailyAggregation.getOrDefault(st.getDeviceId(), dayOfMonth) +st.getCount()
+							devicesDailyAggregation.getOrDefault(st.getDeviceId(), dayOfMonth) +st.getCount()
 							);
 						
 					}
@@ -264,9 +265,9 @@ public class DeviceMetricsAggregationService {
 			}
 			
 			// Get device classes
-			this.dailyDeviceStatisticsAggregation.setTotalDeviceCount(this.devicesDailyAggregation.size());
+			this.dailyDeviceStatisticsAggregation.setTotalDeviceCount(devicesDailyAggregation.size());
 			DeviceClassConfiguration dailyDeviceClasses = new DeviceClassConfiguration();
-			for (var device : this.devicesDailyAggregation.entrySet()){
+			for (var device : devicesDailyAggregation.entrySet()){
 				this.dailyDeviceStatisticsAggregation.addTotalMeas(device.getValue());
 				this.updateDeviceClass(dailyDeviceClasses, device.getValue(), dayOfMonth);
 			}
