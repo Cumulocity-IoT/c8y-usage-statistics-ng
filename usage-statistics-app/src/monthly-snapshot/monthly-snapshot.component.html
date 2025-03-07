@@ -9,13 +9,13 @@
     </div>
   </div>
   <div class="col-md-6">
-    <div>
-      <span>
-      <p class="text-20">{{titleSnapshot}}</p>
-      <button class="btn btn-default" type="submit" (click)="refreshSnapshot()">
-        Refresh Snapshot
-      </button>
-    </span>
+    <div class="row">
+      <div class="col-lg-6">
+        <p class="text-20">{{titleSnapshot}}</p>
+        <!-- <button class="btn btn-default" type="submit" (click)="refreshSnapshot()">
+          Refresh Snapshot
+        </button> -->
+      </div>
     </div>
     <div class="card m-b-0">
       <device-class-chart *ngIf="deviceDataCurrentMonth" [deviceData]="deviceDataCurrentMonth"></device-class-chart>
