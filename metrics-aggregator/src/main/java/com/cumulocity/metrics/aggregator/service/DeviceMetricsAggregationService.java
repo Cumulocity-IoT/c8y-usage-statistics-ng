@@ -221,7 +221,7 @@ public class DeviceMetricsAggregationService {
 		Instant now = Instant.now();
 		long hours = ChronoUnit.HOURS.between(this.dailyDeviceStatisticsAggregationLastRun, now );
 		// fetch only when older than 12 hours
-		if (omitCache || hours > 12)	 {
+		if (omitCache || hours > 12 )	 {
 			log.info("Getting Daily stats.");
 			createDailyDeviceStatistics();
 		}
@@ -239,7 +239,8 @@ public class DeviceMetricsAggregationService {
 			cal.set(Calendar.HOUR_OF_DAY, 0);
 			cal.set(Calendar.MINUTE, 0);
 			cal.set(Calendar.SECOND, 0);
-	//		cal.set(Calendar.MONTH, 1);
+			// cal.set(Calendar.MONTH, 1);
+			// dayOfMonth = 28;
 			
 			// get all device meas from start of month
 			for (int i = 1; i <= dayOfMonth; i++){
@@ -276,7 +277,7 @@ public class DeviceMetricsAggregationService {
     }
 
 
-	@Scheduled(cron = "* 50 23,11 * * ?")
+	@Scheduled(cron = "0 50 23,11 * * ?")
 	public void scheduleDailyStatistics(){
 		subscriptionsService.runForEachTenant(()->{
 			this.createDailyDeviceStatistics();

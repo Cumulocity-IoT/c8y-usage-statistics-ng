@@ -3,6 +3,7 @@ package com.cumulocity.metrics.aggregator.service;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -151,7 +152,7 @@ public class MicroservicesMetricsAggregationService {
 	
 		@Cacheable(value = "microserviceCache", key = "#dateFrom.toString() + '-' + #dateTo.toString()")
 		public MicroservicesStatisticsAggregation getMicroservicesStatisticsOverview(Date dateFrom, Date dateTo) {
-			this.setDaysInMonth(dateFrom);
+			this.setDaysInMonth(dateFrom, dateTo);
 			// Aggregation object will hold all statistics
 			MicroservicesStatisticsAggregation microservicesStatisticsAggregation = new MicroservicesStatisticsAggregation();
 	
@@ -330,11 +331,7 @@ public class MicroservicesMetricsAggregationService {
 		}
 
 	
-		public void setDaysInMonth(Date date) {
-			Calendar calendar = new GregorianCalendar();
-			calendar.setTime(date);
-			YearMonth yearMonthObject = YearMonth.of(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH ) +1 );
-			this.daysInMonth = yearMonthObject.lengthOfMonth();
-
+		public void setDaysInMonth(Date dateFrom, Date dateTo) {
+			this.daysInMonth = (int) ChronoUnit.DAYS.between(dateFrom.toInstant(),dateTo.toInstant()) +1;
     }
 }
