@@ -2,13 +2,10 @@ package com.cumulocity.metrics.aggregator.service;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
