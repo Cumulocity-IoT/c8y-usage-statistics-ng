@@ -22,6 +22,8 @@ public class TenantStatistics {
 
     // @JsonIgnore
     private Resources resources;
+
+    @JsonIgnore
     private int storageLimitPerDevice;
     private int eventsCreatedCount;
 
