@@ -221,7 +221,7 @@ public class DeviceMetricsAggregationService {
 		Instant now = Instant.now();
 		long hours = ChronoUnit.HOURS.between(this.dailyDeviceStatisticsAggregationLastRun, now );
 		// fetch only when older than 12 hours
-		if (omitCache || hours > 12 )	 {
+		if (omitCache || hours > 24 )	 {
 			log.info("Getting Daily stats.");
 			createDailyDeviceStatistics();
 		}
