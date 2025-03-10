@@ -13,11 +13,17 @@ If you are using an enterprise tenant consider to install the  [metrics-aggregat
 
 ### Overview of Features
 The `Usage Statistics Application` consists of the following statistics:
+
+- `Monthly Snapshot` - Will display a summary of the last month and a snapshot of the current month. Statistics of the current month will be renewed each night. Is only available if metrics aggregator microservice is deployed. 
 - `Device Statistics` - Calculates the device classification for each device connected to Cumulocity IoT, giving you greater ability to investigate the amount of data each device is sending to the platform. This includes also the Device Aggregation that sums up all subtenants blow the (including) enterprise  tenant.
 - `Microservice Statistics` - Understand the resources used behind each deployed microservice and identify areas of optimization. This includes also the Microservice Aggregation that sums up all subtenants blow the (including) enterprise  tenant.
 - `Tenant Statistics` - Discover other data points related to tenant consumption, including metrics such as total storage used and subscribed applications. This includes also the Tenant Aggregation that sums up all subtenants blow the (including) enterprise  tenant. 
 
 The data in the app is available monthly on a per-tenant basis. Parent tenants can view statistics for individual child tenants. The month and tenant selectors are universal and apply throughout the application. Tenant selector is naturally not available in aggregated views.
+
+
+##### Monthly Snapshot
+![Tenant Selector](usage-statistics-app/assets/images/monthly_snapshot.jpg)
 
 ##### Tenant Selector
 ![Tenant Selector](usage-statistics-app/assets/images/tenant_selector.png)
@@ -86,11 +92,18 @@ https://<deployed tenant>.cumulocity.com/service/metrics-aggregator/devices/{typ
 
 Given the date it will gather either a daily (type) or monthly statistics. Given includeSubtenants=true it will also output the subtenant device class statistics. The output will consist of an array of device classes which are requested form the tenant options of each tenant. Is not device class definition found in the tenant options a default device class configuration is used.
 
+#### Device DailyStatistics
+https://<deployed tenant>.cumulocity.com/service/metrics-aggregator/devices/dailystatistics?omitCache={true | false}
+
+Will fetch daily stats from start of the month. Will check if stats are older than 12 hours and fetch new if so.
+
+
 ### Microservices
 https://<deployed tenant>.cumulocity.com/service/metrics-aggregator/microservices/?dateFrom=2024-12-01&dateTo=2024-12-31
 
 ### Tenant
 https://<deployed tenant>.cumulocity.com/service/metrics-aggregator/tenants/?dateFrom=2024-12-01&dateTo=2024-12-31
+
 
 
 ## We want your feedback!
