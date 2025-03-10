@@ -7,6 +7,8 @@ export default {
     description,
     version,
     name,
+    contextPath: 'c8y-pkg-community-plugins',
+    key: 'c8y-pkg-usage-statistics-key',
     dynamicOptionsUrl: true,
     isPackage: true,
     package: 'blueprint',
