@@ -2,16 +2,22 @@
 <!-- <statistics-action-bar [feature]="feature"></statistics-action-bar> -->
 
 <div class="row d-flex show-grid">
-  <div class="col-md-6">
-    <p class="text-20">{{titleLastMonth}}</p>
+
+  <div class="col-md-6 m-8">
+    <div class="row">
+      <div class="col-lg-6 m-8">
+        <h4 class="text-medium">{{titleLastMonth}}</h4>
+      </div>
+    </div>
     <div class="card m-b-0">
       <device-class-chart *ngIf="deviceData" [deviceData]="deviceData"></device-class-chart>
     </div>
   </div>
-  <div class="col-md-6">
+
+  <div class="col-md-6 m-8">
     <div class="row">
-      <div class="col-lg-6">
-        <p class="text-20">{{titleSnapshot}}</p>
+      <div class="col-lg-6 m-8">
+        <h4 class="text-medium">{{titleSnapshot}}</h4>
         <!-- <button class="btn btn-default" type="submit" (click)="refreshSnapshot()">
           Refresh Snapshot
         </button> -->
@@ -25,7 +31,7 @@
 
 <div class="row d-flex show-grid">
  
-  <div class="col-md-6" *ngIf="deviceData && tenantAggregation && microserviceData">
+  <div class="col-md-6 m-8" *ngIf="deviceData && tenantAggregation && microserviceData">
     <div class="card m-b-0">
       <table class="table">
         <thead>
@@ -65,7 +71,7 @@
       </c8y-data-grid>
     </div>
   </div>
-  <div class="col-md-6" *ngIf="deviceDataCurrentMonth && tenantAggregationCurrentMonth && microserviceDataCurrentMonth">
+  <div class="col-md-6 m-8" *ngIf="deviceDataCurrentMonth && tenantAggregationCurrentMonth && microserviceDataCurrentMonth">
     <div class="card m-b-0">
       <table class="table">
         <thead>
