@@ -1,11 +1,12 @@
 import type { ConfigurationOptions } from '@c8y/devkit';
-import { author, description, version, name } from './package.json';
+import { author, description, version, name, license } from './package.json';
 
 export default {
   runTime: {
     author,
     description,
     version,
+    license,
     name,
     contextPath: 'c8y-pkg-community-plugins',
     key: 'c8y-pkg-usage-statistics-key',
