@@ -22,15 +22,15 @@
 			"path": "/health",
 			"port": 80
 		},
-		"initialDelaySeconds": 30,
-		"periodSeconds": 10
+		"initialDelaySeconds": 300,
+		"periodSeconds": 100
 	},
 	"readinessProbe": {
 		"httpGet": {
 			"path": "/health",
 			"port": 80
 		},
-		"initialDelaySeconds": 20,
-		"periodSeconds": 10
+		"initialDelaySeconds": 300,
+		"periodSeconds": 100
 	}
 }
