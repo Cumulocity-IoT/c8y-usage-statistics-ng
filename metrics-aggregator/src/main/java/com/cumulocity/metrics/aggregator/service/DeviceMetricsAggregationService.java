@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -97,17 +98,19 @@ public class DeviceMetricsAggregationService {
 
 	public Map<String, DeviceStatistics> getDeviceStatisticsOverview(String type, Date statDate) {
 		HashMap<String, DeviceStatistics> dsMap = new HashMap<String, DeviceStatistics>();
-			for (String currentTenant : this.getTenantList()) {
-				log.info("Get Statistics for Tenant: " + currentTenant);
-				
-				DeviceStatistics dspage = restConnector.get(
-						"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
-								+ "?pageSize=2000&withTotalPages=true",
-						CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
-				dspage.setDaysInMonth(statDate,type);
-				log.debug("Statistics: " + dspage.getStatistics().toString());
-				dsMap.put(currentTenant, dspage);
-			}
+			this.subscriptionsService.runForEachTenant(()->{
+				for (String currentTenant : this.getTenantList()) {
+					log.info("Get Statistics for Tenant: " + currentTenant);
+					
+					DeviceStatistics dspage = restConnector.get(
+							"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
+									+ "?pageSize=2000&withTotalPages=true",
+							CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
+					dspage.setDaysInMonth(statDate,type);
+					log.debug("Statistics: " + dspage.getStatistics().toString());
+					dsMap.put(currentTenant, dspage);
+				}
+			});
 		return dsMap;
 	}
 
@@ -229,8 +232,17 @@ public class DeviceMetricsAggregationService {
 	}
 
 
-	
+	@Async	
 	public void createDailyDeviceStatistics(){
+		while(this.tenantList == null){
+			log.info("Getting daily statistics waiting for tenantlist....");
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 
 			this.dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
 			Map<String,Integer> devicesDailyAggregation = new HashMap<String,Integer>();
