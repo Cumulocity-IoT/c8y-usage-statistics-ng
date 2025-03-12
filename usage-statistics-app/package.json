@@ -1,7 +1,7 @@
 {
   "name": "Usage Statistics",
   "license": "Apache-2.0",
-  "version": "1.1.12",
+  "version": "1.1.13",
   "author": "Cumulocity GmbH",
   "description": "The Usage Statistics Application enables you to view consumption and usage information for your tenant within Cumulocity IoT. Many different types of data are present, including device statistics, microservice statistics, and tenant statistics. In addition, if you install the metrics-aggregator microservice into your enterprise tenant you get top level aggregation of all subtenants",
   "scripts": {
