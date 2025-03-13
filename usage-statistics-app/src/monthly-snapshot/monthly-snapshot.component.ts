@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { gettext, DisplayOptions, Pagination, Column } from '@c8y/ngx-components';
+import { gettext, DisplayOptions, Pagination, Column, AlertService } from '@c8y/ngx-components';
 import { Subscription } from 'rxjs';
 import { DeviceStatisticsService, CLASS_COLORS, } from '../device-statistics/device-statistics.service';  
 import { CommonService, FeatureList } from '../common.service';    
@@ -34,6 +34,7 @@ export class MonthlySnapshotComponent implements OnInit {
     private microserviceStatisticsService: MicroserviceStatisticsService,
     private commonService: CommonService,
     private tenantStatisticsService: TenantStatisticsService,
+    private alertService: AlertService,
     
   ) { }
 
@@ -95,6 +96,13 @@ export class MonthlySnapshotComponent implements OnInit {
   ngOnInit(): void {
         this.feature = FeatureList.MonthlySnapshot;
         this.getData();
+  }
+
+  ngAfterViewInit() {
+    if (!sessionStorage.getItem("isFirstSession")) {
+      this.alertService.warning(gettext('Usage Statistics should be used for indicative purposes only. Billable metrics may be different than the data shown below.'));
+      sessionStorage.setItem("isFirstSession", "no");
+    }
   }
 
 

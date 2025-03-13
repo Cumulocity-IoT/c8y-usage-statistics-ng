@@ -201,7 +201,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         return data.roles.map(elem => elem.id)
       }
       else {
-        throw { message: gettext('User does not have any roles') }
+        throw { message: gettext('User does not have required roles TENANT_STATISTICS_READ ROLE_TENANT_MANAGEMENT') }
       }
     }
     catch (error) {
