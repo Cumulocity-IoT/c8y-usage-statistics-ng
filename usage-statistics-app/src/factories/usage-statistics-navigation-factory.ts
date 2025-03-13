@@ -16,7 +16,6 @@ import { aggregationAvailable } from './aggregation.guard';
 
 const APPROVED_ROLES = [
   "ROLE_TENANT_STATISTICS_READ",
-  "ROLE_OPTION_MANAGEMENT_READ",
   "ROLE_TENANT_MANAGEMENT_READ"
 ]
 

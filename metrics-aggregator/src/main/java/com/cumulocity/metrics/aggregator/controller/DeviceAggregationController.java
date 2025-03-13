@@ -6,6 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,7 @@ import com.cumulocity.metrics.aggregator.service.DeviceMetricsAggregationService
  * @author marco.stoffel@cumulocity.com
  *
  */
+@PreAuthorize("hasRole('ROLE_TENANT_STATISTICS_READ') && hasRole('ROLE_TENANT_MANAGEMENT_READ')")
 @RestController
 @RequestMapping("/devices")
 public class DeviceAggregationController {
@@ -33,6 +35,7 @@ public class DeviceAggregationController {
 		this.deviceService = deviceService;
 	}
 
+
 	@GetMapping(value = "/{type}/{statDate}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<DeviceStatisticsAggregation> getAggregatedDevicesPerClass(
 			@PathVariable("type") String type,
@@ -43,6 +46,7 @@ public class DeviceAggregationController {
 				includeSubtenants, useTenantDeviceClasses);
 		return new ResponseEntity<DeviceStatisticsAggregation>(response, HttpStatus.OK);
 	}
+
 
 	@GetMapping(value = "/dailystatistics", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<DeviceStatisticsAggregation> getDailyAggregatedDevicesPerClass(

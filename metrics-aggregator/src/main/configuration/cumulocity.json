@@ -11,26 +11,8 @@
     },
 	"requiredRoles": [
 		"ROLE_TENANT_STATISTICS_READ",
-		"ROLE_OPTION_MANAGEMENT_READ",
 		"ROLE_TENANT_MANAGEMENT_READ"
 	],
 	"roles": [
-		"ROLE_AGGREGATE_STATISTICS_READ"
-	],
-	"livenessProbe": {
-		"httpGet": {
-			"path": "/health",
-			"port": 80
-		},
-		"initialDelaySeconds": 300,
-		"periodSeconds": 100
-	},
-	"readinessProbe": {
-		"httpGet": {
-			"path": "/health",
-			"port": 80
-		},
-		"initialDelaySeconds": 300,
-		"periodSeconds": 100
-	}
+	]
 }
