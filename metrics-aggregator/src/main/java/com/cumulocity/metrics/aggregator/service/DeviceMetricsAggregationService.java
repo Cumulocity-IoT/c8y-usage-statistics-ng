@@ -237,7 +237,7 @@ public class DeviceMetricsAggregationService {
 		while(this.tenantList == null){
 			log.info("Getting daily statistics waiting for tenantlist....");
 			try {
-				Thread.sleep(2000);
+				Thread.sleep(3000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -291,9 +291,9 @@ public class DeviceMetricsAggregationService {
 
 	@Scheduled(cron = "0 15 0 * * ?")
 	public void scheduleDailyStatistics(){
+		log.info("ScheduledDailyStatistics");
 		subscriptionsService.runForEachTenant(()->{
 			this.createDailyDeviceStatistics();
 		});
-		log.info("ScheduledDailyStatistics");
 	}
 }

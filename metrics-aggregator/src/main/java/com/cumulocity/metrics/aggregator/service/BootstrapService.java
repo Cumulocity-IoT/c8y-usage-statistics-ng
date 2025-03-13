@@ -3,7 +3,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAddedEvent;
 
@@ -18,7 +17,7 @@ import com.cumulocity.microservice.subscription.model.MicroserviceSubscriptionAd
  * @author Marco Stoffel
  *
  */
-@EnableAsync
+
 @Service
 public class BootstrapService {
 
@@ -31,14 +30,11 @@ public class BootstrapService {
 
     private static final Logger log = LoggerFactory.getLogger(BootstrapService.class);
 
-
-
     @EventListener
 	public void initialize(MicroserviceSubscriptionAddedEvent event) {
 		log.info("Tenant Sub: " + event.toString());
-        String currentTenant = event.getCredentials().getTenant();
-
-        utils.getTenants(currentTenant);
+        utils.setCurrentTenant(event.getCredentials().getTenant());
+        utils.getTenants();
         deviceMetricsAggregationService.createDailyDeviceStatistics();
 	}
 
