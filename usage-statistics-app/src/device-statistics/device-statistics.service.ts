@@ -7,7 +7,7 @@ const moment = require('moment')
 const _ = require('lodash')
 export const DATE_FORMAT_DAY = 'YYYY-MM-DD';
 
-export const CLASS_COLORS = ['#024B7A', '#44A5C2', '#FFAE49', '#58508D', '#9C1086', '#E0000E'];
+export const CLASS_COLORS = ['#FFBE00', '#119D11', '#00A1F2', '#FF8800', '#E51A1A', '#212121'];
 
 export interface DeviceDataModel {
   deviceId: string,
