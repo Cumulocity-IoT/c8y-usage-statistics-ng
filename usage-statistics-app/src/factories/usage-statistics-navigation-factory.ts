@@ -187,7 +187,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
 
   async checkRoles() {
     const roles = await this.getAllUserRoles();
-    const result = roles.every((item) => APPROVED_ROLES.indexOf(item) >= 0);
+    const result = APPROVED_ROLES.every(r => roles.includes(r));
     return result
   }
 
