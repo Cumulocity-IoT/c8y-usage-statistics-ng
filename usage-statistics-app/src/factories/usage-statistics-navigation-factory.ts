@@ -54,10 +54,14 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
     private router: Router,
     private commonService: CommonService
   ) {
-    this.isConfigAccessible().then(res => {
-      if (res) {
-        this.router.config.splice(-3, 3);
-        this.router.resetConfig(this.router.config);
+    this.checkRoles().then(res => {
+      console.log(res);
+      if (!res) {
+        const alert: Alert = {
+          text: gettext('User does not have required roles TENANT_STATISTICS_READ and ROLE_TENANT_MANAGEMENT'),
+          type: 'danger',
+        }
+        this.alertService.add(alert)
       }
     });
   }
@@ -181,9 +185,9 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
 
   
 
-  async isConfigAccessible() {
+  async checkRoles() {
     const roles = await this.getAllUserRoles();
-    const result = roles.some((item) => APPROVED_ROLES.indexOf(item) >= 0);
+    const result = roles.every((item) => APPROVED_ROLES.indexOf(item) >= 0);
     return result
   }
 
@@ -194,11 +198,11 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         headers: this.header,
       };
 
-      const url = '/user/roles?pageSize=2000'
+      const url = '/user/currentUser?pageSize=2000'
       const res = await this.client.fetch(url, options);
       const data = await res.json()
-      if (data && data.roles && data.roles.length > 0) {
-        return data.roles.map(elem => elem.id)
+      if (data && data.effectiveRoles && data.effectiveRoles.length > 0) {
+        return data.effectiveRoles.map(elem => elem.id)
       }
       else {
         throw { message: gettext('User does not have required roles TENANT_STATISTICS_READ ROLE_TENANT_MANAGEMENT') }
