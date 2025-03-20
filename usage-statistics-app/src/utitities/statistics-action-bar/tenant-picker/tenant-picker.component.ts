@@ -53,6 +53,14 @@ export class TenantPickerComponent implements OnInit {
       console.log('sourceTenant: ' + this.sourceTenant)
       this.currentlyActiveTenant = await this.commonService.getCurrentlyActiveTenant();
       this.tenantList = await this.commonService.getAllSubtenants(this.sourceTenant);
+      let aggregationActive = await this.commonService.isMetricsAggregatorAvailable;
+      if (   this.tenantList.length > 1 && !(typeof aggregationActive === "boolean") ){
+        const alert: Alert = {
+          text: gettext("Child tenants detected.\nDeploy the 'metrics-aggregator' microservice to view aggregated data"),
+          type: 'warning'
+        }
+        this.alertService.add(alert)
+      }
       this.tenantHierarchy = this.getTenantHierarchyAndBuildDictionary();
       this.allTenantIdList = Object.keys(this.tenantListDict)
       this.allCompaniesList = [... new Set(this.tenantList.map(elem => elem.company).filter(elem => elem))]

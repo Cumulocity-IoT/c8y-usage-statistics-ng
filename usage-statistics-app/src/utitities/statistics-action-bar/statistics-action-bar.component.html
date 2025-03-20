@@ -6,7 +6,9 @@
 
 
 <c8y-action-bar-item [placement]="'left'" >
-    <ng-content></ng-content>
+    <ng-content>
+        <!-- <div *ngIf="!aggregationActive">No 'metrics-aggregator' microservice detected. Aggregation is only applicable to parent or management tenants. If your tenant has no child tenants, aggregation is not required.</div> -->
+    </ng-content>
 </c8y-action-bar-item>
 
 

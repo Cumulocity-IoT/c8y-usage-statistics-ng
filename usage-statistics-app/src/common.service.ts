@@ -193,11 +193,11 @@ export class CommonService {
       return true;
     } else {
       let al: string = "No Metrics Aggregator Microservice found. No aggregation possible."
-      const alert: Alert = {
-        text: gettext(al),
-        type: 'danger'
-      }
-      this.alertService.add(alert);
+      // const alert: Alert = {
+      //   text: gettext(al),
+      //   type: 'danger'
+      // }
+      // this.alertService.add(alert);
       console.log(al);
       return this.router.createUrlTree(['device-statistics/overview']);
     }
