@@ -97,7 +97,7 @@ public class TenantMetricsAggregationService {
 						+ currentTenant
 						+ "&dateFrom=" + df.format(dateFrom)
 						+ "&dateTo=" + df.format(dateTo)
-						+ "&pageSize=2000&withTotalPages=true";
+						+ "&pageSize=2000&withTotalElements=true";
 	
 				RestTemplate restTemplate = new RestTemplate();
 				HttpEntity<TenantStatistics> entity = new HttpEntity<TenantStatistics>(headers);

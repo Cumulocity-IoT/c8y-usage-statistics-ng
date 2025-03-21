@@ -104,7 +104,7 @@ public class DeviceMetricsAggregationService {
 					
 					DeviceStatistics dspage = restConnector.get(
 							"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
-									+ "?pageSize=2000&withTotalPages=true",
+									+ "?pageSize=2000&withTotalElements=true",
 							CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
 					dspage.setDaysInMonth(statDate,type);
 					log.debug("Statistics: " + dspage.getStatistics().toString());
