@@ -100,15 +100,20 @@ public class DeviceMetricsAggregationService {
 		HashMap<String, DeviceStatistics> dsMap = new HashMap<String, DeviceStatistics>();
 			this.subscriptionsService.runForEachTenant(()->{
 				for (String currentTenant : this.getTenantList()) {
-					log.info("Get Statistics for Tenant: " + currentTenant);
-					
-					DeviceStatistics dspage = restConnector.get(
-							"/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
-									+ "?pageSize=2000&withTotalElements=true",
-							CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
-					dspage.setDaysInMonth(statDate,type);
-					log.debug("Statistics: " + dspage.getStatistics().toString());
-					dsMap.put(currentTenant, dspage);
+					try {
+						
+						log.info("Get Statistics for Tenant: " + currentTenant);
+						String url = "/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
+										+ "?pageSize=2000&withTotalElements=true";
+						DeviceStatistics dspage = restConnector.get(
+								url,
+								CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
+						dspage.setDaysInMonth(statDate,type);
+						log.debug("Statistics: " + dspage.getStatistics().toString());
+						dsMap.put(currentTenant, dspage);
+					} catch (Exception e) {
+						log.error(e.toString());
+					}
 				}
 			});
 		return dsMap;

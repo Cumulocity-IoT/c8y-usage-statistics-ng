@@ -2,10 +2,12 @@ package com.cumulocity.metrics.aggregator.model.microservice;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.HashMap;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MicroservicesStatisticsAggregation {
 
     @JsonPropertyOrder({ "totalUsage", "subTenants" })

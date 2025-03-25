@@ -1,5 +1,6 @@
 package com.cumulocity.metrics.aggregator.model.device;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Date;
@@ -9,6 +10,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import org.slf4j.Logger;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DeviceStatistics {
 
     public DeviceStatistics() {

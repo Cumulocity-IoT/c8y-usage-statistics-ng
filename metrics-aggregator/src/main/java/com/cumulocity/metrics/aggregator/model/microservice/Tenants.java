@@ -24,6 +24,17 @@ public class Tenants {
     public static class Tenant {
         @JsonProperty("id")
         private String id;
+        
+        @JsonProperty("domain")
+        private String domain;
+
+        public String getDomain() {
+            return domain;
+        }
+
+        public void setDomain(String domain) {
+            this.domain = domain;
+        }
 
         // Getters and Setters
         public String getId() {

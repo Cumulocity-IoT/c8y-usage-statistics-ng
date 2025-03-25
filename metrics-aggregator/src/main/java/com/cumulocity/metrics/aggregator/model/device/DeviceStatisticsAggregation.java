@@ -5,12 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.math.BigInteger;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({ "totalMeas", "totalDeviceCount", "totalDeviceClasses", "tenantAggregation" })
 public class DeviceStatisticsAggregation {
 

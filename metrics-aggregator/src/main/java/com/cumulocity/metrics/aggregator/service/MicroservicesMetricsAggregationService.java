@@ -175,11 +175,14 @@ public class MicroservicesMetricsAggregationService {
 		
 					RestTemplate restTemplate = new RestTemplate();
 					HttpEntity<TenantStatistics> entity = new HttpEntity<TenantStatistics>(headers);
-					ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,
-							entity, TenantStatistics.class);
-		
-					
-					tenantStatistics = response.getBody();
+					try {
+						ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,
+								entity, TenantStatistics.class);
+						tenantStatistics = response.getBody();
+						
+					} catch (Exception e) {
+						log.error(currentTenant, e);
+					}
 		
 					// Exclude Product product services and empty results
 					if (tenantStatistics.getResources() != null){

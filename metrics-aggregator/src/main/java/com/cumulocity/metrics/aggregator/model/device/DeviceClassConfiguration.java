@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /*
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * but also to be a part DeviceStatisticAggregation
  */
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DeviceClassConfiguration {
     @JsonValue
     private List<DeviceClass> deviceClasses;

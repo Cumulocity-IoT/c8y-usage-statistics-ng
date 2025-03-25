@@ -98,19 +98,23 @@ public class TenantMetricsAggregationService {
 						+ "&dateFrom=" + df.format(dateFrom)
 						+ "&dateTo=" + df.format(dateTo)
 						+ "&pageSize=2000&withTotalElements=true";
-	
-				RestTemplate restTemplate = new RestTemplate();
-				HttpEntity<TenantStatistics> entity = new HttpEntity<TenantStatistics>(headers);
-				ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,
-						entity, TenantStatistics.class);
-	
-				tenantStatistics = response.getBody();
-				tenantStatistics.setResources(null);
-				tenantStatisticsAggregation.calcTotalMeas(tenantStatistics);
-				tenantStatisticsAggregation.getSubTenantStat().put(currentTenant, tenantStatistics);
-				tenantStatisticsAggregation.addToTotalStatistics(tenantStatistics);
-				tenantStatisticsAggregation.convertStorageToHumanReadable(tenantStatisticsAggregation.getTotalTenantStat().getStorageSize());
-				
+				try {
+					
+					RestTemplate restTemplate = new RestTemplate();
+					HttpEntity<TenantStatistics> entity = new HttpEntity<TenantStatistics>(headers);
+					ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,
+							entity, TenantStatistics.class);
+		
+					tenantStatistics = response.getBody();
+					tenantStatistics.setResources(null);
+					tenantStatisticsAggregation.calcTotalMeas(tenantStatistics);
+					tenantStatisticsAggregation.getSubTenantStat().put(currentTenant, tenantStatistics);
+					tenantStatisticsAggregation.addToTotalStatistics(tenantStatistics);
+					tenantStatisticsAggregation.convertStorageToHumanReadable(tenantStatisticsAggregation.getTotalTenantStat().getStorageSize());
+					
+				} catch (Exception e) {
+					log.error(currentTenant, e);
+				}
 			}
 		});
 		

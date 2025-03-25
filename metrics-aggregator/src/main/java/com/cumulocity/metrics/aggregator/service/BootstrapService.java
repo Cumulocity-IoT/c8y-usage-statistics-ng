@@ -24,7 +24,6 @@ public class BootstrapService {
     @Autowired
     DeviceMetricsAggregationService deviceMetricsAggregationService;
  
-
     @Autowired
     StartupUtils utils;
 

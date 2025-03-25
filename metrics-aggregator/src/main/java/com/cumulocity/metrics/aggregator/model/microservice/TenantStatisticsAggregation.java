@@ -2,12 +2,14 @@ package com.cumulocity.metrics.aggregator.model.microservice;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.HashMap;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TenantStatisticsAggregation {
 
         @JsonPropertyOrder({ "totalTenantStat", "subTenantStat" })
