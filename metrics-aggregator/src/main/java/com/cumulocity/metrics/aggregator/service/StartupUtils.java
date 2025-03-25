@@ -123,8 +123,6 @@ public class StartupUtils {
         list.add(new BlacklistEntry(BlacklistType.REGEX, "c8ytest\\..*", BlacklistField.DOMAIN));
         list.add(new BlacklistEntry(BlacklistType.REGEX, "cumulocity\\..*", BlacklistField.DOMAIN));
         list.add(new BlacklistEntry(BlacklistType.REGEX, "statuspage-monitoring\\..*", BlacklistField.DOMAIN));
-        list.add(new BlacklistEntry(BlacklistType.REGEX, "mstoffel\\..*", BlacklistField.DOMAIN));
-        list.add(new BlacklistEntry(BlacklistType.EXACT, "t1299412144", BlacklistField.TENANT_ID));
         
         log.info("Initialized blacklist with {} entries", list.size());
         return list;
