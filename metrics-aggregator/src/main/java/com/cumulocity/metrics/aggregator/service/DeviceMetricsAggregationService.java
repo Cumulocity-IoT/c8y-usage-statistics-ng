@@ -257,11 +257,26 @@ public class DeviceMetricsAggregationService {
 			cal.set(Calendar.HOUR_OF_DAY, 0);
 			cal.set(Calendar.MINUTE, 0);
 			cal.set(Calendar.SECOND, 0);
+
 			// cal.set(Calendar.MONTH, 1);
-			// dayOfMonth = 28;
+			// dayOfMonth = 1;
+
+			int daysToFetch = dayOfMonth;
+			if (dayOfMonth == 1) {
+				if (cal.get(Calendar.MONTH) == 0){
+					cal.set(Calendar.MONTH, 11);
+					cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)- 1);
+				}else{
+					cal.set(Calendar.MONTH, cal.get(Calendar.MONTH) -1);
+				}
+				dayOfMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+				// only for full month including last day
+				daysToFetch = dayOfMonth +1;
+			}
+
 			
 			// get all device meas from start of month
-			for (int i = 1; i <= dayOfMonth; i++){
+			for (int i = 1; i < daysToFetch; i++){
 				cal.set(Calendar.DAY_OF_MONTH, i);
 				Date statDate = cal.getTime();
 				
