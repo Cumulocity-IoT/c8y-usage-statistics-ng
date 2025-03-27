@@ -45,6 +45,27 @@ export class CommonService {
     return this.sourceTenant;
   }
 
+  async getTenantByTenantId(tenantId: string){
+    try {
+      const options: IFetchOptions = {
+        method: "GET",
+        headers: this.header,
+      };
+      const url = '/tenant/tenants/' + tenantId ;
+      const res = await this.client.fetch(url, options);
+      const data = await res.json()      
+      return data
+    }
+    catch (error) {
+      const alert: Alert = {
+        text: gettext('Unable to get details for this tenant'),
+        type: 'danger',
+        detailedData: error.message
+      }
+      this.alertService.add(alert)
+    }
+  }
+
   async getCurrentTenantDetails(){
     try {
       const options: IFetchOptions = {

@@ -4,7 +4,7 @@ import { CellRendererContext } from "@c8y/ngx-components";
 @Component({
   template: `
     <a
-      href="/apps/devicemanagement/index.html#/device/{{ context.value }}"
+      href="{{ context.item.domain }}{{ context.value }}"
       [title]="context.value"
       class="interact"
       target="_blank"

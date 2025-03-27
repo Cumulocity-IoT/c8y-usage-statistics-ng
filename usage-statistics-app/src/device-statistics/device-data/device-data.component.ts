@@ -8,6 +8,8 @@ import { TOTAL_MEA, AVG_MEA, CLASS } from './device-data.service';
 import { DeviceTypeGridColumn } from './device-type-grid-component';
 import { CommonService, FeatureList } from '../../src/../common.service';
 
+
+
 @Component({
   selector: 'device-data',
   templateUrl: './device-data.component.html',
@@ -35,7 +37,7 @@ export class DeviceDataComponent implements OnInit, OnDestroy {
     private commonService: CommonService,
     private monthPickerService: MonthPickerService,
     private deviceStatisticsService: DeviceStatisticsService,
-    private element: ElementRef
+    private element: ElementRef,
   ) {
   }
 
@@ -93,7 +95,19 @@ export class DeviceDataComponent implements OnInit, OnDestroy {
 
   async getDeviceData(selectedDate = this.monthPickerService.selectedDate) {
     const data = await this.deviceStatisticsService.getFormattedDeviceData(selectedDate);
+    const activeTenant = await this.commonService.getCurrentlyActiveTenant();
+    const sourceTenant = await this.commonService.getSourceTenant();
+    let domain: string = "";
+    const domainSuffix: string = "/apps/devicemanagement/index.html#/device/";
+    if (activeTenant == sourceTenant){
+      domain = domainSuffix;
+    }else{
+      const tenantData = await this.commonService.getTenantByTenantId(activeTenant);
+      domain = "https://" +tenantData.domain + domainSuffix;
+
+    }
     this.deviceData = data.deviceData;
+    this.deviceData.forEach(e => e.domain = domain);
   }
  
   ngOnDestroy(): void {
