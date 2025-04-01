@@ -289,7 +289,7 @@ public class DeviceMetricsAggregationService {
 					for (Statistic st : ls) {
 						devicesDailyAggregation.put(
 							st.getDeviceId(), 
-							devicesDailyAggregation.getOrDefault(st.getDeviceId(), dayOfMonth) +st.getCount()
+							devicesDailyAggregation.getOrDefault(st.getDeviceId(), 0) +st.getCount()
 							);
 					}
 				}

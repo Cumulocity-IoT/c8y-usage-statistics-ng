@@ -180,9 +180,16 @@ export class MicroserviceStatisticsService {
     }
     
     public async getMonthlySnapshot():Promise<any> {
-        let date: Date = new Date();
-        return await this.getMicroserviceAggregation(
-            this.commonService.getDatesStartAndEndMonth(date).startOfMonth,date);
+        let today: Date = new Date();
+        let dateFrom: Date= this.commonService.getDatesStartAndEndMonth(today).startOfMonth;
+        let dateTo: Date= today;
+        if (today.getDate() == 1){
+            dateFrom = today;
+            dateFrom.setMonth(today.getMonth() -1)
+            dateFrom = this.commonService.getDatesStartAndEndMonth(dateFrom).startOfMonth
+            dateTo = this.commonService.getDatesStartAndEndMonth(dateFrom).endOfMonth;
+        }
+        return await this.getMicroserviceAggregation(dateFrom,dateTo);
     }
 
     private async getMicroserviceAggregation (dateFrom: Date, dateTo: Date){
