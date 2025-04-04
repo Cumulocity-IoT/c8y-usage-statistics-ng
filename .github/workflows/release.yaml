@@ -95,8 +95,8 @@ jobs:
           files: |
             metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
             usage-statistics-app/dist/usage-statistics-app-${{ steps.get_app_version.outputs.APP_VERSION }}.zip
-          draft: false
-          prerelease: ${{ github.event_name == 'workflow_dispatch' }}
+          draft: ${{ github.event_name == 'workflow_dispatch' }}
+          prerelease: false
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
