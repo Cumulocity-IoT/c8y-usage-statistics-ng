@@ -11,38 +11,38 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TenantStatistics {
-    private int deviceEndpointCount;
-    private int deviceWithChildrenCount;
-    private int inventoriesUpdatedCount;
-    private int eventsUpdatedCount;
+    private long deviceEndpointCount;
+    private long deviceWithChildrenCount;
+    private long inventoriesUpdatedCount;
+    private long eventsUpdatedCount;
 
     @JsonIgnore
     private ZonedDateTime day;
-    private int requestCount;
-    private int deviceCount;
-    private int deviceRequestCount;
+    private long requestCount;
+    private long deviceCount;
+    private long deviceRequestCount;
 
     // @JsonIgnore
     private Resources resources;
 
     @JsonIgnore
-    private int storageLimitPerDevice;
-    private int eventsCreatedCount;
+    private long storageLimitPerDevice;
+    private long eventsCreatedCount;
 
     @JsonIgnore
     private List<String> subscribedApplications;
-    private int alarmsCreatedCount;
-    private int alarmsUpdatedCount;
-    private int inventoriesCreatedCount;
+    private long alarmsCreatedCount;
+    private long alarmsUpdatedCount;
+    private long inventoriesCreatedCount;
     private long storageSize;
     private String storageHumanReadable;
-    private int meas;
+    private long meas;
     
-    public int getMeas() {
+    public long getMeas() {
         return meas;
     }
 
-    public void setMeas(int meas) {
+    public void setMeas(long meas) {
         this.meas = meas;
     }
 
@@ -54,42 +54,42 @@ public class TenantStatistics {
         this.storageHumanReadable = storageHumanReadable;
     }
 
-    private int measurementsCreatedCount;
+    private long measurementsCreatedCount;
 
     @JsonIgnore
     private String self;
-    private int totalResourceCreateAndUpdateCount;
+    private long totalResourceCreateAndUpdateCount;
 
     // Getter und Setter
-    public int getDeviceEndpointCount() {
+    public long getDeviceEndpointCount() {
         return deviceEndpointCount;
     }
 
-    public void setDeviceEndpointCount(int deviceEndpointCount) {
-        this.deviceEndpointCount = deviceEndpointCount;
+    public void setDeviceEndpointCount(long deviceEndpolongCount) {
+        this.deviceEndpointCount = deviceEndpolongCount;
     }
 
-    public int getDeviceWithChildrenCount() {
+    public long getDeviceWithChildrenCount() {
         return deviceWithChildrenCount;
     }
 
-    public void setDeviceWithChildrenCount(int deviceWithChildrenCount) {
+    public void setDeviceWithChildrenCount(long deviceWithChildrenCount) {
         this.deviceWithChildrenCount = deviceWithChildrenCount;
     }
 
-    public int getInventoriesUpdatedCount() {
+    public long getInventoriesUpdatedCount() {
         return inventoriesUpdatedCount;
     }
 
-    public void setInventoriesUpdatedCount(int inventoriesUpdatedCount) {
+    public void setInventoriesUpdatedCount(long inventoriesUpdatedCount) {
         this.inventoriesUpdatedCount = inventoriesUpdatedCount;
     }
 
-    public int getEventsUpdatedCount() {
+    public long getEventsUpdatedCount() {
         return eventsUpdatedCount;
     }
 
-    public void setEventsUpdatedCount(int eventsUpdatedCount) {
+    public void setEventsUpdatedCount(long eventsUpdatedCount) {
         this.eventsUpdatedCount = eventsUpdatedCount;
     }
 
@@ -101,27 +101,27 @@ public class TenantStatistics {
         this.day = day;
     }
 
-    public int getRequestCount() {
+    public long getRequestCount() {
         return requestCount;
     }
 
-    public void setRequestCount(int requestCount) {
+    public void setRequestCount(long requestCount) {
         this.requestCount = requestCount;
     }
 
-    public int getDeviceCount() {
+    public long getDeviceCount() {
         return deviceCount;
     }
 
-    public void setDeviceCount(int deviceCount) {
+    public void setDeviceCount(long deviceCount) {
         this.deviceCount = deviceCount;
     }
 
-    public int getDeviceRequestCount() {
+    public long getDeviceRequestCount() {
         return deviceRequestCount;
     }
 
-    public void setDeviceRequestCount(int deviceRequestCount) {
+    public void setDeviceRequestCount(long deviceRequestCount) {
         this.deviceRequestCount = deviceRequestCount;
     }
 
@@ -133,19 +133,19 @@ public class TenantStatistics {
         this.resources = resources;
     }
 
-    public int getStorageLimitPerDevice() {
+    public long getStorageLimitPerDevice() {
         return storageLimitPerDevice;
     }
 
-    public void setStorageLimitPerDevice(int storageLimitPerDevice) {
+    public void setStorageLimitPerDevice(long storageLimitPerDevice) {
         this.storageLimitPerDevice = storageLimitPerDevice;
     }
 
-    public int getEventsCreatedCount() {
+    public long getEventsCreatedCount() {
         return eventsCreatedCount;
     }
 
-    public void setEventsCreatedCount(int eventsCreatedCount) {
+    public void setEventsCreatedCount(long eventsCreatedCount) {
         this.eventsCreatedCount = eventsCreatedCount;
     }
 
@@ -157,27 +157,27 @@ public class TenantStatistics {
         this.subscribedApplications = subscribedApplications;
     }
 
-    public int getAlarmsCreatedCount() {
+    public long getAlarmsCreatedCount() {
         return alarmsCreatedCount;
     }
 
-    public void setAlarmsCreatedCount(int alarmsCreatedCount) {
+    public void setAlarmsCreatedCount(long alarmsCreatedCount) {
         this.alarmsCreatedCount = alarmsCreatedCount;
     }
 
-    public int getAlarmsUpdatedCount() {
+    public long getAlarmsUpdatedCount() {
         return alarmsUpdatedCount;
     }
 
-    public void setAlarmsUpdatedCount(int alarmsUpdatedCount) {
+    public void setAlarmsUpdatedCount(long alarmsUpdatedCount) {
         this.alarmsUpdatedCount = alarmsUpdatedCount;
     }
 
-    public int getInventoriesCreatedCount() {
+    public long getInventoriesCreatedCount() {
         return inventoriesCreatedCount;
     }
 
-    public void setInventoriesCreatedCount(int inventoriesCreatedCount) {
+    public void setInventoriesCreatedCount(long inventoriesCreatedCount) {
         this.inventoriesCreatedCount = inventoriesCreatedCount;
     }
 
@@ -189,11 +189,11 @@ public class TenantStatistics {
         this.storageSize = storageSize;
     }
 
-    public int getMeasurementsCreatedCount() {
+    public long getMeasurementsCreatedCount() {
         return measurementsCreatedCount;
     }
 
-    public void setMeasurementsCreatedCount(int measurementsCreatedCount) {
+    public void setMeasurementsCreatedCount(long measurementsCreatedCount) {
         this.measurementsCreatedCount = measurementsCreatedCount;
     }
 
@@ -205,11 +205,11 @@ public class TenantStatistics {
         this.self = self;
     }
 
-    public int getTotalResourceCreateAndUpdateCount() {
+    public long getTotalResourceCreateAndUpdateCount() {
         return totalResourceCreateAndUpdateCount;
     }
 
-    public void setTotalResourceCreateAndUpdateCount(int totalResourceCreateAndUpdateCount) {
+    public void setTotalResourceCreateAndUpdateCount(long totalResourceCreateAndUpdateCount) {
         this.totalResourceCreateAndUpdateCount = totalResourceCreateAndUpdateCount;
     }
     @JsonPropertyOrder({ "cpu", "avgCPU", "memory","avgMemory", "CCUs", "usedBy"})
