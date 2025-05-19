@@ -37,7 +37,7 @@
     "echarts": "^5.5.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^18.2.12",
+    "@angular-devkit/build-angular": "^18.2.19",
     "@angular/cli": "^18.2.12",
     "@angular/compiler-cli": "^18.2.0",
     "@c8y/devkit": "1021.29.1",
