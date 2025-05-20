@@ -1,12 +1,9 @@
 package com.cumulocity.metrics.aggregator.model.microservice;
 
 import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
-import java.text.CharacterIterator;
-import java.text.StringCharacterIterator;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -81,18 +78,9 @@ public class TenantStatisticsAggregation {
                                                 + tenantStatistics.getTotalResourceCreateAndUpdateCount());
         }
         public void convertStorageToHumanReadable(long bytes){            
-                long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
-                if (absB < 1024) {
-                        this.totalTenantStat.setStorageHumanReadable( bytes + " B");
-                }
-                long value = absB;
-                CharacterIterator ci = new StringCharacterIterator("KMGTPE");
-                for (int i = 40; i >= 0 && absB > 0xfffccccccccccccL >> i; i -= 10) {
-                        value >>= 10;
-                        ci.next();
-                }
-                value *= Long.signum(bytes);
-                this.totalTenantStat.setStorageHumanReadable(String.format("%.1f %ciB", value / 1073.74, ci.current()));
+             
+                DecimalFormat df = new DecimalFormat("#.##");
+                this.totalTenantStat.setStorageHumanReadable(df.format((double)bytes / 1073741824));
         }
 
         public void calcTotalMeas(TenantStatistics tenantStatistics){
