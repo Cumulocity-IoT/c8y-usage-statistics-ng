@@ -197,7 +197,7 @@ export class CommonService {
 
   private async getUrl(selectedDate: Date, urlFragment: string) {
     const { startOfMonth, endOfMonth } = this.getDatesStartAndEndMonth(selectedDate)
-    return `${urlFragment}?dateFrom=${startOfMonth}&dateTo=${endOfMonth}&tenant=${await this.getCurrentlyActiveTenant()}&pageSize=2000`;
+    return `${urlFragment}?dateFrom=${startOfMonth}&dateTo=${endOfMonth}&tenant=${await this.getCurrentlyActiveTenant()}&pageSize=2000&withTotalElements=true`;
   }
 
   public getDatesStartAndEndMonth(selectedDate: Date) {
