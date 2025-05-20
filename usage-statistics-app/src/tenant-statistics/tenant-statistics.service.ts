@@ -85,6 +85,10 @@ export class TenantStatisticsService {
   getStorageSizeInMiB(storage: number) {
     return (storage / 1048576).toFixed(2)
   }
+  
+  getStorageSizeInGiB(storage: number) {
+    return (storage / 1073741824).toFixed(2)
+  }
 
   getTotalCPUs(cpus: number) {
     return (cpus / 1000).toFixed(2)
