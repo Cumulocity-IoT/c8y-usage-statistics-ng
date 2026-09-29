@@ -1,5 +1,6 @@
 import { Type } from '@angular/core';
-import { Column, ColumnDataType, gettext } from '@c8y/ngx-components';
+import { Column, ColumnDataType } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { MicroserviceCategoryCellRendererComponent } from './microservice-category.cell-renderer.component';
 import { CATEGORY, NAME } from './microservice-data.service';
 

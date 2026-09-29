@@ -1,5 +1,6 @@
 import { Type } from '@angular/core';
-import { Column, ColumnDataType, gettext } from '@c8y/ngx-components';
+import { Column, ColumnDataType } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { DEVICE_TYPE } from './device-data.service';
 import { DeviceTypeCellRendererComponent } from './device-type.cell-renderer.component';
 

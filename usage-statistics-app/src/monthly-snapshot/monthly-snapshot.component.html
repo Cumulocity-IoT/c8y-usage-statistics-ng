@@ -38,8 +38,9 @@
           <tr>
             <th>Successful Requests</th>
             <th>Devices</th>
-            <th>Memory</th>
-            <th>CPU</th>
+            <th>Memory (GiB)</th>
+            <th>Memory (CCUs)</th>
+            <th>CPU (CPUs)</th>
             <th>CCUs</th>
             <th>MEAs</th>
             <th>Storage (GiB)</th>
@@ -47,11 +48,12 @@
         </thead>
         <tbody>
           <tr>
-            <td>{{totalMeas | number: '2.'}}</td>
-            <td>{{totalDeviceCount| number: '2.'}}</td>
-            <td>{{totalMem| number: '2.'}}</td>
-            <td>{{totalCpu| number: '2.'}}</td>
-            <td>{{CCUs| number: '2.'}}</td>
+            <td>{{totalMeas | number}}</td>
+            <td>{{totalDeviceCount| number}}</td>
+            <td>{{totalMemGiB| number}}</td>
+            <td>{{totalMem| number}}</td>
+            <td>{{totalCpu| number}}</td>
+            <td>{{CCUs| number}}</td>
             <td>{{tenantAggregation.meas| number }}</td>
             <td>{{tenantAggregation.storageHumanReadable}}</td>
           </tr>
@@ -78,8 +80,9 @@
           <tr>
             <th>Successful Requests</th>
             <th>Devices</th>
-            <th>Memory</th>
-            <th>CPU</th>
+            <th>Memory (GiB)</th>
+            <th>Memory (CCUs)</th>
+            <th>CPU (CPUs)</th>
             <th>CCUs</th>
             <th>MEAs</th>
             <th>Storage (GiB)</th>
@@ -87,11 +90,12 @@
         </thead>
         <tbody>
           <tr>
-            <td>{{totalMeasCurrentMonth | number: '2.'}}</td>
-            <td>{{totalDeviceCountCurrentMonth| number: '2.'}}</td>
-            <td>{{totalMemCurrentMonth| number: '2.'}}</td>
-            <td>{{totalCpuCurrentMonth| number: '2.'}}</td>
-            <td>{{CCUsCurrentMonth| number: '2.'}}</td>
+            <td>{{totalMeasCurrentMonth | number}}</td>
+            <td>{{totalDeviceCountCurrentMonth| number}}</td>
+            <td>{{totalMemGiBCurrentMonth| number}}</td>
+            <td>{{totalMemCurrentMonth| number}}</td>
+            <td>{{totalCpuCurrentMonth| number}}</td>
+            <td>{{CCUsCurrentMonth| number}}</td>
             <td>{{tenantAggregationCurrentMonth.meas| number }}</td>
             <td>{{tenantAggregationCurrentMonth.storageHumanReadable}}</td>
           </tr>

@@ -1,8 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AlertService, gettext } from '@c8y/ngx-components';
+import { AlertService } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { CommonService, FeatureList } from '../../common.service';
 
 @Component({
+  standalone: false,
   selector: 'statistics-action-bar',
   templateUrl: './statistics-action-bar.component.html',
   styleUrls: ['./statistics-action-bar.component.css']

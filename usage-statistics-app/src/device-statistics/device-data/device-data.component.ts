@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
-import { Column, DisplayOptions, gettext, Pagination } from '@c8y/ngx-components';
+import { Column, DisplayOptions, Pagination } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { Subscription } from 'rxjs';
 import { MonthPickerService } from '../../utitities/statistics-action-bar/month-picker/month-picker.service';
 import { DeviceStatisticsService } from '../device-statistics.service';
@@ -11,6 +12,7 @@ import { CommonService, FeatureList } from '../../src/../common.service';
 
 
 @Component({
+  standalone: false,
   selector: 'device-data',
   templateUrl: './device-data.component.html',
   styleUrls: ['./device-data.component.css']
@@ -103,7 +105,8 @@ export class DeviceDataComponent implements OnInit, OnDestroy {
       domain = domainSuffix;
     }else{
       const tenantData = await this.commonService.getTenantByTenantId(activeTenant);
-      domain = "https://" +tenantData.domain + domainSuffix;
+      // Without the subtenant's domain, fall back to a relative link instead of failing to show any data
+      domain = tenantData?.domain ? "https://" + tenantData.domain + domainSuffix : domainSuffix;
 
     }
     this.deviceData = data.deviceData;

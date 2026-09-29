@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { FetchClient, IFetchOptions, TenantService } from '@c8y/client';
 import { TenantSummaryDetailedResources } from './tenant-statistics/tenant-statistics.service';
-import { Alert, AlertService, gettext } from '@c8y/ngx-components';
+import { Alert, AlertService } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { DATE_FORMAT_DAY } from './device-statistics/device-statistics.service';
 import { Subject } from 'rxjs';
 import {  Router, UrlTree } from '@angular/router';

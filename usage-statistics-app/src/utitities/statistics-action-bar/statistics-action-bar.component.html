@@ -1,7 +1,11 @@
 <c8y-action-bar-item [placement]="'right'" >
-    <tenant-picker [feature]="feature" style="display: flex; align-items: center;"></tenant-picker>
-    <month-picker style="display: flex; align-items: center;"></month-picker>
-    <csv-exporter  [feature]="feature"></csv-exporter>
+    <!-- One explicit row: since web SDK 1024 the action bar no longer lines up an item's children,
+         so the pickers stacked and the month picker covered the tenant button. -->
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <tenant-picker [feature]="feature" style="display: flex; align-items: center;"></tenant-picker>
+        <month-picker style="display: flex; align-items: center;"></month-picker>
+        <csv-exporter  [feature]="feature"></csv-exporter>
+    </div>
 </c8y-action-bar-item>
 
 

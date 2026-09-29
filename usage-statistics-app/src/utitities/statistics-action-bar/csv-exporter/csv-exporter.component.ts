@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { gettext } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { MicroserviceStatisticsService, MonthlyMicroserviceProdCategoryMap } from '../../../microservice-statistics/microservice-statistics.service';
 import { DATE_FORMAT_MONTH, FeatureList} from '../../../common.service';
 import { DeviceStatisticsService } from '../../../device-statistics/device-statistics.service';
@@ -8,8 +8,15 @@ import { TenantStatisticsService, TenantSummaryDetailedResources } from '../../.
 
 const moment = require('moment');
 
+/** Quotes a value per RFC 4180 when it contains a separator, quote or line break. */
+export function toCsvCell(value: unknown): string {
+  const text = value === null || value === undefined ? '' : String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
 
 @Component({
+  standalone: false,
   selector: 'csv-exporter',
   templateUrl: './csv-exporter.component.html',
   styleUrls: ['./csv-exporter.component.css']
@@ -39,23 +46,28 @@ export class CsvExporterComponent implements OnInit {
   }
 
   downloadCsvData() {
-    this.setCSVHeadersAndData();
-    this.csvContent = "data:text/csv;charset=utf-8,";
-    this.rows.forEach((rowArray) => {
-      const row = rowArray.join(",");
-      this.csvContent += row + "\r\n";
-    });
-    const encodedUri = encodeURI(this.csvContent);
+    if (!this.setCSVHeadersAndData()) {
+      return;
+    }
+    this.csvContent = this.rows.map((rowArray) => rowArray.map(toCsvCell).join(",")).join("\r\n") + "\r\n";
+    // A Blob instead of an encodeURI'd data: URL, which cut the file off at the first '#'
+    const url = URL.createObjectURL(new Blob([this.csvContent], { type: "text/csv;charset=utf-8" }));
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", this.fileName);
     document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
-  private setCSVHeadersAndData() {
+  /** @returns false when there is no data loaded yet to export */
+  private setCSVHeadersAndData(): boolean {
     if (this.feature === FeatureList.DeviceStatistics) {
       this.dataStore = this.deviceStatisticsService.deviceStatisticsDataStore;
+      if (!this.dataStore?.deviceData) {
+        return false;
+      }
       this.rows = [[
         gettext('Device ID'),
         gettext('Device type'),
@@ -70,22 +82,28 @@ export class CsvExporterComponent implements OnInit {
     }
     else if (this.feature === FeatureList.MicroserviceStatistics) {
       this.dataStore = this.microserviceStatisticsService.microserviceStatisticsDataStore;
+      if (!this.dataStore?.response) {
+        return false;
+      }
       this.rows = [[
         COLUMN_FIELDS.MICROSERVICE,
         COLUMN_FIELDS.MEMORY_TOTAL,
+        COLUMN_FIELDS.MEMORY_AVG_GIB,
         COLUMN_FIELDS.MEMORY_AVG,
         COLUMN_FIELDS.CPU_TOTAL,
         COLUMN_FIELDS.CPU_AVG,        
         COLUMN_FIELDS.CAUSE       
       ]];
-   
-      // this.dataStore.response.forEach((elem: MonthlyMicroserviceProdCategoryMap) => {
-      //   this.rows.push([elem.microserviceName, elem.avgMemory, elem.cpu, elem.avgCpu, elem.cause])
-      // });
+      this.dataStore.response.forEach((elem: MonthlyMicroserviceProdCategoryMap) => {
+        this.rows.push([elem.microserviceName, elem.memory, elem.avgMemoryGiB, elem.avgMemory, elem.cpu, elem.avgCpu, elem.cause])
+      });
       this.fileName = `microservice_statistics_${moment(this.dataStore.date, DATE_FORMAT_MONTH).format('MMMM-YYYY').split('-').join('_').toLowerCase()}.csv`
     }
     else if (this.feature === FeatureList.TenantStatistics) {
       this.dataStore = this.tenantStatisticsService.tenantSummaryDetailedResourcesStore.data as TenantSummaryDetailedResources;
+      if (!this.dataStore) {
+        return false;
+      }
       const date = this.tenantStatisticsService.tenantSummaryDetailedResourcesStore.date;
       
       this.rows = [[
@@ -118,5 +136,9 @@ export class CsvExporterComponent implements OnInit {
       )
       this.fileName = `tenant_statistics_${moment(date, DATE_FORMAT_MONTH).format('MMMM-YYYY').split('-').join('_').toLowerCase()}.csv`
     }
+    else {
+      return false;
+    }
+    return true;
   }
 }

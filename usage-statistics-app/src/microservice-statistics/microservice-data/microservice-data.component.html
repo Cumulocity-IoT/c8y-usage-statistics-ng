@@ -12,12 +12,14 @@
         </colgroup> -->
         <thead>
           <tr>
-            <th>Total avg Memory</th>
-            <th>Total avg CPU</th>
+            <th>Total avg Memory (GiB)</th>
+            <th>Total avg Memory (CCUs)</th>
+            <th>Total avg CPU (CPUs)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
+            <td >{{avgMEMGiB}}</td>
             <td >{{avgMEM}}</td>
             <td >{{avgCPU}}</td>
           </tr>
@@ -33,9 +35,6 @@
       [columns]="columns"
       [rows]="microserviceData"
       [pagination]="pagination"
-      [infiniteScroll]="infiniteScroll"
-      [actionControls]="actionControls"
-      [showSearch]="showSearch"
       class="d-contents"
     >
       <div class="c8y-empty-state" *ngIf="isLoading">

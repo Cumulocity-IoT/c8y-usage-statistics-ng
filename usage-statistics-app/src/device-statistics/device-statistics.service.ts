@@ -4,7 +4,6 @@ import { CommonService } from "../common.service";
 import { DeviceConfigurationService } from "./device-configuration/device-configuration.service";
 import { MonthPickerService } from "../utitities/statistics-action-bar/month-picker/month-picker.service";
 const moment = require('moment')
-const _ = require('lodash')
 export const DATE_FORMAT_DAY = 'YYYY-MM-DD';
 
 export const CLASS_COLORS = ['#FFBE00', '#119D11', '#00A1F2', '#FF8800', '#E51A1A', '#212121'];
@@ -100,6 +99,9 @@ export class DeviceStatisticsService {
 
     do {
       response = await this.getMonthlyDeviceStatistics(api, selectedDate)
+      if (!response?.statistics) {
+        break;
+      }
       api = response.next ? response.next.substring(response.next.indexOf('/tenant')) : response.next;
       statistics = response.statistics;
       this.deviceDataStore.statistics.push(...response.statistics)

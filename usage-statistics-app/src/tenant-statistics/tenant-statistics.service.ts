@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { gettext } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { TenantSummaryResources } from '../microservice-statistics/microservice-statistics.service';
 import { CommonService } from '../common.service';
 import { FetchClient } from "@c8y/client";
@@ -69,10 +69,14 @@ export class TenantStatisticsService {
 
   async getTenantSummaryDetailedResources(selectedDate: Date): Promise<TenantSummaryDetailedResources> {
     const data = await this.commonService.getCurrentTenantSummary(selectedDate)
+    if (!data) {
+      throw { message: gettext('Tenant data is not available') }
+    }
+    // Keep the reported totals; only default them when the summary has no resources section
     data.resources = {
-      memory: 0,
-      cpu: 0,
-      usedBy:  null
+      memory: data.resources?.memory ?? 0,
+      cpu: data.resources?.cpu ?? 0,
+      usedBy: null
     }
 
     this.tenantSummaryDetailedResourcesStore = {

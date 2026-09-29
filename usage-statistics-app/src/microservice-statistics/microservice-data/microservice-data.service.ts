@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { FetchClient, IFetchOptions } from "@c8y/client";
-import { gettext } from "@c8y/ngx-components";
+import { gettext } from "@c8y/ngx-components/gettext";
 
 export const MEMORY: string = 'memory';
 export const NAME: string = 'name';
@@ -10,7 +10,8 @@ export const CATEGORY: string = 'category'
 export const COLUMN_FIELDS = {
   MICROSERVICE: gettext('Microservice'),
   MEMORY_TOTAL: gettext('Memory (MiB)'),
-  MEMORY_AVG: gettext('Daily Avg Memory (GiB)'),
+  MEMORY_AVG_GIB: gettext('Daily Avg Memory (GiB)'),
+  MEMORY_AVG: gettext('Daily Avg Memory (CCUs)'),
   CPU_TOTAL: gettext('CPU (mCPU)'),
   CPU_AVG: gettext('Daily Avg CPU (CPUs)'),
   CAUSE: gettext('Source')

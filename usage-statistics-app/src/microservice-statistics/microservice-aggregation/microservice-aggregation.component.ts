@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
-import { gettext, DisplayOptions, Pagination, Column } from '@c8y/ngx-components';
+import { DisplayOptions, Pagination, Column } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { Subject, Subscription } from 'rxjs';
 import { MonthPickerService } from '../../utitities/statistics-action-bar/month-picker/month-picker.service';
 import { MicroserviceStatisticsService } from '../microservice-statistics.service';
@@ -9,6 +10,7 @@ import { CommonService, FeatureList } from '../../common.service';
 import { NumberRendererComponent } from './renderer/number.renderer.component';
 
 @Component({
+  standalone: false,
   selector: 'microservice-aggregation',
   templateUrl: './microservice-aggregation.component.html',
   styleUrls: ['./microservice-aggregation.component.css'],
@@ -35,6 +37,7 @@ export class MicroserviceAggregationComponent implements OnInit, OnDestroy {
   pagination: Pagination = this.getPagination();
   totalCpu: any;
   totalMem: any;
+  totalMemGiB: any;
   CCUs: any;
   columns: Column[] = [
     {
@@ -44,16 +47,22 @@ export class MicroserviceAggregationComponent implements OnInit, OnDestroy {
       filterable: true,
     },
     {
-
+      name: "avgMemoryGiB",
+      header: "Average Memory (GiB)",
+      path: "avgMemoryGiB",
+      filterable: true,
+      cellRendererComponent: NumberRendererComponent,
+    },
+    {
       name: "avgMemory",
-      header: "Average Memory",
+      header: "Average Memory (CCUs)",
       path: "avgMemory",
       filterable: true,
       cellRendererComponent: NumberRendererComponent,
     },
     {
       name: "avgCPU",
-      header: "Average CPU",
+      header: "Average CPU (CPUs)",
       path: "avgCPU",
       filterable: true,
       cellRendererComponent: NumberRendererComponent,
@@ -83,6 +92,7 @@ export class MicroserviceAggregationComponent implements OnInit, OnDestroy {
     try {
       this.microserviceData = await this.microserviceStatisticsService.getMonthlyMicroserviceAggregation(selectedDate)
       this.totalMem = Number(this.microserviceData['totalUsage']['avgMemory']).toFixed(2)
+      this.totalMemGiB = Number(this.microserviceData['totalUsage']['avgMemoryGiB']).toFixed(2)
       this.totalCpu = Number(this.microserviceData['totalUsage']['avgCPU']).toFixed(2)
       this.CCUs = Number(this.microserviceData['totalUsage']['ccus']).toFixed(0)
       this.microserviceData = this.microserviceData['totalUsage']['usedBy']

@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
-import { DateTimePickerComponent, gettext } from "@c8y/ngx-components";
+import { DateTimePickerComponent } from "@c8y/ngx-components";
+import { gettext } from "@c8y/ngx-components/gettext";
 
 //import { Api, MicroserviceCategory, MicroserviceConfigurationService, ProductCategory, PropertyName } from './microservice-configuration/microservice-configuration.service';
 import { CommonService, DATE_FORMAT_MONTH } from "../common.service";
@@ -8,6 +9,10 @@ import { FetchClient } from "@c8y/client";
 const moment = require('moment');
 export const CLASS_COLORS = ['#024B7A', '#44A5C2', '#FFAE49', '#2B8A3E', '#58508D', '#9C1086', '#E0000E', '#E67700', '#004225', '#592720'];
 export const DATE_FORMAT_DAY = 'YYYY-MM-DD';
+// Summary memory is reported in MB per day; 1073.74 MB = 1 GiB
+export const MB_PER_GIB = 1073.74;
+// 1 CCU = 1 CPU core or 4 GiB of memory, so memory / 4 GiB is the memory-based CCU value
+export const GIB_PER_CCU = 4;
 export interface TenantSummaryResources {
     memory: number,
     name: string,
@@ -18,7 +23,10 @@ export interface TenantSummaryResources {
 export interface MonthlyMicroserviceProdCategoryMap extends TenantSummaryResources {
     microserviceName: string,
     avgCpu?: string,
-    avgMemory?: string
+    /** Average memory per day divided by 4 GiB: the memory-based CCU value, not GiB */
+    avgMemory?: string,
+    /** Actual average memory per day in GiB */
+    avgMemoryGiB?: string
 }
 
 @Injectable({
@@ -29,7 +37,8 @@ export class MicroserviceStatisticsService {
         response: <MonthlyMicroserviceProdCategoryMap[]>[],
         date: <Date>new Date(),
         avgCPU: "",
-        avgMEM: "" 
+        avgMEM: "",
+        avgMEMGiB: ""
     }
 
     constructor(
@@ -118,12 +127,14 @@ export class MicroserviceStatisticsService {
                     ...elem,
                     microserviceName: microserviceName,
                     avgCpu: (elem.cpu / (1000 * numberOfDaysInMonth)).toFixed(2),
-                    avgMemory: (elem.memory / (4294.97 * numberOfDaysInMonth)).toFixed(2)
+                    avgMemory: (elem.memory / (MB_PER_GIB * GIB_PER_CCU * numberOfDaysInMonth)).toFixed(2),
+                    avgMemoryGiB: (elem.memory / (MB_PER_GIB * numberOfDaysInMonth)).toFixed(2)
                 })
             }
         })
         this.microserviceStatisticsDataStore.avgCPU = (totalCPU / (1000 * numberOfDaysInMonth)).toFixed(2);
-        this.microserviceStatisticsDataStore.avgMEM = (totalMEM  / (4294.97 * numberOfDaysInMonth)).toFixed(2);
+        this.microserviceStatisticsDataStore.avgMEM = (totalMEM / (MB_PER_GIB * GIB_PER_CCU * numberOfDaysInMonth)).toFixed(2);
+        this.microserviceStatisticsDataStore.avgMEMGiB = (totalMEM / (MB_PER_GIB * numberOfDaysInMonth)).toFixed(2);
 
         this.microserviceStatisticsDataStore.response = response
         this.microserviceStatisticsDataStore.date = selectedDate
