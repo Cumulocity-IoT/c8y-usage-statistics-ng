@@ -1,8 +1,5 @@
 import { NgModule } from '@angular/core';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { RouterModule as ngRouterModule } from '@angular/router';
-import { CoreModule, BootstrapComponent, RouterModule, HOOK_NAVIGATOR_NODES, PluginsModule, CommonModule, HOOK_TABS } from '@c8y/ngx-components';
-import { TranslateModule } from '@ngx-translate/core';
+import { CoreModule, RouterModule, HOOK_NAVIGATOR_NODES, PluginsModule, CommonModule, HOOK_TABS, hookRoute } from '@c8y/ngx-components';
 import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 
@@ -31,6 +28,7 @@ import { DeviceAggregationComponent } from './device-statistics/device-aggregati
 import { NumberRendererComponent} from './microservice-statistics/microservice-aggregation/renderer/number.renderer.component' 
 import { DeviceClassChart } from './device-statistics/device-class-chart/device-class-chart.component';
 import { MonthlySnapshotComponent } from './monthly-snapshot/monthly-snapshot.component';
+import { MemoryCpuHeaderComponent } from './microservice-statistics/microservice-data/microservice-data.component';
 import { NgxEchartsModule } from 'ngx-echarts';
 // import echarts core
 import * as echarts from 'echarts/core';
@@ -41,25 +39,22 @@ import { CanvasRenderer } from 'echarts/renderers';
 echarts.use([BarChart, GridComponent, CanvasRenderer]);
 export const hooks = [
   { provide: HOOK_NAVIGATOR_NODES, useClass: UsageStatisticsNavigationFactory, multi: true },
-  { provide: HOOK_TABS, useClass: UsageStatisticsTabFactory, multi: true }
+  { provide: HOOK_TABS, useClass: UsageStatisticsTabFactory, multi: true },
+  // Routes go through c8y's router hook (as in the Web SDK templates). A second Angular
+  // RouterModule.forRoot() competes with c8y's RouterService, which then never runs the initial navigation.
+  hookRoute(ROUTES)
 ];
 
 @NgModule({
   imports: [
     CommonModule,
     NgCommonModule,
-    BrowserAnimationsModule,
     FormsModule,
     ReactiveFormsModule,
     TooltipModule.forRoot(),
     PopoverModule.forRoot(),
     RouterModule.forRoot(),
-    TranslateModule.forRoot(),
     BsDatepickerModule.forRoot(),
-    ngRouterModule.forRoot(
-      [...ROUTES],
-      { enableTracing: false, useHash: true }
-    ),
     CoreModule.forRoot(),
     PluginsModule,
     NgxEchartsModule.forRoot({ echarts: () => import('echarts') }),
@@ -81,11 +76,13 @@ export const hooks = [
     SortStringAscPipe,
     NumberRendererComponent,
     DeviceClassChart,
-    MonthlySnapshotComponent
+    MonthlySnapshotComponent,
+    MemoryCpuHeaderComponent
   ],
   providers: [
     ...hooks,
-  ],
-  bootstrap: [BootstrapComponent]
+  ]
+  // No `bootstrap` array: since web SDK 1024 BootstrapComponent is standalone and is bootstrapped
+  // with bootstrapApplication() in bootstrap.ts, which imports this module's providers.
 })
 export class AppModule { }

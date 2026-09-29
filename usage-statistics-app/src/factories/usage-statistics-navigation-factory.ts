@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FetchClient, IFetchOptions } from '@c8y/client';
-import { Alert, AlertService, gettext, NavigatorNode, NavigatorNodeFactory, Route } from '@c8y/ngx-components';
+import { Alert, AlertService, NavigatorNode, NavigatorNodeFactory, Route } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { DeviceDataComponent } from '../device-statistics/device-data/device-data.component';
 import { DeviceOverviewComponent } from '../device-statistics/device-overview/device-overview.component';
 import { DeviceAggregationComponent } from '../device-statistics/device-aggregation/device-aggregation.component';
@@ -26,26 +27,27 @@ export const ROUTES: Route[] = [
 
   { path: '', pathMatch: 'prefix', component: MonthlySnapshotComponent, canActivate: [aggregationAvailable]},
   { path: 'monthly-snapshot', pathMatch: 'prefix', component: MonthlySnapshotComponent, canActivate: [aggregationAvailable]},
-  { path: 'device-statistics', pathMatch: 'prefix', redirectTo: 'device-statistics/overview' },
+  { path: 'device-statistics', pathMatch: 'full', redirectTo: 'device-statistics/overview' },
   { path: 'device-statistics/overview', component: DeviceOverviewComponent },
   { path: 'device-statistics/device-data', component: DeviceDataComponent },
   { path: 'device-statistics/aggregation', component: DeviceAggregationComponent, canActivate: [aggregationAvailable] },
-  { path: 'microservice-statistics', pathMatch: 'prefix', redirectTo: 'microservice-statistics/overview/category-overview' },
-  { path: 'microservice-statistics/overview', pathMatch: 'prefix', redirectTo: 'microservice-statistics/overview/category-overview' },
+  { path: 'microservice-statistics', pathMatch: 'full', redirectTo: 'microservice-statistics/microservice-data' },
+  { path: 'microservice-statistics/overview', pathMatch: 'full', redirectTo: 'microservice-statistics/microservice-data' },
   { path: 'microservice-statistics/microservice-data', component: MicroserviceDataComponent },
   { path: 'microservice-statistics/microservice-aggregation', component: MicroserviceAggregationComponent, canActivate: [aggregationAvailable] },
-  { path: 'tenant-statistics', pathMatch: 'prefix', redirectTo: 'tenant-statistics/tenant-data' },
+  { path: 'tenant-statistics', pathMatch: 'full', redirectTo: 'tenant-statistics/tenant-data' },
   { path: 'tenant-statistics/tenant-data', component: TenantDataComponent },
   { path: 'tenant-statistics/tenant-aggregation', component: TenantAggregationComponent, canActivate: [aggregationAvailable] },
-  { path: 'device-statistics/device-configuration-list', pathMatch: 'prefix', redirectTo: 'device-statistics/overview' },
-  { path: 'device-statistics/device-configuration-details', pathMatch: 'prefix', redirectTo: 'device-statistics/overview' },
-  { path: 'microservice-statistics/microservice-configuration', pathMatch: 'prefix', redirectTo: 'microservice-statistics/overview/category-overview' },
+  { path: 'device-statistics/device-configuration-list', pathMatch: 'full', redirectTo: 'device-statistics/overview' },
+  { path: 'device-statistics/device-configuration-details', pathMatch: 'full', redirectTo: 'device-statistics/overview' },
+  { path: 'microservice-statistics/microservice-configuration', pathMatch: 'full', redirectTo: 'microservice-statistics/microservice-data' },
 ]
 
 
 @Injectable()
 export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
   private navs: NavigatorNode[] = [];
+  private navsPromise: Promise<NavigatorNode[]>;
   private readonly header: any = { "Content-Type": "application/json" };
 
   constructor(
@@ -58,7 +60,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
       console.log(res);
       if (!res) {
         const alert: Alert = {
-          text: gettext('User does not have required roles TENANT_STATISTICS_READ and ROLE_TENANT_MANAGEMENT'),
+          text: gettext('User does not have required roles ROLE_TENANT_STATISTICS_READ and ROLE_TENANT_MANAGEMENT_READ'),
           type: 'danger',
         }
         this.alertService.add(alert)
@@ -66,10 +68,14 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
     });
   }
 
-  async get() {
-    
-   
-    
+  get(): Promise<NavigatorNode[]> {
+    // The navigator calls get() more than once, and building the nodes awaits the metrics-aggregator
+    // health check. Without caching the promise, overlapping calls each appended the nodes (duplicate menu).
+    this.navsPromise = this.navsPromise ?? this.buildNavs();
+    return this.navsPromise;
+  }
+
+  private async buildNavs(): Promise<NavigatorNode[]> {
     if (this.navs.length === 0) {
 
       // Device Statistics
@@ -205,7 +211,7 @@ export class UsageStatisticsNavigationFactory implements NavigatorNodeFactory {
         return data.effectiveRoles.map(elem => elem.id)
       }
       else {
-        throw { message: gettext('User does not have required roles TENANT_STATISTICS_READ ROLE_TENANT_MANAGEMENT') }
+        throw { message: gettext('User does not have required roles ROLE_TENANT_STATISTICS_READ and ROLE_TENANT_MANAGEMENT_READ') }
       }
     }
     catch (error) {

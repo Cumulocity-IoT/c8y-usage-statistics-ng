@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { gettext, DisplayOptions, Pagination, Column, AlertService } from '@c8y/ngx-components';
+import { DisplayOptions, Pagination, Column, AlertService } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { Subscription } from 'rxjs';
 import { DeviceStatisticsService, CLASS_COLORS, } from '../device-statistics/device-statistics.service';  
 import { CommonService, FeatureList } from '../common.service';    
@@ -8,6 +9,7 @@ import { TenantStatisticsService } from '../tenant-statistics/tenant-statistics.
 
 
 @Component({
+  standalone: false,
   selector: 'monthly-snapshot',
   templateUrl: './monthly-snapshot.component.html',
   styleUrls: ['./monthly-snapshot.component.css']
@@ -52,10 +54,12 @@ export class MonthlySnapshotComponent implements OnInit {
 
   totalCpu: any = 0;
   totalMem: any = 0;
+  totalMemGiB: any = 0;
   CCUs: any= 0;
 
   totalCpuCurrentMonth: any = 0;
   totalMemCurrentMonth: any = 0;
+  totalMemGiBCurrentMonth: any = 0;
   CCUsCurrentMonth: any= 0;
 
 
@@ -112,7 +116,7 @@ export class MonthlySnapshotComponent implements OnInit {
   async getData() {
     try {
       let today:Date  = new Date();
-      this.selectedDate = new Date(today.getFullYear(),today.getMonth()-1,today.getMonth());
+      this.selectedDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
       let df = new Intl.DateTimeFormat(
         Intl.DateTimeFormat().resolvedOptions().locale, {
         year: 'numeric',
@@ -134,11 +138,13 @@ export class MonthlySnapshotComponent implements OnInit {
 
       this.microserviceData = await this.microserviceStatisticsService.getMonthlyMicroserviceAggregation(this.selectedDate)
       this.totalMem = Number(this.microserviceData['totalUsage']['avgMemory']).toFixed(2)
+      this.totalMemGiB = Number(this.microserviceData['totalUsage']['avgMemoryGiB']).toFixed(2)
       this.totalCpu = Number(this.microserviceData['totalUsage']['avgCPU']).toFixed(2)
       this.CCUs = Number(this.microserviceData['totalUsage']['ccus']).toFixed(0)
 
       this.microserviceDataCurrentMonth = await this.microserviceStatisticsService.getMonthlySnapshot();
       this.totalMemCurrentMonth = Number(this.microserviceDataCurrentMonth['totalUsage']['avgMemory']).toFixed(2)
+      this.totalMemGiBCurrentMonth = Number(this.microserviceDataCurrentMonth['totalUsage']['avgMemoryGiB']).toFixed(2)
       this.totalCpuCurrentMonth = Number(this.microserviceDataCurrentMonth['totalUsage']['avgCPU']).toFixed(2)
       this.CCUsCurrentMonth = Number(this.microserviceDataCurrentMonth['totalUsage']['ccus']).toFixed(0)
 

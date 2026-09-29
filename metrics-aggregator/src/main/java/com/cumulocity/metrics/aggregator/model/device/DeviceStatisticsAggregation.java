@@ -58,7 +58,7 @@ public class DeviceStatisticsAggregation {
         this.totalMeas = totalMeas;
     }
 
-    public void addTotalMeas(int meas) {
+    public void addTotalMeas(long meas) {
         this.totalMeas = this.totalMeas.add(BigInteger.valueOf(meas));
     }
 
@@ -75,7 +75,8 @@ public class DeviceStatisticsAggregation {
 
     public static class TenantAggregation {
 
-        private int meas;
+        // long: a tenant's monthly count easily exceeds Integer.MAX_VALUE and silently overflowed
+        private long meas;
         private int devicesCount;
 
         @JsonUnwrapped
@@ -97,7 +98,7 @@ public class DeviceStatisticsAggregation {
             this.devicesCount++;
         }
 
-        public void addToMeas(int meas) {
+        public void addToMeas(long meas) {
             this.meas = this.meas + meas;
         }
 
@@ -121,11 +122,11 @@ public class DeviceStatisticsAggregation {
             this.deviceClasses = deviceClasses;
         }
 
-        public int getMeas() {
+        public long getMeas() {
             return meas;
         }
 
-        public void setMeas(int meas) {
+        public void setMeas(long meas) {
             this.meas = meas;
         }
 

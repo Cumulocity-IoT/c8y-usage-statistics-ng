@@ -1,5 +1,6 @@
 import { Component,  Input, OnInit, SimpleChanges } from '@angular/core';
-import { gettext, DisplayOptions} from '@c8y/ngx-components';
+import { DisplayOptions } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { DeviceStatisticsService, CLASS_COLORS, } from '../device-statistics.service';  
 import { CommonService} from '../../common.service';   
 import { EChartsCoreOption } from 'echarts/core';
@@ -7,6 +8,7 @@ import { ECharts, EChartsOption } from 'echarts';
 
 
 @Component({
+  standalone: false,
   selector: 'device-class-chart',
   templateUrl: './device-class-chart.component.html',
   styleUrls: ['./device-class-chart.component.css']

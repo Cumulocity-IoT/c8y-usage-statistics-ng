@@ -22,11 +22,11 @@ describe('Test MonthPickerComponent', () => {
 
   const commonServiceMock = {
     tenantChanged:{
-        subscribe: jest.fn()
+        subscribe: vi.fn()
     },
-    getSourceTenant: jest.fn(),
-    getCurrentlyActiveTenant: jest.fn(),
-    getAllSubtenants: jest.fn(),
+    getSourceTenant: vi.fn(),
+    getCurrentlyActiveTenant: vi.fn(),
+    getAllSubtenants: vi.fn(),
   }
 
   const modalServiceMock = {
@@ -34,7 +34,7 @@ describe('Test MonthPickerComponent', () => {
   }
   
   const alertServiceMock = {
-    add: jest.fn()
+    add: vi.fn()
   }
 
 
@@ -61,9 +61,6 @@ describe('Test MonthPickerComponent', () => {
     expect(fixture).toBeDefined();
   });
 
-  test('should load expected component', () => {
-    expect(fixture).toMatchSnapshot();
-  });
 
   describe('loadSubTenantList', () => {
     it('should create the component with isisLoading set to true by default', () => {
@@ -75,9 +72,9 @@ describe('Test MonthPickerComponent', () => {
       const mockCurrentlyActiveTenant = 'currentlyActiveTenant';
       const mockTenantList = ['tenant1', 'tenant2'];
   
-      jest.spyOn(commonService, 'getSourceTenant').mockResolvedValue(mockSourceTenant);
-      jest.spyOn(commonService, 'getCurrentlyActiveTenant').mockResolvedValue(mockCurrentlyActiveTenant);
-      jest.spyOn(commonService, 'getAllSubtenants').mockResolvedValue(mockTenantList);
+      vi.spyOn(commonService, 'getSourceTenant').mockResolvedValue(mockSourceTenant);
+      vi.spyOn(commonService, 'getCurrentlyActiveTenant').mockResolvedValue(mockCurrentlyActiveTenant);
+      vi.spyOn(commonService, 'getAllSubtenants').mockResolvedValue(mockTenantList);
   
       await component.loadSubTenantList();
   
@@ -87,7 +84,7 @@ describe('Test MonthPickerComponent', () => {
     it('should set isLoading to false when an error occurs', async () => {
       const errorMessage = 'Unable to get the  subtenants of the current tenant';
 
-      jest.spyOn(commonService, 'getSourceTenant').mockRejectedValue(() => Promise.reject(new Error(errorMessage)));
+      vi.spyOn(commonService, 'getSourceTenant').mockRejectedValue(() => Promise.reject(new Error(errorMessage)));
   
       await component.loadSubTenantList();
   

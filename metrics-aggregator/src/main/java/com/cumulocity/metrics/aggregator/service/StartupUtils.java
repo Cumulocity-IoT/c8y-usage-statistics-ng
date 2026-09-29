@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -180,6 +181,26 @@ public class StartupUtils {
     @Autowired
     RestConnector restConnector;
 
+    @Autowired
+    CacheManager cacheManager;
+
+    private static final int TENANT_PAGE_SIZE = 2000;
+
+    /**
+     * The aggregation caches have no TTL. Without eviction, a result for the current (still growing) month
+     * would be served unchanged until the microservice restarts. Runs after the nightly daily statistics job.
+     */
+    @Scheduled(cron = "0 30 0 * * ?")
+    public void evictCaches() {
+        log.info("Evicting aggregation caches: {}", cacheManager.getCacheNames());
+        cacheManager.getCacheNames().forEach(name -> {
+            var cache = cacheManager.getCache(name);
+            if (cache != null) {
+                cache.clear();
+            }
+        });
+    }
+
     @Scheduled(cron = "0 45 */1 * * ?")
     @Async
     public void getTenants() {
@@ -194,17 +215,30 @@ public class StartupUtils {
         
         log.info("getTenants for: " + this.currentTenant);
         this.subscriptionsService.runForTenant(this.currentTenant, () -> {
-            Tenants tenants = restConnector.get(
-                "/tenant/tenants?pageSize=2000&withTotalElements=true&withApps=false",
-                CumulocityMediaType.APPLICATION_JSON_TYPE, Tenants.class);
-            
+            // Page through all subtenants; a single page is capped at TENANT_PAGE_SIZE
+            List<Tenant> allTenants = new ArrayList<>();
+            int currentPage = 1;
+            while (true) {
+                Tenants page = restConnector.get(
+                    "/tenant/tenants?pageSize=" + TENANT_PAGE_SIZE + "&currentPage=" + currentPage + "&withApps=false",
+                    CumulocityMediaType.APPLICATION_JSON_TYPE, Tenants.class);
+                if (page.getTenants() == null || page.getTenants().isEmpty()) {
+                    break;
+                }
+                allTenants.addAll(page.getTenants());
+                if (page.getTenants().size() < TENANT_PAGE_SIZE) {
+                    break;
+                }
+                currentPage++;
+            }
+
             ArrayList<String> tenantIds = new ArrayList<>();
             int blacklistedCount = 0;
             
             // Always add current tenant first (never blacklisted)
             tenantIds.add(currentTenant);
             
-            for (Tenant tenant : tenants.getTenants()) {
+            for (Tenant tenant : allTenants) {
                
                 
                 // Skip current tenant as we've already added it

@@ -4,12 +4,13 @@ import { MonthPickerService } from './month-picker.service';
 const moment = require('moment');
 
 @Component({
+  standalone: false,
   selector: 'month-picker',
   templateUrl: './month-picker.component.html',
   styleUrls: ['./month-picker.component.css']
 })
 export class MonthPickerComponent {
-  selectedDate: string;
+  selectedDate: string | Date;
   maxDate: Date;
 
   constructor(
@@ -31,9 +32,17 @@ export class MonthPickerComponent {
   }
 
   update() {
-    this.monthPickerService.selectedDate = this.monthPickerService.selectedDate ? new Date(this.selectedDate) : this.getLastMonth();
-    this.monthPickerService.daysInMonth = moment(this.selectedDate, DATE_FORMAT_MONTH).daysInMonth() 
+    this.monthPickerService.selectedDate = this.monthPickerService.selectedDate ? this.toDate(this.selectedDate) : this.getLastMonth();
+    this.monthPickerService.daysInMonth = moment(this.monthPickerService.selectedDate).daysInMonth()
     this.monthPickerService.dateChanged.next(this.monthPickerService.selectedDate)
+  }
+
+  /**
+   * The model holds a 'MMMM/YYYY' string until the datepicker replaces it with a Date.
+   * new Date('September/2026') only happens to work in Chrome; Firefox and Safari return Invalid Date.
+   */
+  private toDate(value: string | Date): Date {
+    return value instanceof Date ? value : moment(value, DATE_FORMAT_MONTH).toDate();
   }
 
   private getLastMonth() {

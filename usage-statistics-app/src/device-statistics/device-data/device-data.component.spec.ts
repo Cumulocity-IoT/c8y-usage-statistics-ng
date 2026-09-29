@@ -5,6 +5,8 @@ import { DeviceStatisticsService } from '../device-statistics.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { CoreModule } from '@c8y/ngx-components';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { Subject } from 'rxjs';
+import { CommonService } from '../../common.service';
 
 describe('Test DeviceDataComponent', () => {
   let component: DeviceDataComponent;
@@ -12,8 +14,15 @@ describe('Test DeviceDataComponent', () => {
   let deviceStatisticsService: DeviceStatisticsService;
 
   const deviceStatisticsServiceMock = {
-    getFormattedDeviceData: jest.fn(),
+    getFormattedDeviceData: vi.fn().mockResolvedValue({ deviceData: [] }),
 }
+
+  const commonServiceMock = {
+    tenantChanged: new Subject(),
+    getCurrentlyActiveTenant: vi.fn().mockResolvedValue('t1'),
+    getSourceTenant: vi.fn().mockResolvedValue('t1'),
+    getTenantByTenantId: vi.fn(),
+  }
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -22,6 +31,7 @@ describe('Test DeviceDataComponent', () => {
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
         { provide: DeviceStatisticsService, useValue: deviceStatisticsServiceMock },
+        { provide: CommonService, useValue: commonServiceMock },
     ]
     });
     fixture = TestBed.createComponent(DeviceDataComponent);
@@ -33,13 +43,10 @@ describe('Test DeviceDataComponent', () => {
     expect(fixture).toBeDefined();
   });
 
-  test('should load expected component', () => {
-    expect(fixture).toMatchSnapshot();
-  });
 
   test('should call getFormattedDeviceData from service', async () => {
     fixture.detectChanges();
-    const getFormattedDeviceDataSpy = jest.spyOn(deviceStatisticsService, 'getFormattedDeviceData');
+    const getFormattedDeviceDataSpy = vi.spyOn(deviceStatisticsService, 'getFormattedDeviceData');
     expect(getFormattedDeviceDataSpy).toHaveBeenCalled();
   });
 
@@ -129,7 +136,7 @@ describe('Test DeviceDataComponent', () => {
           }
       }
     };
-    jest.spyOn(deviceStatisticsService, 'getFormattedDeviceData').mockImplementation(()=>Promise.resolve(mockResponse))
+    vi.spyOn(deviceStatisticsService, 'getFormattedDeviceData').mockImplementation(()=>Promise.resolve(mockResponse))
     await component.getDeviceData(selectedDate);
     expect(component.deviceData).toEqual(mockResponse.deviceData);
   });

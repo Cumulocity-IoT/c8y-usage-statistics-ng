@@ -3,6 +3,7 @@ import { CellRendererContext } from '@c8y/ngx-components';
 import { NumberPipe } from "@c8y/ngx-components";
 
 @Component({
+  standalone: false,
     templateUrl: './number.renderer.component.html'
 })
 export class NumberRendererComponent {

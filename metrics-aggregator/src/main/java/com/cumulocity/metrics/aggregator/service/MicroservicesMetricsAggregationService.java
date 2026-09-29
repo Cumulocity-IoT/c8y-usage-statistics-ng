@@ -1,7 +1,5 @@
 package com.cumulocity.metrics.aggregator.service;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,7 +47,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class MicroservicesMetricsAggregationService {
 
 	private static final Logger log = LoggerFactory.getLogger(MicroservicesMetricsAggregationService.class);
-	private DateFormat df;
 
 	private List<String> tenantList;
 
@@ -130,10 +127,6 @@ public class MicroservicesMetricsAggregationService {
 		this.productServices = productServices;
 	}
 
-	public MicroservicesMetricsAggregationService() {
-		this.df = new SimpleDateFormat("yyyy-MM-dd");
-	}
-
 	@Autowired
 	MicroserviceSubscriptionsService subscriptionsService;
 
@@ -145,32 +138,33 @@ public class MicroservicesMetricsAggregationService {
 
 	@Autowired
 	CumulocityClientProperties clientProperties;
-		private int daysInMonth;
-	
+
 		@Cacheable(value = "microserviceCache", key = "#dateFrom.toString() + '-' + #dateTo.toString()")
 		public MicroservicesStatisticsAggregation getMicroservicesStatisticsOverview(Date dateFrom, Date dateTo) {
-			this.setDaysInMonth(dateFrom, dateTo);
+			// Local, not a field: this singleton serves concurrent requests for different months
+			final int daysInMonth = getDaysInPeriod(dateFrom, dateTo);
 			// Aggregation object will hold all statistics
 			MicroservicesStatisticsAggregation microservicesStatisticsAggregation = new MicroservicesStatisticsAggregation();
 	
 			subscriptionsService.runForEachTenant(() -> {
-				// Will hold the c8y API response for eacht tenant
-				TenantStatistics tenantStatistics = new TenantStatistics();
 				HttpHeaders headers = new HttpHeaders();
 				for (String currentTenant : this.getTenantList()) {
+					// Will hold the c8y API response for each tenant. Must be fresh per tenant, otherwise a failed
+					// request would re-use (and re-count) the previous tenant's statistics.
+					TenantStatistics tenantStatistics = new TenantStatistics();
 					headers.set("Authorization",
 							contextService.getContext().toCumulocityCredentials()
 									.getAuthenticationString());
 		
 					headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
 		
-					log.info("Get MS Statistics for Tenant: " + currentTenant + "  date: " + df.format(dateFrom));
+					log.info("Get MS Statistics for Tenant: " + currentTenant + "  date: " + DateUtils.formatDay(dateFrom));
 		
 					String serverUrl = clientProperties.getBaseURL()
 							+ "/tenant/statistics/summary/?tenant="
 							+ currentTenant
-							+ "&dateFrom=" + df.format(dateFrom)
-							+ "&dateTo=" + df.format(dateTo)
+							+ "&dateFrom=" + DateUtils.formatDay(dateFrom)
+							+ "&dateTo=" + DateUtils.formatDay(dateTo)
 							+ "&pageSize=2000&withTotalElements=true";
 		
 					RestTemplate restTemplate = new RestTemplate();
@@ -178,14 +172,15 @@ public class MicroservicesMetricsAggregationService {
 					try {
 						ResponseEntity<TenantStatistics> response = restTemplate.exchange(serverUrl, HttpMethod.GET,
 								entity, TenantStatistics.class);
-						tenantStatistics = response.getBody();
-						
+						if (response.getBody() != null) {
+							tenantStatistics = response.getBody();
+						}
 					} catch (Exception e) {
 						log.error(currentTenant, e);
 					}
 		
 					// Exclude Product product services and empty results
-					if (tenantStatistics.getResources() != null){
+					if (tenantStatistics.getResources() != null && tenantStatistics.getResources().getUsedBy() != null){
 						tenantStatistics.getResources().setUsedBy(
 								tenantStatistics.getResources().getUsedBy().stream().filter(
 										usedBy -> (!(this.productServices.contains(usedBy.getName()))
@@ -331,7 +326,7 @@ public class MicroservicesMetricsAggregationService {
 		}
 
 	
-		public void setDaysInMonth(Date dateFrom, Date dateTo) {
-			this.daysInMonth = (int) ChronoUnit.DAYS.between(dateFrom.toInstant(),dateTo.toInstant()) +1;
-    }
+		static int getDaysInPeriod(Date dateFrom, Date dateTo) {
+			return (int) ChronoUnit.DAYS.between(dateFrom.toInstant(), dateTo.toInstant()) + 1;
+		}
 }

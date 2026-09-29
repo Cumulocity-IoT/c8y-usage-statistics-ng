@@ -1,18 +1,19 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { MonthPickerService } from '../../utitities/statistics-action-bar/month-picker/month-picker.service';
 import { CLASS_COLORS, DeviceStatisticsService } from '../device-statistics.service';
-import { gettext } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { CommonService, FeatureList } from '../../common.service';
 
 const d3 = require('d3')
 
 @Component({
+  standalone: false,
   selector: 'device-overview',
   templateUrl: './device-overview.component.html',
   styleUrls: ['./device-overview.component.css']
 })
-export class DeviceOverviewComponent implements OnInit, OnDestroy {
+export class DeviceOverviewComponent implements OnInit, AfterViewInit, OnDestroy {
   feature = FeatureList.DeviceStatistics
   CLASS_CATEGORY = {
     TOTAL_MEA: 'total_mea',
@@ -25,7 +26,8 @@ export class DeviceOverviewComponent implements OnInit, OnDestroy {
   showPanel = false
   isLoading = true
   detailsUnavailable = false
-  resizeObserver
+  resizeObserver: ResizeObserver
+  private lastChartWidth = 0
   totalDeviceCount = 0;
   totalMeaCount = 0;
   isAnyThresholdSet = false;
@@ -33,8 +35,29 @@ export class DeviceOverviewComponent implements OnInit, OnDestroy {
   constructor(
     private monthPickerService: MonthPickerService,
     private deviceStatisticsService: DeviceStatisticsService,
-    private commonService: CommonService
+    private commonService: CommonService,
+    private element: ElementRef
   ) { }
+
+  ngAfterViewInit(): void {
+    // The chart is sized from its container once. The navigator opens after the first render and narrows
+    // the content area, which clipped the last class; redraw whenever the container width changes.
+    const container = this.element.nativeElement.querySelector('.class-comparison-chart-container');
+    if (!container || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    this.resizeObserver = new ResizeObserver(entries => {
+      const width = Math.round(entries[0].contentRect.width);
+      if (width === this.lastChartWidth) {
+        return;
+      }
+      this.lastChartWidth = width;
+      if (this.deviceData?.overview) {
+        this.generateClassComparisonChart(this.deviceData.overview);
+      }
+    });
+    this.resizeObserver.observe(container);
+  }
 
   ngOnInit(): void {
     try {
@@ -172,6 +195,7 @@ export class DeviceOverviewComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.resizeObserver?.disconnect()
     if (this.monthChangedSubscription) {
       this.monthChangedSubscription.unsubscribe()
     }

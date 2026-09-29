@@ -63,7 +63,7 @@ public class DeviceStatistics {
 
     public static class Statistic {
         private String deviceType;
-        private int count;
+        private long count;
         private List<String> deviceParents;
         private String deviceId;
 
@@ -76,11 +76,11 @@ public class DeviceStatistics {
             this.deviceType = deviceType;
         }
 
-        public int getCount() {
+        public long getCount() {
             return count;
         }
 
-        public void setCount(int count) {
+        public void setCount(long count) {
             this.count = count;
         }
 

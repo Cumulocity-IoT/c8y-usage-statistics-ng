@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
-import { gettext, DisplayOptions, Pagination, Column } from '@c8y/ngx-components';
+import { DisplayOptions, Pagination, Column } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { Subscription } from 'rxjs';
 import { MonthPickerService } from '../../utitities/statistics-action-bar/month-picker/month-picker.service';
 import { DeviceStatisticsService, CLASS_COLORS, } from '../device-statistics.service';  
@@ -9,6 +10,7 @@ import { CommonService, FeatureList } from '../../common.service';
 const d3 = require('d3')
 
 @Component({
+  standalone: false,
   selector: 'device-aggregation',
   templateUrl: './device-aggregation.component.html',
   styleUrls: ['./device-aggregation.component.css']

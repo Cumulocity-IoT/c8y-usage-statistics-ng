@@ -1,11 +1,13 @@
 import { Component, Input, OnInit, TemplateRef } from '@angular/core';
 import { CommonService,FeatureList } from '../../../common.service';
 import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
-import { Alert, AlertService, gettext } from '@c8y/ngx-components';
+import { Alert, AlertService } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 
 
 
 @Component({
+  standalone: false,
   selector: 'tenant-picker',
   templateUrl: './tenant-picker.component.html',
   styleUrls: ['./tenant-picker.component.css']
@@ -116,15 +118,17 @@ export class TenantPickerComponent implements OnInit {
         return this.tenantListDict[elem].parent
       }
     }).filter(elem => elem !== undefined)
-    const allChosenTenants = [...selectedChildTenantIds, ...selectedParentTenantIds]
-    this.tenantHierarchy[this.sourceTenant].forEach(tenant => {
+    const allChosenTenants = [...selectedChildTenantIds, ...selectedParentTenantIds];
+    (this.tenantHierarchy[this.sourceTenant] ?? []).forEach(tenant => {
       tenant['hideItem'] = !(allChosenTenants.includes(tenant.id) || allChosenTenants.includes(tenant.company) || allChosenTenants.includes(tenant.domain));
       if (this.tenantHierarchy[tenant.id]) {
         this.tenantHierarchy[tenant.id].forEach(subTenant => {
-          subTenant['hideItem'] = !(allChosenTenants.includes(subTenant.id) || allChosenTenants.includes(subTenant.company) || allChosenTenants.includes(tenant.domain));
+          subTenant['hideItem'] = !(allChosenTenants.includes(subTenant.id) || allChosenTenants.includes(subTenant.company) || allChosenTenants.includes(subTenant.domain));
           if (!subTenant['hideItem']) {
             const parent = this.tenantHierarchy[this.sourceTenant].find(elem => elem.id === subTenant.parent)
-            parent['hideItem'] = false
+            if (parent) {
+              parent['hideItem'] = false
+            }
           }
         })
       }

@@ -5,6 +5,7 @@ import { MonthPickerService } from '../../utitities/statistics-action-bar/month-
 import { TenantStatisticsService, TenantAggregationResources } from '../tenant-statistics.service';
 
 @Component({
+  standalone: false,
   selector: 'tenant-aggregation',
   templateUrl: './tenant-aggregation.component.html',
   styleUrls: ['./tenant-aggregation.component.css']

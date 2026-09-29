@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
-import { gettext, DisplayOptions, Pagination, Column, CellRendererContext } from '@c8y/ngx-components';
+import { DisplayOptions, Pagination, Column, CellRendererContext } from '@c8y/ngx-components';
+import { gettext } from '@c8y/ngx-components/gettext';
 import { Subscription } from 'rxjs';
 import { CommonService, FeatureList } from '../../common.service';
 import { MonthPickerService } from '../../utitities/statistics-action-bar/month-picker/month-picker.service';
@@ -11,6 +12,7 @@ const moment = require('moment');
 
 
 @Component({
+  standalone: false,
   selector: 'app-microservice-data',
   templateUrl: './microservice-data.component.html',
   styleUrls: ['./microservice-data.component.css']
@@ -33,16 +35,17 @@ export class MicroserviceDataComponent implements OnInit, OnDestroy {
   
   avgCPU = "";
   avgMEM = "";
+  avgMEMGiB = "";
   MEMORY: string = 'memory';
   NAME: string = 'microserviceName';
   CPU: string = 'cpu';
   CAUSE: string = 'cause';
   AVG_CPU: string = 'avgCpu';
   AVG_MEMORY: string = 'avgMemory';
+  AVG_MEMORY_GIB: string = 'avgMemoryGiB';
 
   columns: Column[] = this.getColumns();
   pagination: Pagination = this.getPagination();
-showSearch: boolean;
 
   constructor(
     private monthPickerService: MonthPickerService,
@@ -87,6 +90,14 @@ showSearch: boolean;
         filterable: true,
         sortable: true,
         visible: false,
+        headerCellRendererComponent: MemoryCpuHeaderComponent
+      },
+      {
+        name: this.AVG_MEMORY_GIB,
+        header: COLUMN_FIELDS.MEMORY_AVG_GIB,
+        path: this.AVG_MEMORY_GIB,
+        filterable: true,
+        sortable: true,
         headerCellRendererComponent: MemoryCpuHeaderComponent
       },
       {
@@ -136,6 +147,7 @@ showSearch: boolean;
       this.microserviceData = await this.microserviceStatisticsService.getMonthlyMicroserviceProdCategoryMap(selectedDate);
       this.avgCPU = this.microserviceStatisticsService.microserviceStatisticsDataStore.avgCPU;
       this.avgMEM = this.microserviceStatisticsService.microserviceStatisticsDataStore.avgMEM;
+      this.avgMEMGiB = this.microserviceStatisticsService.microserviceStatisticsDataStore.avgMEMGiB;
     }
     catch (error) {
       this.commonService.microserviceUnavailableAlert(error)
@@ -154,6 +166,7 @@ showSearch: boolean;
 
 
 @Component({
+  standalone: false,
   template: `  
       {{ context?.value }}
       <button type="button" c8yicon="question-circle-o" class="btn btn-link dlt-c8y-icon-question-circle-o" style="text-decoration: none"
@@ -164,8 +177,11 @@ showSearch: boolean;
 export class MemoryCpuHeaderComponent {
   title: string
   constructor(public context: CellRendererContext) {
-    if (context?.value === COLUMN_FIELDS.MEMORY_AVG) {
+    if (context?.value === COLUMN_FIELDS.MEMORY_AVG_GIB) {
       this.title = gettext('Average memory usage / day (GiB)');
+    }
+    else if (context?.value === COLUMN_FIELDS.MEMORY_AVG) {
+      this.title = gettext('Average memory usage / day divided by 4 GiB. 1 CCU = 1 CPU or 4 GiB memory, whichever is higher');
     }
     else if (context?.value === COLUMN_FIELDS.MEMORY_TOTAL) {
       this.title = gettext('Total megabytes used in the month, calculated daily (MiB)');
