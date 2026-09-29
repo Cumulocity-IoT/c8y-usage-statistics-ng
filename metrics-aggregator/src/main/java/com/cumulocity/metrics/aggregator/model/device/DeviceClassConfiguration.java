@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -47,7 +48,8 @@ public class DeviceClassConfiguration {
         private int monthlyThreshold;
         private int count;
 
-        // Default constructor
+        // Default constructor. Explicit creator: Jackson 3 would otherwise pick the all-args constructor.
+        @JsonCreator
         public DeviceClass() {
         }
 

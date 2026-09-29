@@ -4,13 +4,18 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TenantStatistics {
+    /** 1 CCU = 1 CPU core or 4 GiB of memory. avgMemory is expressed in these memory CCUs. */
+    public static final int GIB_PER_CCU = 4;
+
     private long deviceEndpointCount;
     private long deviceWithChildrenCount;
     private long inventoriesUpdatedCount;
@@ -212,7 +217,8 @@ public class TenantStatistics {
     public void setTotalResourceCreateAndUpdateCount(long totalResourceCreateAndUpdateCount) {
         this.totalResourceCreateAndUpdateCount = totalResourceCreateAndUpdateCount;
     }
-    @JsonPropertyOrder({ "cpu", "avgCPU", "memory","avgMemory", "CCUs", "usedBy"})
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonPropertyOrder({ "cpu", "avgCPU", "memory","avgMemory", "avgMemoryGiB", "ccus", "usedBy"})
     public static class Resources {
 
         public Resources(long cpu, long memory, double avgCPU, double avgMemory, double CCUs, List<UsedBy> usedBy) {
@@ -224,6 +230,8 @@ public class TenantStatistics {
             this.setUsedBy(usedBy);
         }
 
+        // Jackson 3 would otherwise pick the all-args constructor and fail on any omitted number
+        @JsonCreator
         public Resources() {
             this.setCpu(0);
             this.setMemory(0);
@@ -238,16 +246,25 @@ public class TenantStatistics {
         private double avgCPU;
         private double CCUs;
 
+        // Pinned: the UI reads "ccus". Jackson 2 derived that from getCCUs(), Jackson 3 (Spring Boot 4) derives "CCUs".
+        @JsonProperty("ccus")
         public double getCCUs() {
             return CCUs;
         }
 
+        @JsonProperty("ccus")
         public void setCCUs(double cCUs) {
             CCUs = cCUs;
         }
 
         public double getAvgMemory() {
             return avgMemory;
+        }
+
+        /** Actual average memory per day in GiB; avgMemory is this divided by {@link #GIB_PER_CCU}. */
+        @JsonProperty(value = "avgMemoryGiB", access = JsonProperty.Access.READ_ONLY)
+        public double getAvgMemoryGiB() {
+            return avgMemory * GIB_PER_CCU;
         }
 
         public void setAvgMemory(double avgMemory) {
@@ -289,6 +306,7 @@ public class TenantStatistics {
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class UsedBy {
 
         private long memory;
@@ -296,6 +314,12 @@ public class TenantStatistics {
         private double avgCPU;
         public double getAvgMemory() {
             return avgMemory;
+        }
+
+        /** Actual average memory per day in GiB; avgMemory is this divided by {@link #GIB_PER_CCU}. */
+        @JsonProperty(value = "avgMemoryGiB", access = JsonProperty.Access.READ_ONLY)
+        public double getAvgMemoryGiB() {
+            return avgMemory * GIB_PER_CCU;
         }
 
         public void setAvgMemory(double avgMemory) {

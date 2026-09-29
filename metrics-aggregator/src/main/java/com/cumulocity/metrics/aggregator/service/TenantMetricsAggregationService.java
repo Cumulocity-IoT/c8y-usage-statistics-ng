@@ -1,7 +1,5 @@
 package com.cumulocity.metrics.aggregator.service;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -40,11 +38,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TenantMetricsAggregationService {
 
 	private static final Logger log = LoggerFactory.getLogger(TenantMetricsAggregationService.class);
-	private DateFormat df;
-
-	public TenantMetricsAggregationService() {
-		this.df = new SimpleDateFormat("yyyy-MM-dd");
-	}
 
 
 	@Autowired
@@ -90,13 +83,13 @@ public class TenantMetricsAggregationService {
 								.getAuthenticationString());
 	
 				headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-				log.info("Get Tenant Statistics for Tenant: " + currentTenant + "  date: " + df.format(dateFrom));
+				log.info("Get Tenant Statistics for Tenant: " + currentTenant + "  date: " + DateUtils.formatDay(dateFrom));
 	
 				String serverUrl = clientProperties.getBaseURL()
 						+ "/tenant/statistics/summary/?tenant="
 						+ currentTenant
-						+ "&dateFrom=" + df.format(dateFrom)
-						+ "&dateTo=" + df.format(dateTo)
+						+ "&dateFrom=" + DateUtils.formatDay(dateFrom)
+						+ "&dateTo=" + DateUtils.formatDay(dateTo)
 						+ "&pageSize=2000&withTotalElements=true";
 				try {
 					

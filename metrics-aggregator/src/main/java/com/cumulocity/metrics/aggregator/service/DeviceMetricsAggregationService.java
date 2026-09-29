@@ -1,10 +1,7 @@
 package com.cumulocity.metrics.aggregator.service;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.Period;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -61,13 +58,12 @@ public class DeviceMetricsAggregationService {
 
 	private static final String OPTION_CATEGORY_CONFIGURATION = "configuration";
 	private static final String OPTION_KEY = "device.statistics.class.details";
-
-	private Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
+	private static final int PAGE_SIZE = 2000;
 	//private Map<Date,DeviceStatisticsAggregation> deviceStatisticsAggregationCurrentMonth = new HashMap<Date,DeviceStatisticsAggregation>();
 
 
-	DeviceStatisticsAggregation dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
-	Instant dailyDeviceStatisticsAggregationLastRun=  Instant.now().minus(Period.ofDays(2));
+	volatile DeviceStatisticsAggregation dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
+	volatile Instant dailyDeviceStatisticsAggregationLastRun=  Instant.now().minus(Period.ofDays(2));
 	
 
 	@Autowired
@@ -94,8 +90,6 @@ public class DeviceMetricsAggregationService {
 		this.tenantList = tenantList;
 	}
 
-	private DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-
 	public Map<String, DeviceStatistics> getDeviceStatisticsOverview(String type, Date statDate) {
 		HashMap<String, DeviceStatistics> dsMap = new HashMap<String, DeviceStatistics>();
 			this.subscriptionsService.runForEachTenant(()->{
@@ -103,14 +97,10 @@ public class DeviceMetricsAggregationService {
 					try {
 						
 						log.info("Get Statistics for Tenant: " + currentTenant);
-						String url = "/tenant/statistics/device/" + currentTenant + "/" + type + "/" + df.format(statDate)
-										+ "?pageSize=2000&withTotalElements=true";
-						DeviceStatistics dspage = restConnector.get(
-								url,
-								CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
-						dspage.setDaysInMonth(statDate,type);
-						log.debug("Statistics: " + dspage.getStatistics().toString());
-						dsMap.put(currentTenant, dspage);
+						DeviceStatistics ds = fetchAllDeviceStatistics(currentTenant, type, statDate);
+						ds.setDaysInMonth(statDate,type);
+						log.debug("Statistics: " + ds.getStatistics().toString());
+						dsMap.put(currentTenant, ds);
 					} catch (Exception e) {
 						log.error(e.toString());
 					}
@@ -119,14 +109,45 @@ public class DeviceMetricsAggregationService {
 		return dsMap;
 	}
 
+	/**
+	 * Fetches every page of a tenant's device statistics. A single page is capped at
+	 * {@value #PAGE_SIZE} devices, so tenants with more devices were silently truncated before.
+	 */
+	private DeviceStatistics fetchAllDeviceStatistics(String tenant, String type, Date statDate) {
+		String baseUrl = "/tenant/statistics/device/" + tenant + "/" + type + "/" + DateUtils.formatDay(statDate)
+				+ "?pageSize=" + PAGE_SIZE + "&currentPage=";
+		DeviceStatistics result = null;
+		List<Statistic> all = new ArrayList<Statistic>();
+		int currentPage = 1;
+		while (true) {
+			DeviceStatistics page = restConnector.get(baseUrl + currentPage,
+					CumulocityMediaType.APPLICATION_JSON_TYPE, DeviceStatistics.class);
+			if (result == null) {
+				result = page;
+			}
+			List<Statistic> stats = page.getStatistics();
+			if (stats == null || stats.isEmpty()) {
+				break;
+			}
+			all.addAll(stats);
+			if (stats.size() < PAGE_SIZE) {
+				break;
+			}
+			currentPage++;
+		}
+		result.setStatistics(all);
+		return result;
+	}
+
 	public Map<String, DeviceClassConfiguration> getAllDeviceClassConfiguration(boolean useTenantDeviceClasses) {
 		log.info("# Fetching all deviceClassConfigurations, useTenantDeviceClasses: " + useTenantDeviceClasses);
-		this.allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
+		// Local, not a field: concurrent requests would otherwise overwrite each other's configuration
+		Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
 		for (String currentTenant : this.getTenantList()) {
 				if (useTenantDeviceClasses) {
-					this.allDeviceClassConfiguration.put(currentTenant, getDeviceClasseConfiguration(currentTenant));
+					allDeviceClassConfiguration.put(currentTenant, getDeviceClasseConfiguration(currentTenant));
 				} else {
-					this.allDeviceClassConfiguration.put(currentTenant, new DeviceClassConfiguration());
+					allDeviceClassConfiguration.put(currentTenant, new DeviceClassConfiguration());
 				}
 
 		}
@@ -208,27 +229,26 @@ public class DeviceMetricsAggregationService {
 	}
 
 	
-	private void updateDeviceClass(DeviceClassConfiguration deviceClassConfiguration, int count, int daysInMonth) {
-		float avgMea = count / daysInMonth;
+	static void updateDeviceClass(DeviceClassConfiguration deviceClassConfiguration, long count, int daysInMonth) {
+		double avgMea = (double) count / daysInMonth;
 		Iterator<DeviceClass> idc = deviceClassConfiguration.getDeviceClasses().iterator();
 		while (idc.hasNext()) {
 			DeviceClass dc = idc.next();
-			if ((dc.getAvgMaxMea() instanceof String && dc.getAvgMaxMea().equals("INFINITY")
-					&& avgMea >= Float.valueOf(dc.getAvgMinMea()))
-					||
-					(dc.getAvgMaxMea() instanceof Integer && avgMea >= Float.valueOf(dc.getAvgMinMea())
-							&& avgMea < Float.valueOf((int) dc.getAvgMaxMea()))) {
+			if (avgMea < dc.getAvgMinMea()) {
+				continue;
+			}
+			Object max = dc.getAvgMaxMea();
+			// Class definitions from tenant options may deserialize the upper bound as Integer, Long or Double,
+			// so compare any Number rather than only Integer.
+			if ((max instanceof String && ((String) max).equalsIgnoreCase("INFINITY"))
+					|| (max instanceof Number && avgMea < ((Number) max).doubleValue())) {
 				dc.incrementCount();
 			}
-			;
 		}
 	}
 
 
 	public DeviceStatisticsAggregation getDailyStatistics(boolean omitCache){
-		Instant now = Instant.now();
-		long hours = ChronoUnit.HOURS.between(this.dailyDeviceStatisticsAggregationLastRun, now );
-		// fetch only when older than 12 hours
 		if (omitCache )	 {
 			log.info("Getting Daily stats.");
 			createDailyDeviceStatistics();
@@ -238,7 +258,7 @@ public class DeviceMetricsAggregationService {
 
 
 	@Async	
-	public void createDailyDeviceStatistics(){
+	public synchronized void createDailyDeviceStatistics(){
 		while(this.tenantList == null){
 			log.info("Getting daily statistics waiting for tenantlist....");
 			try {
@@ -249,8 +269,9 @@ public class DeviceMetricsAggregationService {
 			}
 		}
 
-			this.dailyDeviceStatisticsAggregation = new DeviceStatisticsAggregation();
-			Map<String,Integer> devicesDailyAggregation = new HashMap<String,Integer>();
+			// Build into a local object and publish it only when complete, so readers never see a half-filled result
+			DeviceStatisticsAggregation dailyAggregation = new DeviceStatisticsAggregation();
+			Map<String,Long> devicesDailyAggregation = new HashMap<String,Long>();
 			Calendar cal = Calendar.getInstance();
 			
 			int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
@@ -289,20 +310,24 @@ public class DeviceMetricsAggregationService {
 					for (Statistic st : ls) {
 						devicesDailyAggregation.put(
 							st.getDeviceId(), 
-							devicesDailyAggregation.getOrDefault(st.getDeviceId(), 0) +st.getCount()
+							devicesDailyAggregation.getOrDefault(st.getDeviceId(), 0L) +st.getCount()
 							);
 					}
 				}
 			}
 			
+			// Average over the days actually fetched: today is excluded because its statistics are incomplete
+			int daysFetched = Math.max(daysToFetch - 1, 1);
+
 			// Get device classes
-			this.dailyDeviceStatisticsAggregation.setTotalDeviceCount(devicesDailyAggregation.size());
+			dailyAggregation.setTotalDeviceCount(devicesDailyAggregation.size());
 			DeviceClassConfiguration dailyDeviceClasses = new DeviceClassConfiguration();
 			for (var device : devicesDailyAggregation.entrySet()){
-				this.dailyDeviceStatisticsAggregation.addTotalMeas(device.getValue());
-				this.updateDeviceClass(dailyDeviceClasses, device.getValue(), dayOfMonth);
+				dailyAggregation.addTotalMeas(device.getValue());
+				updateDeviceClass(dailyDeviceClasses, device.getValue(), daysFetched);
 			}
-			this.dailyDeviceStatisticsAggregation.setTotalDeviceClasses(dailyDeviceClasses);
+			dailyAggregation.setTotalDeviceClasses(dailyDeviceClasses);
+			this.dailyDeviceStatisticsAggregation = dailyAggregation;
 			this.dailyDeviceStatisticsAggregationLastRun = Instant.now();
 			//log.info("Daily Stat: " + this.deviceStatisticsAggregationCurrentMonth.toString());
 
