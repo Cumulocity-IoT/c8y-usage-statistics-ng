@@ -7,7 +7,7 @@
 
 	<groupId>cumulocity.microservice</groupId>
 	<artifactId>metrics-aggregator</artifactId>
-	<version>1.2.0-SNAPSHOT</version>
+	<version>1.2.1-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -16,7 +16,7 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<spring-boot-dependencies.version>4.0.7</spring-boot-dependencies.version>
-		<c8y.version>2026.48.0</c8y.version>
+		<c8y.version>2026.49.0</c8y.version>
 		<microservice.name>metrics-aggregator</microservice.name>
 		<c8y.docker.skip>false</c8y.docker.skip>
 	</properties>

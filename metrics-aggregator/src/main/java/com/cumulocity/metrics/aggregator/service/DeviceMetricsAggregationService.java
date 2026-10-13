@@ -21,7 +21,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.cumulocity.sdk.client.RestConnector;
-import com.cumulocity.sdk.client.SDKException;
 
 
 import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration;
@@ -30,13 +29,7 @@ import com.cumulocity.metrics.aggregator.model.device.DeviceStatistics.Statistic
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatisticsAggregation;
 import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration.DeviceClass;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
-import com.cumulocity.model.option.OptionPK;
 import com.cumulocity.rest.representation.CumulocityMediaType;
-import com.cumulocity.rest.representation.tenant.OptionRepresentation;
-import com.cumulocity.sdk.client.option.TenantOptionApi;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
@@ -56,8 +49,6 @@ public class DeviceMetricsAggregationService {
 
 	private static final Logger log = LoggerFactory.getLogger(DeviceMetricsAggregationService.class);
 
-	private static final String OPTION_CATEGORY_CONFIGURATION = "configuration";
-	private static final String OPTION_KEY = "device.statistics.class.details";
 	private static final int PAGE_SIZE = 2000;
 	//private Map<Date,DeviceStatisticsAggregation> deviceStatisticsAggregationCurrentMonth = new HashMap<Date,DeviceStatisticsAggregation>();
 
@@ -71,13 +62,6 @@ public class DeviceMetricsAggregationService {
 
 	@Autowired
 	MicroserviceSubscriptionsService subscriptionsService;
-
-
-	@Autowired
-	TenantOptionApi tenantOptionApi;
-
-	@Autowired
-	ObjectMapper objectMapper;
 
 
 	private List<String> tenantList;
@@ -139,59 +123,18 @@ public class DeviceMetricsAggregationService {
 		return result;
 	}
 
-	public Map<String, DeviceClassConfiguration> getAllDeviceClassConfiguration(boolean useTenantDeviceClasses) {
-		log.info("# Fetching all deviceClassConfigurations, useTenantDeviceClasses: " + useTenantDeviceClasses);
-		// Local, not a field: concurrent requests would otherwise overwrite each other's configuration
-		Map<String, DeviceClassConfiguration> allDeviceClassConfiguration = new HashMap<String, DeviceClassConfiguration>();
-		for (String currentTenant : this.getTenantList()) {
-				if (useTenantDeviceClasses) {
-					allDeviceClassConfiguration.put(currentTenant, getDeviceClasseConfiguration(currentTenant));
-				} else {
-					allDeviceClassConfiguration.put(currentTenant, new DeviceClassConfiguration());
-				}
-
-		}
-		return allDeviceClassConfiguration;
-	}
-
-	private DeviceClassConfiguration getDeviceClasseConfiguration(String currentTenant) {
-		log.info("Get DeviceClassConfiguration for Tenant: " + currentTenant);
-		final OptionPK option = new OptionPK();
-		option.setCategory(OPTION_CATEGORY_CONFIGURATION);
-		option.setKey(OPTION_KEY);
-		OptionRepresentation optionRepresentation = new OptionRepresentation();
-		List<DeviceClassConfiguration.DeviceClass> dcl = new ArrayList<DeviceClassConfiguration.DeviceClass>();
-		DeviceClassConfiguration deviceClassConfiguration = new DeviceClassConfiguration();
-		try {
-			optionRepresentation = tenantOptionApi.getOption(option);
-			dcl = new ObjectMapper().readValue(
-					optionRepresentation.getValue(),
-					new TypeReference<List<DeviceClassConfiguration.DeviceClass>>() {
-					});
-			deviceClassConfiguration.setDeviceClasses(dcl);
-		} catch (SDKException | JsonProcessingException e) {
-			log.error("Could not get DeviceClassConfiguration form tenant options using default config.");
-		}
-		return deviceClassConfiguration;
-	}
-
-	@Cacheable(value = "deviceCache", key = "#statDate.toString() + '-' + #type + '-' + #includeSubtenants", condition = "#useTenantDeviceClasses == false")
+	@Cacheable(value = "deviceCache", key = "#statDate.toString() + '-' + #type + '-' + #includeSubtenants")
 	public DeviceStatisticsAggregation getAggregatedDeviceClassStatistics(String type, Date statDate,
-			boolean includeSubtenants, boolean useTenantDeviceClasses) {
+			boolean includeSubtenants) {
 		// Get all Device Statistics for all Tenants
-
 		Map<String, DeviceStatistics> deviceStatisticsMap = this.getDeviceStatisticsOverview(type, statDate);
-		Map<String, DeviceClassConfiguration> deviceClassConfigurationMap = this
-				.getAllDeviceClassConfiguration(useTenantDeviceClasses);
-		// Get all device class configurations
-		return getAggregatedDevicesPerClass(deviceStatisticsMap, deviceClassConfigurationMap, includeSubtenants, type);
+		return getAggregatedDevicesPerClass(deviceStatisticsMap, includeSubtenants, type);
 	}
 
 
 
 	private DeviceStatisticsAggregation getAggregatedDevicesPerClass(
-			Map<String, DeviceStatistics> deviceStatisticsMap,
-			Map<String, DeviceClassConfiguration> deviceClassesMap, boolean includeSubtenants, String type) {
+			Map<String, DeviceStatistics> deviceStatisticsMap, boolean includeSubtenants, String type) {
 
 		final Boolean incSubtenants = includeSubtenants;
 		// Return object to gather statistics
@@ -204,7 +147,8 @@ public class DeviceMetricsAggregationService {
 					.next();
 			String tenant = pair.getKey();
 			DeviceStatistics ds = pair.getValue();
-			DeviceClassConfiguration deviceClassConfigCurrentTenant = deviceClassesMap.get(tenant);
+			// Every tenant uses the static default classes; a fresh instance per tenant because the counts are written into it
+			DeviceClassConfiguration deviceClassConfigCurrentTenant = new DeviceClassConfiguration();
 			// Write amount of devices to total
 			deviceStatisticsAggregation.addTotalDevicesCount(ds.getStatistics().size());
 			// Loop through all device statistics of current tenant
