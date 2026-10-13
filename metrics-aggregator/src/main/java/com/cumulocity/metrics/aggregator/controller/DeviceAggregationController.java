@@ -40,10 +40,9 @@ public class DeviceAggregationController {
 	public ResponseEntity<DeviceStatisticsAggregation> getAggregatedDevicesPerClass(
 			@PathVariable("type") String type,
 			@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date statDate,
-			@RequestParam(value = "includeSubtenants", required = false, defaultValue = "false") boolean includeSubtenants,
-			@RequestParam(value = "useTenantDeviceClasses", required = false, defaultValue = "false") boolean useTenantDeviceClasses) {
+			@RequestParam(value = "includeSubtenants", required = false, defaultValue = "false") boolean includeSubtenants) {
 		DeviceStatisticsAggregation response = deviceService.getAggregatedDeviceClassStatistics(type, statDate,
-				includeSubtenants, useTenantDeviceClasses);
+				includeSubtenants);
 		return new ResponseEntity<DeviceStatisticsAggregation>(response, HttpStatus.OK);
 	}
 

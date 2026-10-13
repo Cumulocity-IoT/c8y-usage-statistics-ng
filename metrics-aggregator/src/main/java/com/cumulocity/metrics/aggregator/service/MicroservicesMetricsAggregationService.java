@@ -32,7 +32,6 @@ import com.cumulocity.microservice.api.CumulocityClientProperties;
 import com.cumulocity.microservice.context.ContextService;
 import com.cumulocity.microservice.context.credentials.MicroserviceCredentials;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * This service will aggregate microservices metrics to display in
@@ -129,9 +128,6 @@ public class MicroservicesMetricsAggregationService {
 
 	@Autowired
 	MicroserviceSubscriptionsService subscriptionsService;
-
-	@Autowired
-	ObjectMapper objectMapper;
 
 	@Autowired
 	ContextService<MicroserviceCredentials> contextService;

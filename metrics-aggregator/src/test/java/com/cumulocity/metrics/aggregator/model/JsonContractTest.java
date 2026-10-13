@@ -10,14 +10,13 @@ import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import com.cumulocity.metrics.aggregator.model.device.DeviceClassConfiguration;
 import com.cumulocity.metrics.aggregator.model.device.DeviceStatisticsAggregation;
 import com.cumulocity.metrics.aggregator.model.microservice.MicroservicesStatisticsAggregation;
 import com.cumulocity.metrics.aggregator.model.microservice.TenantStatistics;
 
 /**
- * The Usage Statistics UI depends on these property names. Spring Boot 4 serializes with Jackson 3 while the
- * Cumulocity SDK still brings Jackson 2, so the contract is checked against both.
+ * The Usage Statistics UI depends on these property names. The service serializes with Jackson 3 (SDK 2026.49+), while
+ * Jackson 2 is still on the classpath via jersey-media-json-jackson, so the contract is checked against both.
  */
 class JsonContractTest {
 
@@ -106,16 +105,5 @@ class JsonContractTest {
 		List<TenantStatistics.UsedBy> usedBy = stats.getResources().getUsedBy();
 		assertEquals(1, usedBy.size());
 		assertEquals("svc", usedBy.get(0).getName());
-	}
-
-	@ParameterizedTest
-	@EnumSource(Mapper.class)
-	void tenantOptionDeviceClassParses(Mapper mapper) throws Exception {
-		DeviceClassConfiguration.DeviceClass dc = mapper.read(
-				"{\"className\":\"Class F\",\"avgMinMea\":86400,\"avgMaxMea\":\"INFINITY\"}",
-				DeviceClassConfiguration.DeviceClass.class);
-
-		assertEquals("Class F", dc.getClassName());
-		assertEquals("INFINITY", dc.getAvgMaxMea());
 	}
 }

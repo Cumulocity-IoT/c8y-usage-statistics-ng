@@ -23,7 +23,6 @@ import com.cumulocity.microservice.context.ContextService;
 import com.cumulocity.microservice.context.credentials.MicroserviceCredentials;
 import com.cumulocity.microservice.subscription.service.MicroserviceSubscriptionsService;
 import com.cumulocity.sdk.client.RestConnector;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * This service will aggregate microservices metrics to display in
@@ -42,9 +41,6 @@ public class TenantMetricsAggregationService {
 
 	@Autowired
 	MicroserviceSubscriptionsService subscriptionsService;
-
-	@Autowired
-	ObjectMapper objectMapper;
 
 	@Autowired
 	ContextService<MicroserviceCredentials> contextService;
