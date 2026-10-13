@@ -47,5 +47,9 @@
     "jsdom": "^30.0.0",
     "typescript": "~5.9.3",
     "vitest": "^4.0.8"
+  },
+  "overrides": {
+    "dompurify": "3.4.17",
+    "webpack-dev-middleware": "7.4.6"
   }
 }
