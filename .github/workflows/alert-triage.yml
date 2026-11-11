@@ -1,0 +1,61 @@
+name: Dependabot alert triage
+
+# Splits open Dependabot alerts of the web app into "prod" (a vulnerable
+# version ships in the built bundle) and "dev-only" (build, dev-server and
+# test tooling). Prod alerts are tracked in one issue labeled
+# prod-dependency-alert; the full list is in each run's summary.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - usage-statistics-app/package-lock.json
+      - .github/scripts/alert-triage.mjs
+      - .github/workflows/alert-triage.yml
+  pull_request:
+    paths:
+      - usage-statistics-app/package-lock.json
+      - .github/scripts/alert-triage.mjs
+      - .github/workflows/alert-triage.yml
+
+# GITHUB_TOKEN cannot read Dependabot alerts ("Resource not accessible by
+# integration"), so the DEPENDABOT_ALERTS_TOKEN secret is required: a
+# fine-grained token for this repository with "Dependabot alerts: read" and
+# "Issues: write". Pull requests without it only get a warning.
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: alert-triage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./usage-statistics-app
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ./usage-statistics-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build with webpack stats
+        run: npx ng build --stats-json
+
+      - name: Classify open alerts
+        env:
+          GH_TOKEN: ${{ secrets.DEPENDABOT_ALERTS_TOKEN || secrets.GITHUB_TOKEN }}
+          UPDATE_ISSUE: ${{ github.event_name != 'pull_request' }}
+        run: node ../.github/scripts/alert-triage.mjs
