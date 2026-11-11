@@ -205,7 +205,13 @@ try {
 } catch (e) {
   console.error(e.message);
   if (/\b(403|404)\b/.test(e.message)) {
-    console.error('The token cannot read Dependabot alerts. Add a fine-grained token with "Dependabot alerts: read" (and "Issues: write") as the DEPENDABOT_ALERTS_TOKEN secret.');
+    const msg = 'The token cannot read Dependabot alerts. Add a fine-grained token with "Dependabot alerts: read" (and "Issues: write") as the DEPENDABOT_ALERTS_TOKEN secret.';
+    // Pull requests (Dependabot's own, forks) get no repo secrets; warn there, fail on main.
+    if (!updateIssue) {
+      console.log(`::warning::${msg} Skipping the report on this pull request.`);
+      process.exit(0);
+    }
+    console.error(msg);
   }
   process.exit(1);
 }

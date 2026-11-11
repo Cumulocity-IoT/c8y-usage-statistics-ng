@@ -21,10 +21,13 @@ on:
       - .github/scripts/alert-triage.mjs
       - .github/workflows/alert-triage.yml
 
+# GITHUB_TOKEN cannot read Dependabot alerts ("Resource not accessible by
+# integration"), so the DEPENDABOT_ALERTS_TOKEN secret is required: a
+# fine-grained token for this repository with "Dependabot alerts: read" and
+# "Issues: write". Pull requests without it only get a warning.
 permissions:
   contents: read
   issues: write
-  security-events: read
 
 concurrency:
   group: alert-triage-${{ github.ref }}
