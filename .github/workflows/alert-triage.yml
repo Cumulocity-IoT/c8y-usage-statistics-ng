@@ -23,8 +23,11 @@ on:
 
 # GITHUB_TOKEN cannot read Dependabot alerts ("Resource not accessible by
 # integration"), so the DEPENDABOT_ALERTS_TOKEN secret is required: a
-# fine-grained token for this repository with "Dependabot alerts: read" and
-# "Issues: write". Pull requests without it only get a warning.
+# fine-grained token for this repository with "Dependabot alerts: read".
+# Pull requests without it only get a warning. The tracking issue is written
+# with GITHUB_TOKEN so it comes from github-actions[bot]: the assignee
+# (repository variable PROD_ALERT_ASSIGNEE) gets an email when it opens and
+# when new prod alerts are added. Dev-only alerts never notify anyone.
 permissions:
   contents: read
   issues: write
@@ -57,5 +60,7 @@ jobs:
       - name: Classify open alerts
         env:
           GH_TOKEN: ${{ secrets.DEPENDABOT_ALERTS_TOKEN || secrets.GITHUB_TOKEN }}
+          ISSUE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_ASSIGNEE: ${{ vars.PROD_ALERT_ASSIGNEE || 'mstoffel-sag' }}
           UPDATE_ISSUE: ${{ github.event_name != 'pull_request' }}
         run: node ../.github/scripts/alert-triage.mjs

@@ -6,7 +6,13 @@
 //   node ../.github/scripts/alert-triage.mjs
 //
 // Env:
-//   GH_TOKEN        token that can read Dependabot alerts (and write issues)
+//   GH_TOKEN        token that can read Dependabot alerts
+//   ISSUE_TOKEN     token that writes the tracking issue, default GH_TOKEN. In
+//                   Actions this is GITHUB_TOKEN, so the issue comes from
+//                   github-actions[bot] and the assignee gets an email (GitHub
+//                   never notifies people about their own actions).
+//   ISSUE_ASSIGNEE  GitHub login assigned to a new tracking issue; also gets a
+//                   comment (and email) when new prod alerts show up
 //   GITHUB_REPOSITORY  owner/repo
 //   STATS_FILE      default dist/usage-statistics-app/stats.json
 //   UPDATE_ISSUE    "true" to create/update/close the tracking issue
@@ -23,6 +29,8 @@ const semver = require('semver');
 
 const repo = process.env.GITHUB_REPOSITORY;
 const token = process.env.GH_TOKEN;
+const issueToken = process.env.ISSUE_TOKEN || token;
+const assignee = process.env.ISSUE_ASSIGNEE || '';
 const statsFile = process.env.STATS_FILE || 'dist/usage-statistics-app/stats.json';
 const updateIssue = process.env.UPDATE_ISSUE === 'true';
 const ISSUE_LABEL = 'prod-dependency-alert';
@@ -81,11 +89,11 @@ function bundledPackages() {
 
 // 2. GitHub API ---------------------------------------------------------------
 
-async function gh(method, url, body) {
+async function gh(method, url, body, auth = token) {
   const res = await fetch(url.startsWith('http') ? url : `https://api.github.com${url}`, {
     method,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${auth}`,
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
       ...(body ? { 'Content-Type': 'application/json' } : {}),
@@ -154,18 +162,19 @@ function table(rows) {
 // 4. Tracking issue ---------------------------------------------------------------
 
 async function syncIssue(prodRows) {
+  const api = (method, url, body) => gh(method, url, body, issueToken);
   try {
-    await gh('POST', `/repos/${repo}/labels`, { name: ISSUE_LABEL, color: 'b60205', description: 'Dependabot alert that ships in the production bundle' });
+    await api('POST', `/repos/${repo}/labels`, { name: ISSUE_LABEL, color: 'b60205', description: 'Dependabot alert that ships in the production bundle' });
   } catch (e) {
     if (!String(e.message).includes('422')) throw e; // already exists
   }
-  const { data: issues } = await gh('GET', `/repos/${repo}/issues?state=open&labels=${ISSUE_LABEL}&per_page=10`);
+  const { data: issues } = await api('GET', `/repos/${repo}/issues?state=open&labels=${ISSUE_LABEL}&per_page=10`);
   const issue = issues.find((i) => !i.pull_request);
 
   if (!prodRows.length) {
     if (issue) {
-      await gh('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: 'No open Dependabot alert reaches the production bundle any more. Closing.' });
-      await gh('PATCH', `/repos/${repo}/issues/${issue.number}`, { state: 'closed', state_reason: 'completed' });
+      await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: 'No open Dependabot alert reaches the production bundle any more. Closing.' });
+      await api('PATCH', `/repos/${repo}/issues/${issue.number}`, { state: 'closed', state_reason: 'completed' });
       console.log(`Closed issue #${issue.number}`);
     }
     return;
@@ -182,12 +191,23 @@ async function syncIssue(prodRows) {
 
   if (issue) {
     if (issue.body?.trim() !== body.trim()) {
-      await gh('PATCH', `/repos/${repo}/issues/${issue.number}`, { body });
+      // Body edits send no notification; a comment does, so post one for new alerts.
+      const known = new Set([...(issue.body || '').matchAll(/\[#(\d+)\]\(/g)].map((m) => Number(m[1])));
+      const added = prodRows.filter((r) => !known.has(r.number));
+      await api('PATCH', `/repos/${repo}/issues/${issue.number}`, { body });
       console.log(`Updated issue #${issue.number}`);
+      if (added.length) {
+        const who = assignee ? `@${assignee} ` : '';
+        const list = added.map((r) => `- [#${r.number}](${r.url}) \`${r.pkg}\` (${r.severity}): ${r.summary}`).join('\n');
+        await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: `${who}New Dependabot alerts reach the production bundle:\n\n${list}` });
+        console.log(`Commented on issue #${issue.number} about ${added.length} new prod alert(s)`);
+      }
     }
   } else {
-    const { data } = await gh('POST', `/repos/${repo}/issues`, { title: ISSUE_TITLE, body, labels: [ISSUE_LABEL] });
-    console.log(`Opened issue #${data.number}`);
+    const { data } = await api('POST', `/repos/${repo}/issues`, {
+      title: ISSUE_TITLE, body, labels: [ISSUE_LABEL], ...(assignee ? { assignees: [assignee] } : {}),
+    });
+    console.log(`Opened issue #${data.number}${assignee ? ` assigned to ${assignee}` : ''}`);
   }
 }
 
@@ -205,7 +225,7 @@ try {
 } catch (e) {
   console.error(e.message);
   if (/\b(403|404)\b/.test(e.message)) {
-    const msg = 'The token cannot read Dependabot alerts. Add a fine-grained token with "Dependabot alerts: read" (and "Issues: write") as the DEPENDABOT_ALERTS_TOKEN secret.';
+    const msg = 'The token cannot read Dependabot alerts. Add a fine-grained token with "Dependabot alerts: read" as the DEPENDABOT_ALERTS_TOKEN secret.';
     // Pull requests (Dependabot's own, forks) get no repo secrets; warn there, fail on main.
     if (!updateIssue) {
       console.log(`::warning::${msg} Skipping the report on this pull request.`);
