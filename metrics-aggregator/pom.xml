@@ -15,14 +15,29 @@
 		<java.version>17</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
-		<spring-boot-dependencies.version>4.0.7</spring-boot-dependencies.version>
-		<c8y.version>2026.49.0</c8y.version>
+		<spring-boot-dependencies.version>4.1.2</spring-boot-dependencies.version>
+		<c8y.version>2026.62.0</c8y.version>
+		<!-- Overrides for Dependabot alerts the Cumulocity SDK does not fix yet.
+		     Drop each once microservice-dependencies manages that version or newer. -->
+		<guava.version>33.7.2-jre</guava.version>
+		<jsoup.version>1.23.2</jsoup.version>
 		<microservice.name>metrics-aggregator</microservice.name>
 		<c8y.docker.skip>false</c8y.docker.skip>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- Declared before the BOM import so these versions win. -->
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>${guava.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.jsoup</groupId>
+				<artifactId>jsoup</artifactId>
+				<version>${jsoup.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>com.nsn.cumulocity.clients-java</groupId>
 				<artifactId>microservice-dependencies</artifactId>
