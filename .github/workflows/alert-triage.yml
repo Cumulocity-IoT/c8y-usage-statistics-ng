@@ -1,9 +1,11 @@
 name: Dependabot alert triage
 
-# Splits open Dependabot alerts of the web app into "prod" (a vulnerable
-# version ships in the built bundle) and "dev-only" (build, dev-server and
-# test tooling). Prod alerts are tracked in one issue labeled
-# prod-dependency-alert; the full list is in each run's summary.
+# Splits open Dependabot alerts into "prod" and "dev-only". Web app (npm):
+# prod if a vulnerable version ships in the built bundle, dev-only for build,
+# dev-server and test tooling. Microservice (Maven): prod unless test scope;
+# its full dependency tree comes from maven-dependency-submission.yml.
+# Prod alerts are tracked in one issue labeled prod-dependency-alert; the
+# full list is in each run's summary.
 
 on:
   schedule:

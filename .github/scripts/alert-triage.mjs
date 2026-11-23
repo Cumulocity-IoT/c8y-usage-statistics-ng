@@ -1,6 +1,11 @@
-// Classify open Dependabot alerts of the web app as "prod" (a vulnerable
-// version ships in the built bundle) or "dev-only" (build, dev-server or
-// test tooling, or a bundled copy that is already patched).
+// Classify open Dependabot alerts as "prod" or "dev-only":
+// - Web app (npm, usage-statistics-app/): prod if a vulnerable version ships
+//   in the built bundle; dev-only for build, dev-server or test tooling, or a
+//   bundled copy that is already patched.
+// - Microservice (Maven, metrics-aggregator/): prod unless Dependabot marks the
+//   dependency as development (test scope). Compile and runtime dependencies
+//   all ship in the microservice image. The full tree reaches Dependabot via
+//   .github/workflows/maven-dependency-submission.yml.
 //
 // Usage (from usage-statistics-app, after `ng build --stats-json`):
 //   node ../.github/scripts/alert-triage.mjs
@@ -34,8 +39,11 @@ const assignee = process.env.ISSUE_ASSIGNEE || '';
 const statsFile = process.env.STATS_FILE || 'dist/usage-statistics-app/stats.json';
 const updateIssue = process.env.UPDATE_ISSUE === 'true';
 const ISSUE_LABEL = 'prod-dependency-alert';
-const ISSUE_TITLE = 'Dependabot alerts that reach the production bundle';
-const MANIFEST_PREFIX = 'usage-statistics-app/';
+const ISSUE_TITLE = 'Dependabot alerts that reach production';
+const COMPONENTS = {
+  npm: { prefix: 'usage-statistics-app/', name: 'web app' },
+  maven: { prefix: 'metrics-aggregator/', name: 'microservice' },
+};
 
 if (!repo || !token) {
   console.error('GITHUB_REPOSITORY and GH_TOKEN are required');
@@ -110,28 +118,38 @@ async function gh(method, url, body, auth = token) {
 
 async function openAlerts() {
   const out = [];
-  let url = `/repos/${repo}/dependabot/alerts?state=${process.env.ALERT_STATE || 'open'}&ecosystem=npm&per_page=100`;
+  let url = `/repos/${repo}/dependabot/alerts?state=${process.env.ALERT_STATE || 'open'}&per_page=100`;
   while (url) {
     const { data, next } = await gh('GET', url);
     out.push(...data);
     url = next;
   }
-  return out.filter((a) => a.dependency?.manifest_path?.startsWith(MANIFEST_PREFIX));
+  return out.filter((a) => {
+    const c = COMPONENTS[a.dependency?.package?.ecosystem];
+    return c && a.dependency.manifest_path?.startsWith(c.prefix);
+  });
 }
 
 // 3. Classify -------------------------------------------------------------------
 
 function classify(alert, pkgs) {
+  const ecosystem = alert.dependency.package.ecosystem;
   const name = alert.dependency.package.name;
   const range = alert.security_vulnerability.vulnerable_version_range; // ">= 1.0, < 1.2"
-  const semverRange = range.split(',').map((p) => p.trim().replace(/\s+/g, '')).join(' ');
-  const versions = [...(pkgs.get(name) || [])];
-  const vulnerable = versions.filter((v) => semver.satisfies(v, semverRange));
   let cls;
-  if (vulnerable.length) cls = 'prod';
-  else if (versions.length) cls = 'dev-only (bundled copy patched)';
-  else cls = 'dev-only';
+  let versions = [];
+  if (ecosystem === 'maven') {
+    cls = alert.dependency.scope === 'development' ? 'dev-only' : 'prod';
+  } else {
+    const semverRange = range.split(',').map((p) => p.trim().replace(/\s+/g, '')).join(' ');
+    versions = [...(pkgs.get(name) || [])];
+    const vulnerable = versions.filter((v) => semver.satisfies(v, semverRange));
+    if (vulnerable.length) cls = 'prod';
+    else if (versions.length) cls = 'dev-only (bundled copy patched)';
+    else cls = 'dev-only';
+  }
   return {
+    component: COMPONENTS[ecosystem].name,
     number: alert.number,
     url: alert.html_url,
     pkg: name,
@@ -140,7 +158,7 @@ function classify(alert, pkgs) {
     range,
     fix: alert.security_vulnerability.first_patched_version?.identifier || '-',
     dependabotScope: alert.dependency.scope,
-    bundled: versions.join(', ') || '-',
+    bundled: ecosystem === 'maven' ? 'n/a' : versions.join(', ') || '-',
     cls,
     prod: cls === 'prod',
   };
@@ -152,10 +170,10 @@ function table(rows) {
   if (!rows.length) return '_None._\n';
   const esc = (s) => String(s).replace(/\|/g, '\\|');
   return [
-    '| Alert | Package | Severity | Vulnerable | Fixed in | Bundled version | Dependabot scope | Summary |',
-    '|---|---|---|---|---|---|---|---|',
+    '| Alert | Component | Package | Severity | Vulnerable | Fixed in | Bundled version | Dependabot scope | Summary |',
+    '|---|---|---|---|---|---|---|---|---|',
     ...rows.map((r) =>
-      `| [#${r.number}](${r.url}) | \`${r.pkg}\` | ${r.severity} | ${esc(r.range)} | ${r.fix} | ${r.bundled} | ${r.dependabotScope} | ${esc(r.summary)} |`),
+      `| [#${r.number}](${r.url}) | ${r.component} | \`${r.pkg}\` | ${r.severity} | ${esc(r.range)} | ${r.fix} | ${r.bundled} | ${r.dependabotScope} | ${esc(r.summary)} |`),
   ].join('\n') + '\n';
 }
 
@@ -164,7 +182,7 @@ function table(rows) {
 async function syncIssue(prodRows) {
   const api = (method, url, body) => gh(method, url, body, issueToken);
   try {
-    await api('POST', `/repos/${repo}/labels`, { name: ISSUE_LABEL, color: 'b60205', description: 'Dependabot alert that ships in the production bundle' });
+    await api('POST', `/repos/${repo}/labels`, { name: ISSUE_LABEL, color: 'b60205', description: 'Dependabot alert in code that ships to production' });
   } catch (e) {
     if (!String(e.message).includes('422')) throw e; // already exists
   }
@@ -173,7 +191,7 @@ async function syncIssue(prodRows) {
 
   if (!prodRows.length) {
     if (issue) {
-      await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: 'No open Dependabot alert reaches the production bundle any more. Closing.' });
+      await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: 'No open Dependabot alert reaches production any more. Closing.' });
       await api('PATCH', `/repos/${repo}/issues/${issue.number}`, { state: 'closed', state_reason: 'completed' });
       console.log(`Closed issue #${issue.number}`);
     }
@@ -181,7 +199,7 @@ async function syncIssue(prodRows) {
   }
 
   const body = [
-    'These open Dependabot alerts affect a package version that ships in the built web app (`dist/`). Fix them and cut a release.',
+    'These open Dependabot alerts affect a package that ships to production: in the built web app (`dist/`) or in the microservice (compile or runtime scope). Fix them and cut a release.',
     '',
     table(prodRows),
     'Dev-only alerts (build, dev-server and test tooling) are listed in the latest run of the **Dependabot alert triage** workflow. They do not need a release.',
@@ -198,8 +216,8 @@ async function syncIssue(prodRows) {
       console.log(`Updated issue #${issue.number}`);
       if (added.length) {
         const who = assignee ? `@${assignee} ` : '';
-        const list = added.map((r) => `- [#${r.number}](${r.url}) \`${r.pkg}\` (${r.severity}): ${r.summary}`).join('\n');
-        await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: `${who}New Dependabot alerts reach the production bundle:\n\n${list}` });
+        const list = added.map((r) => `- [#${r.number}](${r.url}) ${r.component}: \`${r.pkg}\` (${r.severity}): ${r.summary}`).join('\n');
+        await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: `${who}New Dependabot alerts reach production:\n\n${list}` });
         console.log(`Commented on issue #${issue.number} about ${added.length} new prod alert(s)`);
       }
     }
@@ -243,7 +261,7 @@ const dev = rows.filter((r) => !r.prod);
 const report = [
   '## Dependabot alert triage',
   '',
-  `${pkgs.size} npm packages ship in the production bundle. ${rows.length} open alerts: **${prod.length} prod**, ${dev.length} dev-only.`,
+  `${pkgs.size} npm packages ship in the web app bundle. ${rows.length} open alerts (web app and microservice): **${prod.length} prod**, ${dev.length} dev-only.`,
   '',
   '### Prod (fix and release)',
   table(prod),
