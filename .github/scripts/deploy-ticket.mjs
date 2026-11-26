@@ -1,55 +1,51 @@
-// After a release, open a CST (Customer Support Tickets) Jira ticket asking Ops
-// to deploy it, but only when the release fixes something that reaches
-// production. A release counts as a prod fix when, since the previous tag:
-//   - a merged PR title starts with "Fix prod Dependabot alerts" (the cloud
-//     routine's PRs), or
-//   - an issue labeled prod-dependency-alert was closed (the triage workflow
-//     closes it once no prod alert is left), or
-//   - a microservice (Maven) Dependabot alert outside test scope was fixed, or
-//   - a commit message contains [prod-fix] (manual override).
+// Decide whether a release must be deployed because it fixes something that
+// reaches production, and draft the CST (Customer Support Tickets) Jira ticket
+// asking Ops to deploy it. Filing the ticket is left to the caller: the daily
+// cloud routine reads this output and creates the ticket through the Atlassian
+// connector, so no Jira credentials live in this repository.
 //
-// Usage (repo root, full git history): node .github/scripts/deploy-ticket.mjs
+// A release counts as a prod fix when, since the previous tag:
+//   - a merged PR title starts with "Fix prod Dependabot alerts" (the cloud
+//     routine's PRs),
+//   - an issue labeled prod-dependency-alert was closed (the triage workflow
+//     closes it once no prod alert is left),
+//   - a microservice (Maven) Dependabot alert outside test scope was fixed
+//     (only checked when ALERTS_TOKEN is set), or
+//   - a commit message has a line starting with [prod-fix] (manual override).
+//
+// Closed issues and fixed alerts count only when this release contains a
+// lockfile or pom change from the 25 hours before them, so a late close is not
+// counted again for the next release.
+//
+// Usage (repo root, full git history and tags):
+//   node .github/scripts/deploy-ticket.mjs            # human-readable
+//   node .github/scripts/deploy-ticket.mjs --json     # for the routine
 //
 // Env:
-//   GITHUB_REPOSITORY  owner/repo
-//   RELEASE_TAG        tag that was released, e.g. v1.2.7
-//   GH_TOKEN           reads PRs, issues and releases
-//   ALERTS_TOKEN       reads Dependabot alerts (DEPENDABOT_ALERTS_TOKEN); optional
-//   JIRA_BASE_URL      default https://cumulocity.atlassian.net
-//   JIRA_EMAIL, JIRA_API_TOKEN  Atlassian account that files the ticket
-//   DRY_RUN            "true" prints the ticket instead of creating it
-//   GITHUB_STEP_SUMMARY  set by Actions; the result is appended to it
+//   GITHUB_REPOSITORY  owner/repo, default Cumulocity-IoT/c8y-usage-statistics-ng
+//   RELEASE_TAG        release to check, default the latest published release
+//   GH_TOKEN           optional; the repo is public, so reads work without it
+//   ALERTS_TOKEN       optional; reads Dependabot alerts (needs "Dependabot alerts: read")
 
 import { execFileSync } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
 
-const repo = process.env.GITHUB_REPOSITORY;
-const tag = process.env.RELEASE_TAG;
-const ghToken = process.env.GH_TOKEN;
+const repo = process.env.GITHUB_REPOSITORY || 'Cumulocity-IoT/c8y-usage-statistics-ng';
+const ghToken = process.env.GH_TOKEN || '';
 const alertsToken = process.env.ALERTS_TOKEN || '';
-const jiraBase = (process.env.JIRA_BASE_URL || 'https://cumulocity.atlassian.net').replace(/\/$/, '');
-const jiraEmail = process.env.JIRA_EMAIL || '';
-const jiraToken = process.env.JIRA_API_TOKEN || '';
-const dryRun = process.env.DRY_RUN === 'true';
+const asJson = process.argv.includes('--json');
 
-const PROJECT = 'CST';
-const ISSUE_TYPE_ID = '10353'; // Support
 const TARGET = 'all public cloud instances';
+const SEV = { critical: 0, high: 1, medium: 2, low: 3 };
 
-if (!repo || !tag || !ghToken) {
-  console.error('GITHUB_REPOSITORY, RELEASE_TAG and GH_TOKEN are required');
-  process.exit(2);
-}
-
-const summary = (line) => {
-  console.log(line);
-  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, line + '\n');
-};
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
 
 async function ghRaw(url, token) {
   const res = await fetch(url.startsWith('http') ? url : `https://api.github.com${url}`, {
-    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+    headers: {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
   if (!res.ok) throw new Error(`GET ${url}: ${res.status} ${await res.text()}`);
   const next = /<([^>]+)>;\s*rel="next"/.exec(res.headers.get('link') || '')?.[1];
@@ -69,131 +65,97 @@ async function ghAll(url, token = ghToken) {
   return out;
 }
 
-// 1. What changed since the previous tag ----------------------------------------
+function finish(result) {
+  if (asJson) {
+    console.log(JSON.stringify(result, null, 2));
+  } else if (!result.deploy) {
+    console.log(`${result.tag}: ${result.message}`);
+  } else {
+    console.log(`${result.tag}: deployment needed\n\n${result.summary}\n\n${result.description}`);
+  }
+  process.exit(0);
+}
+
+// 1. Which release, and what changed since the previous tag -----------------------
+
+const release = process.env.RELEASE_TAG
+  ? await gh(`/repos/${repo}/releases/tags/${process.env.RELEASE_TAG}`).catch(() => null)
+  : await gh(`/repos/${repo}/releases/latest`);
+const tag = process.env.RELEASE_TAG || release.tag_name;
 
 let prevTag = '';
 try {
   prevTag = git('describe', '--tags', '--abbrev=0', `${tag}^`);
 } catch {
-  summary(`No tag before ${tag}; skipping the deploy ticket.`);
-  process.exit(0);
+  finish({ tag, deploy: false, message: `No tag before ${tag}.` });
 }
 const since = git('log', '-1', '--format=%cI', prevTag);
 const until = git('log', '-1', '--format=%cI', tag);
 const ts = (d) => (d ? new Date(d).getTime() : NaN);
-// PRs must be merged before the tagged commit. Issue closes and Dependabot
-// "fixed" dates lag the merge (the triage job runs daily), so they count up to now.
 const mergedInRelease = (d) => ts(d) > ts(since) && ts(d) <= ts(until);
-const sincePrevTag = (d) => ts(d) > ts(since);
-const messages = git('log', '--format=%B', `${prevTag}..${tag}`);
+
+// Issue closes and Dependabot "fixed" dates lag the fixing merge by up to a day
+// (the triage job runs daily), so they can fall after this tag or even after the
+// next one. Attribute such an event to this release only if the release contains
+// a dependency change (lockfile or pom, merged into main) in the 25 hours before it.
+const LAG = 25 * 3600 * 1000;
+const depChanges = git('log', '--first-parent', '-m', '--format=%cI', `${prevTag}..${tag}`, '--',
+  'usage-statistics-app/package-lock.json', 'metrics-aggregator/pom.xml').split('\n').filter(Boolean).map(ts);
+const fixedByThisRelease = (d) => depChanges.some((c) => c <= ts(d) && c >= ts(d) - LAG);
 
 const reasons = [];
 
-if (/\[prod-fix\]/i.test(messages)) reasons.push('A commit is marked `[prod-fix]`.');
+if (/^\[prod-fix\]/im.test(git('log', '--format=%B', `${prevTag}..${tag}`))) {
+  reasons.push('A commit in this release is marked as a production fix.');
+}
 
 const prs = (await ghAll(`/repos/${repo}/pulls?state=closed&base=main&sort=updated&direction=desc`))
   .filter((p) => mergedInRelease(p.merged_at) && /^Fix prod Dependabot alerts/i.test(p.title));
-for (const p of prs) reasons.push(`Merged ${p.html_url}: ${p.title}`);
+for (const p of prs) reasons.push(`Merged [#${p.number}](${p.html_url}): ${p.title}`);
 
 const issues = (await ghAll(`/repos/${repo}/issues?state=closed&labels=prod-dependency-alert`))
-  .filter((i) => !i.pull_request && sincePrevTag(i.closed_at));
-for (const i of issues) reasons.push(`Closed prod tracking issue ${i.html_url}`);
+  .filter((i) => !i.pull_request && fixedByThisRelease(i.closed_at));
+for (const i of issues) reasons.push(`Closed the production alert tracking issue [#${i.number}](${i.html_url}).`);
 
 const fixedAlerts = [];
 if (alertsToken) {
-  try {
-    const alerts = await ghAll(`/repos/${repo}/dependabot/alerts?state=fixed`, alertsToken);
-    for (const a of alerts) {
-      if (!sincePrevTag(a.fixed_at)) continue;
-      const maven = a.dependency?.package?.ecosystem === 'maven' && a.dependency.manifest_path?.startsWith('metrics-aggregator/');
-      if (maven && a.dependency.scope !== 'development') fixedAlerts.push(a);
-    }
-  } catch (e) {
-    console.log(`::warning::Could not read Dependabot alerts: ${e.message.split('\n')[0]}`);
+  const alerts = await ghAll(`/repos/${repo}/dependabot/alerts?state=fixed`, alertsToken);
+  for (const a of alerts) {
+    const maven = a.dependency?.package?.ecosystem === 'maven' && a.dependency.manifest_path?.startsWith('metrics-aggregator/');
+    if (maven && a.dependency.scope !== 'development' && fixedByThisRelease(a.fixed_at)) fixedAlerts.push(a);
   }
+  fixedAlerts.sort((a, b) => SEV[a.security_advisory.severity] - SEV[b.security_advisory.severity] || b.number - a.number);
+  if (fixedAlerts.length) reasons.push(`Fixed ${fixedAlerts.length} microservice Dependabot alert(s) outside test scope.`);
 }
-const SEV = { critical: 0, high: 1, medium: 2, low: 3 };
-fixedAlerts.sort((a, b) => SEV[a.security_advisory.severity] - SEV[b.security_advisory.severity] || b.number - a.number);
-if (fixedAlerts.length) reasons.push(`${fixedAlerts.length} microservice Dependabot alert(s) outside test scope fixed.`);
 
-summary(`## Deploy ticket for ${tag}\n\nChanges ${prevTag}..${tag} (${since} to ${until}).`);
 if (!reasons.length) {
-  summary('No production fix in this release, so no CST ticket.');
-  process.exit(0);
+  finish({ tag, previousTag: prevTag, deploy: false, message: `No production fix between ${prevTag} and ${tag}, so no deployment ticket.` });
 }
 
-// 2. Ticket text ------------------------------------------------------------------
+// 2. Ticket text (Markdown) ------------------------------------------------------------
 
-const release = await gh(`/repos/${repo}/releases/tags/${tag}`).catch(() => null);
 const releaseUrl = release?.html_url || `https://github.com/${repo}/releases/tag/${tag}`;
-const assets = (release?.assets || []).map((a) => `* [${a.name}|${a.browser_download_url}]`);
+const assets = (release?.assets || []).map((a) => `- [${a.name}](${a.browser_download_url})`);
 
-const title = `Deploy Usage Statistics ${tag} (security fix) on ${TARGET}`;
+const summary = `Deploy Usage Statistics ${tag} (security fix) on ${TARGET}`;
 const description = [
   'Hi,',
   '',
-  `please update the *Usage Statistics* web application and the *metrics-aggregator* microservice to *${tag}* on ${TARGET} where they are installed.`,
-  'This release fixes security issues in code that ships to production.',
+  `please update the **Usage Statistics** web application and the **metrics-aggregator** microservice to **${tag}** on ${TARGET} where they are installed. This release fixes security issues in code that ships to production.`,
   '',
-  `*Release:* [${tag}|${releaseUrl}]`,
-  ...(assets.length ? ['*Downloads:*', ...assets] : ['*Downloads:* attached to the release above.']),
+  `**Release:** [${tag}](${releaseUrl})`,
   '',
-  '*Why a deployment is needed:*',
-  ...reasons.map((r) => `* ${r.replace(/`/g, '')}`),
-  ...(fixedAlerts.length ? ['', '*Fixed microservice alerts:*',
-    ...fixedAlerts.slice(0, 10).map((a) => `* [#${a.number}|${a.html_url}] ${a.dependency.package.name} (${a.security_advisory.severity}): ${a.security_advisory.summary.trim()}`),
-    ...(fixedAlerts.length > 10 ? [`* ... and ${fixedAlerts.length - 10} more: [all fixed alerts|https://github.com/${repo}/security/dependabot?q=is%3Aclosed]`] : [])] : []),
+  ...(assets.length ? ['**Downloads:**', ...assets] : ['**Downloads:** attached to the release above.']),
   '',
-  `*Changes since ${prevTag}:* [compare|https://github.com/${repo}/compare/${prevTag}...${tag}]`,
+  '**Why a deployment is needed:**',
+  ...reasons.map((r) => `- ${r}`),
+  ...(fixedAlerts.length ? ['', '**Fixed microservice alerts (worst first):**',
+    ...fixedAlerts.slice(0, 10).map((a) => `- [#${a.number}](${a.html_url}) ${a.dependency.package.name} (${a.security_advisory.severity}): ${a.security_advisory.summary.trim()}`),
+    ...(fixedAlerts.length > 10 ? [`- ... and ${fixedAlerts.length - 10} more`] : [])] : []),
   '',
-  `_Created automatically by .github/workflows/release.yaml in ${repo}._`,
+  `**Changes since ${prevTag}:** [compare](https://github.com/${repo}/compare/${prevTag}...${tag})`,
+  '',
+  `_Created automatically for ${repo}._`,
 ].join('\n');
 
-// 3. Create it (once per tag) ------------------------------------------------------
-
-async function jira(method, url, body) {
-  const res = await fetch(`${jiraBase}${url}`, {
-    method,
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${jiraEmail}:${jiraToken}`).toString('base64')}`,
-      Accept: 'application/json',
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const text = await res.text();
-  return { ok: res.ok, status: res.status, data: text ? JSON.parse(text) : null, text };
-}
-
-if (dryRun) {
-  summary(`Dry run, would create in ${PROJECT}:\n\n**${title}**\n\n\`\`\`\n${description}\n\`\`\``);
-  process.exit(0);
-}
-if (!jiraEmail || !jiraToken) {
-  summary(`::warning::JIRA_EMAIL / JIRA_API_TOKEN secrets are missing, so no CST ticket was created. Create it by hand: "${title}".`);
-  process.exit(0);
-}
-
-const jql = `project = ${PROJECT} AND summary ~ "\\"Usage Statistics ${tag}\\""`;
-const found = await jira('POST', '/rest/api/3/search/jql', { jql, fields: ['summary'], maxResults: 1 });
-if (!found.ok) throw new Error(`Jira search failed: ${found.status} ${found.text}`);
-if (found.data.issues?.length) {
-  summary(`CST ticket already exists: ${jiraBase}/browse/${found.data.issues[0].key}`);
-  process.exit(0);
-}
-
-const fields = {
-  project: { key: PROJECT },
-  issuetype: { id: ISSUE_TYPE_ID },
-  summary: title,
-  description,
-  labels: ['usage-statistics', 'security-fix'],
-};
-let created = await jira('POST', '/rest/api/2/issue', { fields });
-if (!created.ok && created.status === 400) {
-  // Labels may not be on the create screen; the summary is the only required field.
-  delete fields.labels;
-  created = await jira('POST', '/rest/api/2/issue', { fields });
-}
-if (!created.ok) throw new Error(`Creating the CST ticket failed: ${created.status} ${created.text}`);
-summary(`Created ${jiraBase}/browse/${created.data.key}: ${title}`);
+finish({ tag, previousTag: prevTag, deploy: true, publishedAt: release?.published_at || null, summary, description });
