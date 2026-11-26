@@ -109,3 +109,32 @@ jobs:
           path: |
             metrics-aggregator/target/${{ steps.get_version.outputs.PROJECT_VERSION }}
             usage-statistics-app/dist/usage-statistics-app-${{ steps.get_app_version.outputs.APP_VERSION }}.zip
+
+  # Opens a CST Jira ticket asking Ops to deploy this release, but only when it
+  # fixes something that reaches production (see .github/scripts/deploy-ticket.mjs).
+  # Needs the JIRA_EMAIL and JIRA_API_TOKEN secrets; without them it only warns.
+  deploy-ticket:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Create CST deploy ticket for a prod fix
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ALERTS_TOKEN: ${{ secrets.DEPENDABOT_ALERTS_TOKEN }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: node .github/scripts/deploy-ticket.mjs
