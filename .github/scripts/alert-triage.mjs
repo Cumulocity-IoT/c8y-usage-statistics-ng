@@ -39,7 +39,13 @@ const assignee = process.env.ISSUE_ASSIGNEE || '';
 const statsFile = process.env.STATS_FILE || 'dist/usage-statistics-app/stats.json';
 const updateIssue = process.env.UPDATE_ISSUE === 'true';
 const ISSUE_LABEL = 'prod-dependency-alert';
-const ISSUE_TITLE = 'Dependabot alerts that reach production';
+// The title is the email subject, so it says up front that action is needed,
+// how many alerts and the worst severity.
+function issueTitle(prodRows) {
+  const worst = prodRows.map((r) => r.severity).sort((a, b) => SEV[a] - SEV[b])[0];
+  const n = prodRows.length;
+  return `[PROD] Action needed: ${n} Dependabot alert${n === 1 ? '' : 's'} in shipped code (worst: ${worst})`;
+}
 const COMPONENTS = {
   npm: { prefix: 'usage-statistics-app/', name: 'web app' },
   maven: { prefix: 'metrics-aggregator/', name: 'microservice' },
@@ -191,14 +197,17 @@ async function syncIssue(prodRows) {
 
   if (!prodRows.length) {
     if (issue) {
-      await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: 'No open Dependabot alert reaches production any more. Closing.' });
-      await api('PATCH', `/repos/${repo}/issues/${issue.number}`, { state: 'closed', state_reason: 'completed' });
+      await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: '**No action needed:** no open Dependabot alert reaches production any more. Closing.' });
+      await api('PATCH', `/repos/${repo}/issues/${issue.number}`, { title: '[PROD] Resolved: no Dependabot alerts in shipped code', state: 'closed', state_reason: 'completed' });
       console.log(`Closed issue #${issue.number}`);
     }
     return;
   }
 
+  const title = issueTitle(prodRows);
   const body = [
+    '**Relevant: this affects production.** Fix and release. Dev-only alerts never open this issue.',
+    '',
     'These open Dependabot alerts affect a package that ships to production: in the built web app (`dist/`) or in the microservice (compile or runtime scope). Fix them and cut a release.',
     '',
     table(prodRows),
@@ -208,22 +217,22 @@ async function syncIssue(prodRows) {
   ].join('\n');
 
   if (issue) {
-    if (issue.body?.trim() !== body.trim()) {
+    if (issue.body?.trim() !== body.trim() || issue.title !== title) {
       // Body edits send no notification; a comment does, so post one for new alerts.
       const known = new Set([...(issue.body || '').matchAll(/\[#(\d+)\]\(/g)].map((m) => Number(m[1])));
       const added = prodRows.filter((r) => !known.has(r.number));
-      await api('PATCH', `/repos/${repo}/issues/${issue.number}`, { body });
+      await api('PATCH', `/repos/${repo}/issues/${issue.number}`, { title, body });
       console.log(`Updated issue #${issue.number}`);
       if (added.length) {
         const who = assignee ? `@${assignee} ` : '';
         const list = added.map((r) => `- [#${r.number}](${r.url}) ${r.component}: \`${r.pkg}\` (${r.severity}): ${r.summary}`).join('\n');
-        await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: `${who}New Dependabot alerts reach production:\n\n${list}` });
+        await api('POST', `/repos/${repo}/issues/${issue.number}/comments`, { body: `${who}**Relevant: ${added.length} new Dependabot alert${added.length === 1 ? '' : 's'} in production code.** Fix and release:\n\n${list}` });
         console.log(`Commented on issue #${issue.number} about ${added.length} new prod alert(s)`);
       }
     }
   } else {
     const { data } = await api('POST', `/repos/${repo}/issues`, {
-      title: ISSUE_TITLE, body, labels: [ISSUE_LABEL], ...(assignee ? { assignees: [assignee] } : {}),
+      title, body, labels: [ISSUE_LABEL], ...(assignee ? { assignees: [assignee] } : {}),
     });
     console.log(`Opened issue #${data.number}${assignee ? ` assigned to ${assignee}` : ''}`);
   }
